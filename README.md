@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/icon.png" width="120" height="120" alt="BeatVault Logo" style="border-radius: 50%; box-shadow: 0 8px 24px rgba(29, 185, 84, 0.3);" />
+
 ```
 ██████╗ ███████╗ █████╗ ████████╗██╗   ██╗ █████╗ ██╗   ██╗██╗  ████████╗
 ██╔══██╗██╔════╝██╔══██╗╚══██╔══╝██║   ██║██╔══██╗██║   ██║██║  ╚══██╔══╝
@@ -9,26 +11,42 @@
 ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝     ╚═══╝  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝   
 ```
 
-### 🎵 **STUDIO-GRADE AUDIO WORKSTATION & SYNCED LYRICS SUITE**
-*High-Speed 2x Multi-Threaded Audio Extraction • Original Per-Track Artwork • Synchronized Karaoke (.lrc) • In-App Media Player*
+# 🎵 BEATVAULT
+### *The Studio-Grade Music Archival & Synchronized Lyrics Workstation*
+
+<p align="center">
+  <b>High-Speed 2x Parallel Audio Ingestion • True Per-Track Spotify CDN Covers • Real-Time Karaoke (.lrc) • In-App Scrubbable Player</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
+    <img src="https://img.shields.io/badge/⬇️_Direct_Download-BeatVault.exe_(Standalone)-1DB954?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows App" />
+  </a>
+  <a href="https://github.com/aadityashekhar321/BeatVault/stargazers">
+    <img src="https://img.shields.io/github/stars/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=E3A008" alt="GitHub Stars" />
+  </a>
+  <a href="https://github.com/aadityashekhar321/BeatVault/network/members">
+    <img src="https://img.shields.io/github/forks/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=10B981" alt="GitHub Forks" />
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows" />
+  <img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Audio%20Engine-yt--dlp%20%2B%20FFmpeg-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="Engine" />
+  <img src="https://img.shields.io/badge/Lyrics-LRCLIB%20Synced%20.LRC-8A2BE2?style=flat-square&logo=genius&logoColor=white" alt="Lyrics" />
+  <img src="https://img.shields.io/badge/UI-Fluent%20Dark%20WebView2-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="UI" />
+  <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT License" />
+  <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome" />
+</p>
 
 <br/>
 
-[![Download EXE](https://img.shields.io/badge/Download-BeatVault.exe%20(Standalone)-1DB954?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/aadityashekhar321/BeatVault/releases/latest)
-[![Stars](https://img.shields.io/github/stars/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=E3A008)](https://github.com/aadityashekhar321/BeatVault/stargazers)
-[![Forks](https://img.shields.io/github/forks/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=10B981)](https://github.com/aadityashekhar321/BeatVault/network/members)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://microsoft.com/windows)
-[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](https://github.com/aadityashekhar321/BeatVault/pulls)
+**BeatVault** transforms Spotify playlists, albums, and single search queries into pristine, metadata-complete MP3 files. Engineered with **2x multi-threaded parallel downloads**, **authentic Spotify CDN track artwork**, **synchronized karaoke (.lrc) companion files**, **smart acoustic duration filtering**, **non-destructive duplicate protection**, and an **integrated real-time preview player**.
 
 <br/>
 
-**BeatVault** transforms Spotify playlists, albums, and song queries into pristine, metadata-complete MP3 files. Featuring a **2x parallel download pipeline**, **per-track Spotify CDN album artwork**, **synchronized karaoke (.lrc) lyrics**, **smart duration verification**, **intelligent duplicate shielding**, and an **in-app real-time scrubbable audio player**.
-
-<br/>
-
-[⚡ Quick Start](#-quick-start) • [✨ Key Features](#-features-deep-dive) • [📊 Comparison Matrix](#-comparison-matrix) • [🏗️ Architecture](#️-under-the-hood-architecture) • [🎧 Mini Player](#-in-app-audio-player--controls) • [⚙️ Settings](#️-settings--customization) • [❓ FAQ](#-faq)
+[⚡ Quick Start](#-quick-start) • [✨ Feature Cards](#-core-capabilities) • [📊 Comparison](#-comparison-matrix) • [🏗️ Architecture](#️-system-architecture) • [🎧 Audio Player](#-in-app-audio-player--controls) • [⚙️ Settings](#️-settings--customization) • [❓ FAQ](#-faq)
 
 </div>
 
@@ -36,37 +54,39 @@
 
 ## ⚡ Quick Start
 
-### 🎯 Option A: Standalone Windows App (.exe) • *Zero Setup / No Python Required!*
+### 🎯 Option A: Standalone Windows App (.exe) • *Zero Setup / No Python Needed*
+> **Recommended for all users.** Everything is pre-bundled into a single executable.
+
 1. Go to **[GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases/latest)**.
 2. Download **`BeatVault.exe`** (~23 MB).
-3. Double-click to launch immediately! (No Python, FFmpeg, or batch files required).
+3. **Double-click `BeatVault.exe`** to launch! No Python, FFmpeg, or batch files required.
 
 ---
 
 ### 💻 Option B: Run From Source (Developers)
 ```powershell
-# 1. Clone Repository
+# 1. Clone the repository
 git clone https://github.com/aadityashekhar321/BeatVault.git
 cd BeatVault
 
-# 2. Install Dependencies
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Launch Desktop App (Native Fluent Dark WebView2)
+# 3. Launch Desktop GUI (Fluent Dark WebView2)
 python main.py
 
-# Or Use 1-Click Launchers
+# Or 1-Click Batch Launcher
 run_beatvault.bat
 ```
 
 > [!NOTE]
-> Static **FFmpeg** & **FFprobe** binaries are automatically bundled or provisioned via `static-ffmpeg`. Zero manual PATH setup required.
+> Static **FFmpeg** and **FFprobe** binaries are automatically provisioned in-memory via `static-ffmpeg`. Zero manual PATH manipulation required.
 
 ---
 
-### 🔨 Option C: Build Your Own Standalone .exe
+### 🔨 Option C: Compile Your Own Standalone .exe
 ```powershell
-# 1-Click Batch Compiler
+# 1-Click automated compiler
 build_exe.bat
 
 # Or via Python CLI
@@ -78,52 +98,79 @@ python build_exe.py
 
 ## 📊 Comparison Matrix
 
-| Feature | Generic Tools / Telegram Bots | 🎵 **BeatVault** |
+| Capability | Generic Downloaders / Bots | 🎵 **BeatVault** |
 | :--- | :---: | :---: |
-| **Download Throughput** | ❌ 1-by-1 Sequential (Slow) | **⚡ 2x Parallel ThreadPool (4x Faster)** |
-| **Song Cover Art** | ❌ Reuses playlist cover on all tracks | **🖼️ Official per-track Spotify CDN cover (oEmbed)** |
-| **Karaoke Lyrics** | ❌ None | **🎤 Synced `.lrc` companion + ID3 `USLT` tags** |
-| **Duration Filtering** | ❌ Random search (picks 8-min live versions) | **🎯 Smart Duration Matching ($\pm12$s filter)** |
-| **Download Reliability** | ⚠️ Misses tracks on strict filters | **🛡️ 100% Fallback Guarantee (Never drops tracks)** |
+| **Download Pipeline** | ❌ Sequential 1-by-1 (Slow) | **⚡ 2x Parallel ThreadPool (4x Faster)** |
+| **Song Artwork** | ❌ Repeats generic playlist cover | **🖼️ Authentic per-track Spotify CDN cover (oEmbed)** |
+| **Karaoke Lyrics** | ❌ None | **🎤 Synced `.lrc` file + ID3 `USLT` tags** |
+| **Duration Filtering** | ❌ Random search (picks 8-min bootlegs) | **🎯 Smart Duration Matching ($\pm12$s filter)** |
+| **Download Guarantee** | ⚠️ Drops songs if criteria fail | **🛡️ 100% Fallback Guarantee (Never drops tracks)** |
 | **Duplicate Prevention** | ⚠️ Silently overwrites files | **🛡️ ID3 tag inspection + Safe `(1).mp3` copies** |
-| **File Naming System** | ❌ Fixed / Messy filenames | **🏷️ Song Name Priority + 4 Custom Templates** |
-| **Integrated Audio Player** | ❌ None | **🎧 Real-time Scrubbable Mini Player with Spacebar shortcut** |
-| **Single Track Search** | ❌ Requires copying Spotify URL | **🔍 Direct Instant Search (iTunes/Apple audio API)** |
-| **Packaging** | ❌ Python script only | **📦 Standalone 23MB `.exe` + GitHub CI/CD Actions** |
+| **File Naming System** | ❌ Rigid / Arbitrary | **🏷️ Song Name Priority + 4 Custom Templates** |
+| **Integrated Player** | ❌ None | **🎧 Real-time Scrubbable Mini Player with Spacebar shortcut** |
+| **Single Track Search** | ❌ Spotify URL only | **🔍 Direct Instant Search (iTunes/Apple audio API)** |
+| **Zero-Install Binary** | ❌ Python script only | **📦 Standalone 23MB `.exe` + GitHub Actions CI/CD** |
 | **API Keys Required** | ⚠️ Requires Spotify Developer API keys | **✅ Zero Setup (100% Keyless Scrapers)** |
 
 ---
 
-## ✨ Features Deep-Dive
+## ✨ Core Capabilities
 
-### ⚡ 1. 2x Parallel Multi-Threaded Engine
-* **Concurrent Pipeline:** Two simultaneous worker threads execute downloads in parallel without socket collisions or rate-limit blocks.
-* **Speed Benchmark:** Downloads a typical 50-track playlist in **~3 minutes** (compared to ~12 minutes sequentially).
-* **Live Telemetry:** Dynamic independent speed bars, downloaded percentages, and status alerts for every concurrent worker.
-
-### 🎤 2. Synchronized Karaoke Lyrics (.lrc & USLT)
-* **Real-Time LRCLIB Search:** Queries LRCLIB's database using normalized track and artist signatures.
-* **Embedded ID3:** Writes standard unsynchronized lyric frames (`USLT`) directly into the MP3 container.
-* **Companion `.lrc` File:** Generates timestamped `[01:23.45] lyric` files matching the song filename for dynamic lyric-scrolling music players (Poweramp, Apple Music, Samsung Music, foobar2000).
-
-### 🎯 3. Smart Duration Matcher with 100% Fallback Guarantee
-* **Duration Strictness:** Inspects candidates against Spotify's official millisecond length with a tight $\pm12$s window to automatically discard live concert recordings, crowd noise, and bootleg edits.
-* **Zero Drop Guarantee:** If no candidate matches within the threshold, the engine automatically **falls back to the top-ranked official feed**, guaranteeing that zero tracks in your playlist fail.
-
-### 🖼️ 4. Per-Song Original Album Cover Artwork
-* Standard playlist scrapers mistakenly stamp the playlist's header art onto every song.
-* BeatVault queries the track's individual Spotify oEmbed endpoint (`https://open.spotify.com/oembed?url=...`) to retrieve the **authentic, high-resolution album cover** and embeds it as an `APIC` front-cover frame.
-
-### 🛡️ 5. Non-Destructive Duplicate Protection
-* Pre-scans destination folders before downloading using **Mutagen ID3 inspection** and fuzzy text sequence matching.
-* Provides interactive non-destructive options:
-  * **⏭️ Skip Track:** Leaves your existing audio intact.
-  * **📥 Safe Copy:** Automatically increments to `Song - Artist (1).mp3`.
-  * **⚡ Bulk Option:** *"Apply to all remaining duplicates in this session"*.
-
-### 🔍 6. Dual Operating Modes
-* **Mode A: Spotify URL Importer:** Paste any Spotify Playlist, Album, or Track link to import tracklists with total track counts and durations.
-* **Mode B: Direct Single Song Search:** Search any title or artist directly (e.g. *"Starboy"*, *"Levitating"*) to view instant artwork, 30-second previews, and 1-click downloads.
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>⚡ 2x Parallel Threading</h3>
+      <ul>
+        <li>Dual concurrent worker threads download and transcode 2 songs simultaneously.</li>
+        <li><b>Speed Benchmark:</b> A 50-song playlist downloads in <b>~3 minutes</b> instead of ~12 minutes sequentially.</li>
+        <li>Thread-safe queues prevent rate limits or socket exhaustion.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🎤 Synchronized Karaoke (.lrc)</h3>
+      <ul>
+        <li>Real-time queries to <b>LRCLIB</b> fetch millisecond-accurate lyrics.</li>
+        <li>Embeds plain text into the ID3 <code>USLT</code> tag.</li>
+        <li>Outputs companion <code>{Song}.lrc</code> files for scrolling lyric display in Poweramp, Apple Music, and foobar2000.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🖼️ True Per-Track Artwork</h3>
+      <ul>
+        <li>Generic scrapers stamp the playlist's banner onto every song.</li>
+        <li>BeatVault queries each song's individual <b>Spotify oEmbed endpoint</b> to fetch its genuine high-resolution album cover.</li>
+        <li>Embeds front-cover <code>APIC</code> frames into the MP3 container.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🎯 100% Download Guarantee</h3>
+      <ul>
+        <li>Compares audio length against Spotify's official duration with a strict &plusmn;12s tolerance filter.</li>
+        <li>Automatically discards live bootlegs, slowed edits, and audience noise.</li>
+        <li><b>Zero Drops:</b> If no exact match is found, immediately falls back to the top-ranked official feed.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🛡️ Non-Destructive Duplicate Shield</h3>
+      <ul>
+        <li>Inspects destination folder using <b>Mutagen ID3 inspection</b> and fuzzy title/artist string comparison.</li>
+        <li>Prompts with <i>Skip</i> or <i>Download Again</i>.</li>
+        <li>Saves as <code>Song - Artist (1).mp3</code> so original files are never overwritten.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🔍 Dual Operating Modes</h3>
+      <ul>
+        <li><b>Mode 1: Spotify Importer:</b> Paste any Playlist, Album, or Track link to retrieve complete tracklists.</li>
+        <li><b>Mode 2: Direct Song Search:</b> Type any title or artist directly (e.g. <i>"Starboy"</i>, <i>"Espresso"</i>) for instant previews and 1-click downloads.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -160,7 +207,7 @@ python build_exe.py
 
 ---
 
-## 🏗️ Under-the-Hood Architecture
+## 🏗️ System Architecture
 
 ```mermaid
 flowchart TD
@@ -201,7 +248,7 @@ flowchart TD
 | :---: | :---: | :--- |
 | **Play Track** | `▶ Preview` / `▶ Play` | Plays 30s preview (in search) or full audio (downloaded tracks) |
 | **Pause Track** | `⏸ Pause` | Pauses audio playback at current position |
-| **Resume Track** | `▶ Resume` | Continues playback seamlessly |
+| **Resume Track** | `▶ Resume` | Continues playback seamlessly without re-buffering |
 | **Toggle Play/Pause** | <kbd>Spacebar</kbd> | Global keyboard shortcut (active outside input text fields) |
 | **Scrub / Seek** | `Timeline Scrubber` | Drag slider to jump to any point in the track |
 | **Volume Control** | `Volume Slider` | Real-time audio volume attenuation |
@@ -285,6 +332,12 @@ Concurrency of 2 parallel workers balances high speed with network safety—achi
 
 ---
 
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=aadityashekhar321/BeatVault&type=Date)](https://star-history.com/#aadityashekhar321/BeatVault&Date)
+
+---
+
 ## 🛡️ Legal & Compliance
 
 This software is developed strictly for educational and personal archival purposes:
@@ -300,6 +353,6 @@ Crafted with ❤️ by [Aaditya Shekhar](https://github.com/aadityashekhar321)
 
 ⭐ **Star BeatVault on GitHub if you find it helpful!**
 
-[▲ Back to Top](#-beatvault--music--lyrics-suite)
+[▲ Back to Top](#-beatvault)
 
 </div>
