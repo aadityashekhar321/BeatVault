@@ -9,16 +9,17 @@ echo.
 
 set "PATH=C:\Users\aadit\AppData\Local\Programs\Git\cmd;C:\Users\aadit\AppData\Local\Programs\Git\ucrt64\bin;%PATH%"
 
-git push -u origin main
+git push origin main
 
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ========================================================
-    echo      Successfully pushed BeatVault to GitHub!
+    echo   [SUCCESS] BeatVault is now LIVE on your GitHub!
+    echo   https://github.com/aadityashekhar321/BeatVault
     echo ========================================================
 ) else (
     echo.
-    echo Push failed or was cancelled. Check output above.
+    echo Push incomplete. If prompted, please complete GitHub authentication in browser.
 )
 echo.
 pause
