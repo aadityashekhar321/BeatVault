@@ -251,8 +251,6 @@ BeatVault/
 ├── build_exe.bat              # 1-Click .exe compiler for Windows
 ├── requirements.txt           # Python package dependencies
 ├── run_beatvault.bat          # 1-Click launcher for BeatVault
-├── run_app.bat                # Alternate 1-Click launcher
-├── push_to_github.bat         # 1-Click GitHub push utility
 ├── LICENSE                    # MIT License
 └── README.md                  # Comprehensive documentation
 ```
