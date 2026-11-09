@@ -28,6 +28,7 @@ share/python-wheels/
 # PyInstaller / static binaries
 *.manifest
 *.spec
+!BeatVault.spec
 
 # Installer logs
 pip-log.txt

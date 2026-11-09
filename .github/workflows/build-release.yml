@@ -1,0 +1,78 @@
+name: Build & Release BeatVault Windows Executable
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-exe:
+    name: Build Standalone Windows .exe
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller pillow
+
+      - name: Build Standalone Executable
+        run: |
+          python build_exe.py
+
+      - name: Verify Executable Exists
+        run: |
+          if (Test-Path "dist\BeatVault.exe") {
+            $size = (Get-Item "dist\BeatVault.exe").Length / 1MB
+            Write-Host "BeatVault.exe successfully created! Size: $($size.ToString('F2')) MB"
+          } else {
+            Write-Error "dist\BeatVault.exe not found!"
+            exit 1
+          }
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BeatVault-Windows-x64
+          path: dist/BeatVault.exe
+          if-no-files-found: error
+
+      - name: Publish to GitHub Release (Tag Triggered)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/BeatVault.exe
+          name: "BeatVault ${{ github.ref_name }} (Standalone Windows App)"
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+      - name: Publish to GitHub Release (Manual Dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag }}
+          name: "BeatVault ${{ github.event.inputs.release_tag }} (Standalone Windows App)"
+          files: dist/BeatVault.exe
+          generate_release_notes: true
+          draft: false
+          prerelease: false

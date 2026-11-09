@@ -14,12 +14,12 @@
 
 <br/>
 
+[![Download EXE](https://img.shields.io/badge/Download-BeatVault.exe%20(Standalone)-1DB954?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/aadityashekhar321/BeatVault/releases/latest)
 [![Stars](https://img.shields.io/github/stars/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=E3A008)](https://github.com/aadityashekhar321/BeatVault/stargazers)
 [![Forks](https://img.shields.io/github/forks/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=10B981)](https://github.com/aadityashekhar321/BeatVault/network/members)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://microsoft.com/windows)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![UI: Fluent Dark](https://img.shields.io/badge/UI-Fluent%20Dark%20WebView2-1DB954?style=for-the-badge&logo=spotify&logoColor=white)](#-desktop-user-interface)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](https://github.com/aadityashekhar321/BeatVault/pulls)
 
 <br/>
@@ -36,31 +36,43 @@
 
 ## ⚡ Quick Start
 
-### 📦 1. Clone Repository
-```bash
+### 🎯 Option A: Standalone Windows App (.exe) • *Zero Setup / No Python Required!*
+1. Go to **[GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases/latest)**.
+2. Download **`BeatVault.exe`** (~23 MB).
+3. Double-click to launch immediately! (No Python, FFmpeg, or batch files required).
+
+---
+
+### 💻 Option B: Run From Source (Developers)
+```powershell
+# 1. Clone Repository
 git clone https://github.com/aadityashekhar321/BeatVault.git
 cd BeatVault
-```
 
-### 🚀 2. 1-Click Launch (Windows)
-Double-click either launcher included in the project folder:
-* **`run_beatvault.bat`** *(Recommended)*
-* **`run_app.bat`**
-
-### 💻 3. Command-Line Launch
-```powershell
-# Install dependencies (First run only)
+# 2. Install Dependencies
 pip install -r requirements.txt
 
-# Launch Desktop App (Native Fluent Dark WebView2)
+# 3. Launch Desktop App (Native Fluent Dark WebView2)
 python main.py
 
-# Or Launch in Local Web Browser UI (Fallback Mode)
-python main.py --browser
+# Or Use 1-Click Launchers
+run_beatvault.bat
 ```
 
 > [!NOTE]
-> Static **FFmpeg** & **FFprobe** binaries are automatically handled by `static-ffmpeg`. Zero manual PATH setup or command-line configuration required.
+> Static **FFmpeg** & **FFprobe** binaries are automatically bundled or provisioned via `static-ffmpeg`. Zero manual PATH setup required.
+
+---
+
+### 🔨 Option C: Build Your Own Standalone .exe
+```powershell
+# 1-Click Batch Compiler
+build_exe.bat
+
+# Or via Python CLI
+python build_exe.py
+# -> Output generated in: dist/BeatVault.exe
+```
 
 ---
 
@@ -77,6 +89,7 @@ python main.py --browser
 | **File Naming System** | ❌ Fixed / Messy filenames | **🏷️ Song Name Priority + 4 Custom Templates** |
 | **Integrated Audio Player** | ❌ None | **🎧 Real-time Scrubbable Mini Player with Spacebar shortcut** |
 | **Single Track Search** | ❌ Requires copying Spotify URL | **🔍 Direct Instant Search (iTunes/Apple audio API)** |
+| **Packaging** | ❌ Python script only | **📦 Standalone 23MB `.exe` + GitHub CI/CD Actions** |
 | **API Keys Required** | ⚠️ Requires Spotify Developer API keys | **✅ Zero Setup (100% Keyless Scrapers)** |
 
 ---
@@ -219,6 +232,12 @@ Click the **⚙️ Settings** icon in the top header to configure preferences:
 
 ```
 BeatVault/
+├── .github/
+│   └── workflows/
+│       └── build-release.yml  # Automated GitHub Actions Windows .exe CI/CD builder
+├── assets/
+│   ├── icon.ico               # Multi-resolution Windows app icon (16x16 to 256x256)
+│   └── icon.png               # High-res master brand icon
 ├── gui/
 │   └── index.html             # Fluent Dark responsive GUI (Tailwind/CSS, Player, Modals)
 ├── api.py                     # Python-to-JavaScript IPC bridge & folder picker
@@ -227,6 +246,9 @@ BeatVault/
 ├── lyrics_service.py          # LRCLIB API client (.lrc creator & ID3 USLT embedder)
 ├── spotify_service.py         # Zero-config Spotify playlist & album scraper
 ├── main.py                    # PyWebView desktop entrypoint + local browser server
+├── BeatVault.spec             # PyInstaller standalone binary specification
+├── build_exe.py               # Standalone compilation automation engine
+├── build_exe.bat              # 1-Click .exe compiler for Windows
 ├── requirements.txt           # Python package dependencies
 ├── run_beatvault.bat          # 1-Click launcher for BeatVault
 ├── run_app.bat                # Alternate 1-Click launcher
@@ -246,9 +268,9 @@ BeatVault/
 </details>
 
 <details>
-<summary><b>Q: Do I need to install FFmpeg manually?</b></summary>
+<summary><b>Q: Do I need to install Python or FFmpeg manually to use BeatVault.exe?</b></summary>
 <br/>
-<b>No.</b> The project uses <code>static-ffmpeg</code>, which automatically provisions static FFmpeg and FFprobe binaries without requiring manual PATH changes.
+<b>No.</b> The standalone <code>BeatVault.exe</code> includes all dependencies, runtimes, and static FFmpeg binaries bundled in a single file. Just double-click to run!
 </details>
 
 <details>
