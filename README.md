@@ -15,7 +15,7 @@
 ### *The Studio-Grade Music Archival & Synchronized Lyrics Workstation*
 
 <p align="center">
-  <b>High-Speed 2x Parallel Audio Ingestion • True Per-Track Spotify CDN Covers • Real-Time Karaoke (.lrc) • In-App Scrubbable Player</b>
+  <b>High-Speed 2x Parallel Ingestion • Multi-Platform (Spotify • YouTube • Apple Music • SoundCloud) • System Tray & Global Media Keys</b>
 </p>
 
 <p align="center">
@@ -32,17 +32,17 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows" />
-  <img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Multi--Platform-Spotify%20•%20YouTube%20•%20Apple%20Music%20•%20SoundCloud-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="Platforms" />
+  <img src="https://img.shields.io/badge/Tray%20%26%20Hotkeys-Global%20Media%20Keys-FF5722?style=flat-square&logo=windows&logoColor=white" alt="Tray and Keys" />
   <img src="https://img.shields.io/badge/Audio%20Engine-yt--dlp%20%2B%20FFmpeg-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="Engine" />
   <img src="https://img.shields.io/badge/Lyrics-LRCLIB%20Synced%20.LRC-8A2BE2?style=flat-square&logo=genius&logoColor=white" alt="Lyrics" />
   <img src="https://img.shields.io/badge/UI-Fluent%20Dark%20WebView2-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="UI" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT License" />
-  <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome" />
 </p>
 
 <br/>
 
-**BeatVault** transforms Spotify playlists, albums, and single search queries into pristine, metadata-complete MP3 files. Engineered with **2x multi-threaded parallel downloads**, **authentic Spotify CDN track artwork**, **synchronized karaoke (.lrc) companion files**, **smart acoustic duration filtering**, **non-destructive duplicate protection**, and an **integrated real-time preview player**.
+**BeatVault** is an all-in-one studio workstation that imports playlists, albums, and tracks across **Spotify, YouTube / YouTube Music, Apple Music, and SoundCloud**, transcoding them into pristine, metadata-complete MP3 files. Engineered with **2x parallel multi-threaded downloading**, **authentic per-track album covers**, **synchronized karaoke (.lrc) companion files**, **smart acoustic duration matching**, **non-destructive duplicate protection**, **Windows System Tray background execution**, and **native Global Media Keys support**.
 
 <br/>
 
@@ -100,14 +100,16 @@ python build_exe.py
 
 | Capability | Generic Downloaders / Bots | 🎵 **BeatVault** |
 | :--- | :---: | :---: |
+| **Platform Ingestion** | ❌ Single platform / Spotify only | **🌐 Multi-Platform (Spotify, YouTube, Apple Music, SoundCloud)** |
 | **Download Pipeline** | ❌ Sequential 1-by-1 (Slow) | **⚡ 2x Parallel ThreadPool (4x Faster)** |
-| **Song Artwork** | ❌ Repeats generic playlist cover | **🖼️ Authentic per-track Spotify CDN cover (oEmbed)** |
+| **System Tray & Hotkeys** | ❌ Closes completely on exit | **🪟 Windows System Tray + Global Physical Media Keys** |
+| **Song Artwork** | ❌ Repeats generic playlist cover | **🖼️ Authentic per-track covers (Spotify CDN, Apple 1200x630, YT maxres)** |
 | **Karaoke Lyrics** | ❌ None | **🎤 Synced `.lrc` file + ID3 `USLT` tags** |
 | **Duration Filtering** | ❌ Random search (picks 8-min bootlegs) | **🎯 Smart Duration Matching ($\pm12$s filter)** |
 | **Download Guarantee** | ⚠️ Drops songs if criteria fail | **🛡️ 100% Fallback Guarantee (Never drops tracks)** |
 | **Duplicate Prevention** | ⚠️ Silently overwrites files | **🛡️ ID3 tag inspection + Safe `(1).mp3` copies** |
 | **File Naming System** | ❌ Rigid / Arbitrary | **🏷️ Song Name Priority + 4 Custom Templates** |
-| **Integrated Player** | ❌ None | **🎧 Real-time Scrubbable Mini Player with Spacebar shortcut** |
+| **Integrated Player** | ❌ None | **🎧 Real-time Scrubbable Mini Player + Next/Prev & Auto-Advance** |
 | **Single Track Search** | ❌ Spotify URL only | **🔍 Direct Instant Search (iTunes/Apple audio API)** |
 | **Zero-Install Binary** | ❌ Python script only | **📦 Standalone 23MB `.exe` + GitHub Actions CI/CD** |
 | **API Keys Required** | ⚠️ Requires Spotify Developer API keys | **✅ Zero Setup (100% Keyless Scrapers)** |
@@ -155,6 +157,25 @@ python build_exe.py
   </tr>
   <tr>
     <td width="50%" valign="top">
+      <h3>🌐 Multi-Platform Ingestion</h3>
+      <ul>
+        <li><b>Spotify:</b> Public embed JSON parser for playlists, albums, and tracks.</li>
+        <li><b>YouTube & YouTube Music:</b> Fast flat extraction for playlists and direct videos.</li>
+        <li><b>Apple Music:</b> Schema.org JSON-LD parser extracting metadata and 1200x630 lossless covers.</li>
+        <li><b>SoundCloud:</b> Seamless track and set discovery with direct audio routing.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🪟 Windows System Tray & Global Media Keys</h3>
+      <ul>
+        <li><b>System Tray:</b> Minimizes cleanly to notification area with background playback status.</li>
+        <li><b>Global Hotkeys:</b> Controls in-app audio with physical keyboard multimedia keys (<code>Play/Pause</code>, <code>Next Track</code>, <code>Prev Track</code>, <code>Stop</code>) even when minimized.</li>
+        <li><b>Auto-Advance:</b> Seamlessly queues and plays the next downloaded song when current track ends.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
       <h3>🛡️ Non-Destructive Duplicate Shield</h3>
       <ul>
         <li>Inspects destination folder using <b>Mutagen ID3 inspection</b> and fuzzy title/artist string comparison.</li>
@@ -163,10 +184,10 @@ python build_exe.py
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h3>🔍 Dual Operating Modes</h3>
+      <h3>🔍 Instant Search & In-App Player</h3>
       <ul>
-        <li><b>Mode 1: Spotify Importer:</b> Paste any Playlist, Album, or Track link to retrieve complete tracklists.</li>
-        <li><b>Mode 2: Direct Song Search:</b> Type any title or artist directly (e.g. <i>"Starboy"</i>, <i>"Espresso"</i>) for instant previews and 1-click downloads.</li>
+        <li><b>Direct Search:</b> Type any title or artist directly (e.g. <i>"Starboy"</i>, <i>"Espresso"</i>) for instant previews and 1-click downloads.</li>
+        <li><b>Integrated Dock:</b> In-app scrubber, volume slider, auto-advance on track completion, and spacebar play/pause shortcut.</li>
       </ul>
     </td>
   </tr>
@@ -247,11 +268,13 @@ flowchart TD
 | Action | Control | Description |
 | :---: | :---: | :--- |
 | **Play Track** | `▶ Preview` / `▶ Play` | Plays 30s preview (in search) or full audio (downloaded tracks) |
-| **Pause Track** | `⏸ Pause` | Pauses audio playback at current position |
-| **Resume Track** | `▶ Resume` | Continues playback seamlessly without re-buffering |
-| **Toggle Play/Pause** | <kbd>Spacebar</kbd> | Global keyboard shortcut (active outside input text fields) |
+| **Next / Previous Track** | `⏭` / `⏮` or Keyboard Keys | Skips to next or previous track in the active queue |
+| **Global Media Keys** | <kbd>Play/Pause</kbd>, <kbd>Next</kbd>, <kbd>Prev</kbd> | Native Windows global multimedia keys work in background or while minimized |
+| **System Tray Control** | Notification Tray Menu | Right-click BeatVault tray icon to Play/Pause, Skip, or Restore window |
+| **Toggle Play/Pause** | <kbd>Spacebar</kbd> | In-app keyboard shortcut (active outside input text fields) |
 | **Scrub / Seek** | `Timeline Scrubber` | Drag slider to jump to any point in the track |
 | **Volume Control** | `Volume Slider` | Real-time audio volume attenuation |
+| **Auto-Advance** | Automatic | Plays next track automatically when current song reaches the end |
 | **Dismiss Player** | `✕ Close` | Stops stream and hides bottom mini dock |
 
 ---
@@ -291,7 +314,9 @@ BeatVault/
 ├── downloader.py              # Parallel download manager (Concurrency=2) & duration filter
 ├── duplicate_detector.py      # Mutagen ID3 inspector & non-destructive name generator
 ├── lyrics_service.py          # LRCLIB API client (.lrc creator & ID3 USLT embedder)
+├── platform_service.py        # Multi-Platform Router (Spotify, YouTube, Apple Music, SoundCloud)
 ├── spotify_service.py         # Zero-config Spotify playlist & album scraper
+├── tray_and_media_service.py  # Windows System Tray (pystray) & Global Media Keys (ctypes)
 ├── main.py                    # PyWebView desktop entrypoint + local browser server
 ├── BeatVault.spec             # PyInstaller standalone binary specification
 ├── build_exe.py               # Standalone compilation automation engine

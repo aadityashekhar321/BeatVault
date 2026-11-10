@@ -27,6 +27,12 @@ hiddenimports = [
     'spotipy',
     'urllib.request',
     'concurrent.futures',
+    'pystray',
+    'pystray._win32',
+    'PIL',
+    'PIL.Image',
+    'platform_service',
+    'tray_and_media_service',
 ]
 
 a = Analysis(

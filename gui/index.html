@@ -785,6 +785,9 @@
         <span class="badge-dot"></span>
         <span>⚡ 2x Parallel Downloads</span>
       </div>
+      <button class="btn btn-secondary" onclick="minimizeToTray()" title="Minimize to Windows System Tray">
+        🪟 Minimize to Tray
+      </button>
       <button class="btn btn-secondary" onclick="openSettingsModal()" title="Settings">
         ⚙️ Settings
       </button>
@@ -794,7 +797,7 @@
   <!-- Navigation Switcher Tabs -->
   <div class="nav-tabs">
     <button class="tab-btn active" id="tabPlaylistBtn" onclick="switchTab('playlist')">
-      📋 Spotify Playlist / Album
+      📋 Multi-Platform Importer (Spotify • YouTube • Apple Music • SoundCloud)
     </button>
     <button class="tab-btn" id="tabSearchBtn" onclick="switchTab('search')">
       🔍 Direct Single Song Search
@@ -816,15 +819,15 @@
         <!-- Playlist URL Card -->
         <div class="card field-group">
           <div class="field-label">
-            <span>1. Spotify Playlist Link</span>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">Playlist, Album, or Track</span>
+            <span>1. Multi-Platform Link (Spotify, YouTube, Apple Music, SoundCloud)</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Playlists, Albums, Videos & Tracks</span>
           </div>
           <div class="input-row">
             <input 
               type="text" 
               id="playlistUrl" 
               class="input-text" 
-              placeholder="https://open.spotify.com/playlist/..."
+              placeholder="Paste any Spotify, YouTube, Apple Music, or SoundCloud link..."
             />
             <button class="btn btn-secondary" onclick="pasteFromClipboard()">Paste</button>
             <button class="btn btn-primary" id="btnLoad" onclick="loadPlaylist()">
@@ -1001,8 +1004,14 @@
 
     <div class="player-controls">
       <div class="player-buttons">
+        <button class="btn btn-secondary" style="border-radius: 50%; width: 32px; height: 32px; padding: 0; justify-content: center;" onclick="playPrevTrack()" title="Previous Track (Media Key)">
+          ⏮
+        </button>
         <button class="btn-play-round" id="btnPlayPause" onclick="togglePlayerPlay()">
           <span id="playIcon">▶</span>
+        </button>
+        <button class="btn btn-secondary" style="border-radius: 50%; width: 32px; height: 32px; padding: 0; justify-content: center;" onclick="playNextTrack()" title="Next Track (Media Key)">
+          ⏭
         </button>
       </div>
       <div class="seek-container">
@@ -1242,9 +1251,10 @@
         document.getElementById('playlistHero').style.display = 'flex';
         document.getElementById('heroCover').src = currentPlaylist.cover_url || 'https://via.placeholder.com/150/131720/1db954?text=Music';
         document.getElementById('heroTitle').textContent = currentPlaylist.title;
-        document.getElementById('heroAuthor').textContent = currentPlaylist.author ? `By ${currentPlaylist.author}` : 'Spotify';
+        document.getElementById('heroAuthor').textContent = currentPlaylist.author ? `By ${currentPlaylist.author}` : (currentPlaylist.platform_name || 'BeatVault');
         document.getElementById('heroCount').textContent = `${loadedTracks.length} tracks`;
-        document.getElementById('heroType').textContent = (currentPlaylist.type || 'playlist').toUpperCase();
+        const platformBadge = currentPlaylist.platform_badge ? `${currentPlaylist.platform_badge} • ` : '';
+        document.getElementById('heroType').textContent = `${platformBadge}${(currentPlaylist.type || 'playlist').toUpperCase()}`;
 
         // Action bar
         document.getElementById('actionBar').style.display = 'flex';
@@ -1514,7 +1524,16 @@
 
     // Backend Event Dispatcher
     window.handleBackendEvent = function(eventName, data) {
-      if (eventName === 'download_progress') {
+      if (eventName === 'media_key_action') {
+        if (data.action === 'play_pause') {
+          togglePlayerPlay();
+        } else if (data.action === 'next') {
+          playNextTrack();
+        } else if (data.action === 'prev') {
+          playPrevTrack();
+        }
+      }
+      else if (eventName === 'download_progress') {
         const track = data.track;
         const stats = data.stats;
         const overallPercent = stats.total > 0 
@@ -1804,6 +1823,52 @@
       const m = Math.floor(sec / 60);
       const s = Math.floor(sec % 60);
       return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    async function minimizeToTray() {
+      if (window.pywebview && window.pywebview.api) {
+        try {
+          await window.pywebview.api.minimize_to_tray();
+        } catch (e) {
+          console.error('Tray minimize error:', e);
+        }
+      } else {
+        fetch('/api/minimize_to_tray', { method: 'POST' }).catch(() => {});
+      }
+    }
+
+    function playNextTrack() {
+      if (!loadedTracks || loadedTracks.length === 0) return;
+      const startIdx = (currentPlayback && currentPlayback.type === 'track') ? currentPlayback.index : -1;
+      for (let i = 1; i <= loadedTracks.length; i++) {
+        const candidate = (startIdx + i) % loadedTracks.length;
+        const t = loadedTracks[candidate];
+        if (t && (t.destination_file || t.audio_preview || t.status === 'completed')) {
+          togglePlayTrack(candidate);
+          return;
+        }
+      }
+      const nextIdx = (startIdx + 1) % loadedTracks.length;
+      togglePlayTrack(nextIdx);
+    }
+
+    function playPrevTrack() {
+      if (!loadedTracks || loadedTracks.length === 0) return;
+      if (audioPlayer.currentTime > 3) {
+        audioPlayer.currentTime = 0;
+        return;
+      }
+      const startIdx = (currentPlayback && currentPlayback.type === 'track') ? currentPlayback.index : 0;
+      for (let i = 1; i <= loadedTracks.length; i++) {
+        const candidate = (startIdx - i + loadedTracks.length) % loadedTracks.length;
+        const t = loadedTracks[candidate];
+        if (t && (t.destination_file || t.audio_preview || t.status === 'completed')) {
+          togglePlayTrack(candidate);
+          return;
+        }
+      }
+      const prevIdx = (startIdx - 1 + loadedTracks.length) % loadedTracks.length;
+      togglePlayTrack(prevIdx);
     }
   </script>
 </body>

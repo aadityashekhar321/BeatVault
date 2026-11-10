@@ -13,7 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("main")
 
-# Add current directory to path
+# Add current directory to path (Supports PyInstaller frozen binary)
 if getattr(sys, 'frozen', False):
     current_dir = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
 else:
@@ -29,9 +29,10 @@ except Exception as e:
     logger.warning(f"Static FFmpeg path init warning: {e}")
 
 from api import AppAPI
+from tray_and_media_service import SystemTrayService, GlobalMediaKeyService
 
 def run_desktop_app():
-    """Launches the native desktop window using pywebview."""
+    """Launches the native desktop window using pywebview with tray and media keys."""
     import webview
 
     html_file = os.path.join(current_dir, "gui", "index.html")
@@ -45,16 +46,65 @@ def run_desktop_app():
         title="BeatVault - Music & Lyrics Studio",
         url=f"file:///{html_file.replace(os.sep, '/')}",
         js_api=app_api,
-        width=1100,
-        height=760,
-        min_size=(850, 600),
+        width=1120,
+        height=780,
+        min_size=(880, 620),
         background_color="#0f1115"
     )
 
     app_api.set_window(window)
+
+    # Initialize System Tray and Global Media Keys
+    icon_path = os.path.join(current_dir, "assets", "icon.png")
+
+    def on_media_play_pause():
+        logger.info("Global Media Key: Play/Pause triggered")
+        app_api.trigger_media_key("play_pause")
+
+    def on_media_next():
+        logger.info("Global Media Key: Next Track triggered")
+        app_api.trigger_media_key("next")
+
+    def on_media_prev():
+        logger.info("Global Media Key: Prev Track triggered")
+        app_api.trigger_media_key("prev")
+
+    # Start global media keys
+    media_keys = GlobalMediaKeyService(
+        on_play_pause=on_media_play_pause,
+        on_next=on_media_next,
+        on_prev=on_media_prev
+    )
+    media_keys.start()
+
+    # Start system tray
+    def on_tray_show():
+        if window:
+            window.show()
+            window.restore()
+
+    def on_tray_quit():
+        media_keys.stop()
+        if window:
+            window.destroy()
+
+    tray = SystemTrayService(
+        icon_path=icon_path,
+        on_show=on_tray_show,
+        on_toggle_play=on_media_play_pause,
+        on_next=on_media_next,
+        on_prev=on_media_prev,
+        on_quit=on_tray_quit
+    )
+    tray.start()
+    app_api.set_tray_service(tray)
     
     logger.info("Starting pywebview loop...")
-    webview.start(debug=False)
+    try:
+        webview.start(debug=False)
+    finally:
+        media_keys.stop()
+        tray.stop()
 
 def run_browser_mode(port=8080):
     """
@@ -160,6 +210,14 @@ def run_browser_mode(port=8080):
                       cancel_download: async () => {
                         const r = await fetch('/api/cancel_download');
                         return await r.json();
+                      },
+                      minimize_to_tray: async () => {
+                        const r = await fetch('/api/minimize_to_tray');
+                        return await r.json();
+                      },
+                      restore_from_tray: async () => {
+                        const r = await fetch('/api/restore_from_tray');
+                        return await r.json();
                       }
                     }
                   };
@@ -213,6 +271,12 @@ def run_browser_mode(port=8080):
             elif parsed.path == "/api/cancel_download":
                 self._send_json(app_api.cancel_download())
 
+            elif parsed.path == "/api/minimize_to_tray":
+                self._send_json(app_api.minimize_to_tray())
+
+            elif parsed.path == "/api/restore_from_tray":
+                self._send_json(app_api.restore_from_tray())
+
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -247,7 +311,7 @@ def run_browser_mode(port=8080):
                 res = app_api.start_download(
                     payload.get("tracks", []),
                     payload.get("folder", ""),
-                    payload.get("title", "Spotify Playlist"),
+                    payload.get("title", "Music Playlist"),
                     payload.get("quality", "192"),
                     payload.get("filename_template", "title_artist"),
                     payload.get("embed_lyrics", True),

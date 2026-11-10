@@ -6,7 +6,7 @@ import logging
 import threading
 import requests
 from typing import Dict, Any, List, Optional
-from spotify_service import SpotifyService
+from platform_service import PlatformService
 from duplicate_detector import DuplicateDetector
 from downloader import DownloadWorker
 
@@ -15,12 +15,16 @@ logger = logging.getLogger("api")
 class AppAPI:
     def __init__(self, window=None):
         self.window = window
-        self.spotify_service = SpotifyService()
+        self.platform_service = PlatformService()
         self.current_worker: Optional[DownloadWorker] = None
         self.worker_thread: Optional[threading.Thread] = None
+        self.tray_service = None
 
     def set_window(self, window):
         self.window = window
+
+    def set_tray_service(self, tray_service):
+        self.tray_service = tray_service
 
     def get_default_folder(self) -> str:
         """Returns standard user Music directory, falling back to Downloads."""
@@ -69,10 +73,11 @@ class AppAPI:
 
     def load_playlist(self, url: str) -> Dict[str, Any]:
         """
-        Parses Spotify playlist URL and retrieves tracks metadata.
+        Parses Spotify, YouTube, Apple Music, or SoundCloud playlist/album URL
+        and retrieves tracks metadata.
         """
         try:
-            data = self.spotify_service.fetch_playlist_metadata(url)
+            data = self.platform_service.fetch_metadata(url)
             return {"success": True, "data": data}
         except Exception as e:
             logger.error(f"Error loading playlist: {e}")
@@ -80,7 +85,7 @@ class AppAPI:
 
     def search_single_song(self, query: str) -> Dict[str, Any]:
         """
-        Direct single song search without a Spotify link.
+        Direct single song search without a playlist link.
         Returns high-quality metadata, album art, and audio preview.
         """
         if not query or not query.strip():
@@ -183,7 +188,7 @@ class AppAPI:
         self,
         tracks: List[Dict[str, Any]],
         destination_folder: str,
-        playlist_title: str = "Spotify Playlist",
+        playlist_title: str = "Music Playlist",
         audio_quality: str = "192",
         filename_template: str = "title_artist",
         embed_lyrics: bool = True,
@@ -226,7 +231,7 @@ class AppAPI:
             filename_template=filename_template,
             embed_lyrics=embed_lyrics,
             save_lrc_file=save_lrc_file,
-            max_concurrency=2,  # Exactly 2 parallel downloads as requested
+            max_concurrency=2,  # Exactly 2 parallel downloads
             on_progress=on_progress,
             on_track_complete=on_track_complete,
             on_duplicate_detected=on_duplicate_detected,
@@ -266,6 +271,38 @@ class AppAPI:
             self.current_worker.cancel()
             return {"success": True}
         return {"success": False, "error": "No active download"}
+
+    def minimize_to_tray(self) -> Dict[str, Any]:
+        """Minimizes the window to the Windows Notification Area (System Tray)."""
+        if self.window:
+            try:
+                self.window.hide()
+                if self.tray_service:
+                    self.tray_service.notify(
+                        "BeatVault Minimized",
+                        "BeatVault is running in background. Click tray icon or press media keys to control playback."
+                    )
+                return {"success": True}
+            except Exception as e:
+                logger.warning(f"Error minimizing window: {e}")
+                return {"success": False, "error": str(e)}
+        return {"success": False, "error": "No window reference"}
+
+    def restore_from_tray(self) -> Dict[str, Any]:
+        """Restores and shows the window from the system tray."""
+        if self.window:
+            try:
+                self.window.show()
+                self.window.restore()
+                return {"success": True}
+            except Exception as e:
+                logger.warning(f"Error restoring window: {e}")
+                return {"success": False, "error": str(e)}
+        return {"success": False, "error": "No window reference"}
+
+    def trigger_media_key(self, action: str):
+        """Dispatches global media key action ('play_pause', 'next', 'prev') to the UI."""
+        self._send_event_to_frontend("media_key_action", {"action": action})
 
     def get_status(self) -> Dict[str, Any]:
         if self.current_worker:

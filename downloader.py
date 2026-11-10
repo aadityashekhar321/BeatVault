@@ -285,6 +285,9 @@ class DownloadWorker:
         GUARANTEE: If no candidate matches duration, it immediately falls back to candidate #1 so
         no song ever fails to download because of duration matching!
         """
+        # Direct source URL from YouTube, SoundCloud, etc.
+        if track.get("direct_source_url"):
+            return track["direct_source_url"]
         title = track.get("title", "")
         artist = track.get("artist", "")
         target_duration = (track.get("duration_ms", 0) or 0) / 1000.0
