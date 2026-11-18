@@ -20,13 +20,13 @@
 
 <p align="center">
   <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
-    <img src="https://img.shields.io/badge/⬇️_Direct_Download-BeatVault.exe_(Standalone)-1DB954?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows App" />
+    <img src="https://img.shields.io/badge/⬇️_Download-BeatVault--Setup.exe_(Installer)-1DB954?style=for-the-badge&logo=windows&logoColor=white" alt="Download Setup Installer" />
+  </a>
+  <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
+    <img src="https://img.shields.io/badge/📦_Portable-BeatVault.exe-3B82F6?style=for-the-badge&logo=windows&logoColor=white" alt="Download Portable App" />
   </a>
   <a href="https://github.com/aadityashekhar321/BeatVault/stargazers">
     <img src="https://img.shields.io/github/stars/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=E3A008" alt="GitHub Stars" />
-  </a>
-  <a href="https://github.com/aadityashekhar321/BeatVault/network/members">
-    <img src="https://img.shields.io/github/forks/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=10B981" alt="GitHub Forks" />
   </a>
 </p>
 
@@ -54,12 +54,15 @@
 
 ## ⚡ Quick Start
 
-### 🎯 Option A: Standalone Windows App (.exe) • *Zero Setup / No Python Needed*
-> **Recommended for all users.** Everything is pre-bundled into a single executable.
+### 🎯 Option A: Official Windows Packages • *Zero Setup / No Python Needed*
+> **Recommended for all users.** Both options include all dependencies and static FFmpeg pre-bundled.
 
-1. Go to **[GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases/latest)**.
-2. Download **`BeatVault.exe`** (~23 MB).
-3. **Double-click `BeatVault.exe`** to launch! No Python, FFmpeg, or batch files required.
+* **⭐ Setup Installer (Recommended):**
+  1. Download **`BeatVault-Setup.exe`** from **[GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases/latest)**.
+  2. Run the modern setup wizard: automatically creates a **Desktop Shortcut**, registers in **Start Menu**, and provides a clean Windows uninstaller.
+* **📦 Portable Executable:**
+  1. Download **`BeatVault.exe`** from **[GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases/latest)**.
+  2. Double-click to run anywhere directly without any installation.
 
 ---
 
@@ -84,14 +87,15 @@ run_beatvault.bat
 
 ---
 
-### 🔨 Option C: Compile Your Own Standalone .exe
+### 🔨 Option C: Build Standalone .exe & Setup Installer
 ```powershell
-# 1-Click automated compiler
-build_exe.bat
+# 1. Build Inno Setup Installer (Creates dist/BeatVault-Setup.exe)
+build_installer.bat
+# Or: python build_installer.py
 
-# Or via Python CLI
-python build_exe.py
-# -> Output generated in: dist/BeatVault.exe
+# 2. Build Portable Executable (Creates dist/BeatVault.exe)
+build_exe.bat
+# Or: python build_exe.py
 ```
 
 ---
@@ -318,9 +322,13 @@ BeatVault/
 ├── spotify_service.py         # Zero-config Spotify playlist & album scraper
 ├── tray_and_media_service.py  # Windows System Tray (pystray) & Global Media Keys (ctypes)
 ├── main.py                    # PyWebView desktop entrypoint + local browser server
+├── installer/
+│   └── BeatVault.iss          # Inno Setup modern wizard installer definition
 ├── BeatVault.spec             # PyInstaller standalone binary specification
-├── build_exe.py               # Standalone compilation automation engine
-├── build_exe.bat              # 1-Click .exe compiler for Windows
+├── build_installer.py         # Automated Inno Setup compiler runner
+├── build_installer.bat        # 1-Click Setup Installer builder
+├── build_exe.py               # Standalone portable compilation automation engine
+├── build_exe.bat              # 1-Click portable .exe compiler for Windows
 ├── requirements.txt           # Python package dependencies
 ├── run_beatvault.bat          # 1-Click launcher for BeatVault
 ├── LICENSE                    # MIT License

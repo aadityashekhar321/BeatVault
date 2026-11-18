@@ -1,4 +1,4 @@
-name: Build & Release BeatVault Windows Executable
+name: Build & Release BeatVault Windows Executable & Setup Installer
 
 on:
   push:
@@ -15,8 +15,8 @@ permissions:
   contents: write
 
 jobs:
-  build-windows-exe:
-    name: Build Standalone Windows .exe
+  build-windows-exe-and-installer:
+    name: Build Windows .exe & Inno Setup Installer
     runs-on: windows-latest
 
     steps:
@@ -29,13 +29,17 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install Dependencies
+      - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller pillow
 
-      - name: Build Standalone Executable
+      - name: Install Inno Setup Compiler
+        run: |
+          choco install innosetup --no-progress
+
+      - name: Build Standalone Executable (PyInstaller)
         run: |
           python build_exe.py
 
@@ -49,19 +53,37 @@ jobs:
             exit 1
           }
 
-      - name: Upload Artifact
+      - name: Build Windows Setup Installer (Inno Setup)
+        run: |
+          python build_installer.py
+
+      - name: Verify Setup Installer Exists
+        run: |
+          if (Test-Path "dist\BeatVault-Setup.exe") {
+            $size = (Get-Item "dist\BeatVault-Setup.exe").Length / 1MB
+            Write-Host "BeatVault-Setup.exe successfully created! Size: $($size.ToString('F2')) MB"
+          } else {
+            Write-Error "dist\BeatVault-Setup.exe not found!"
+            exit 1
+          }
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: BeatVault-Windows-x64
-          path: dist/BeatVault.exe
+          name: BeatVault-Windows-Binaries
+          path: |
+            dist/BeatVault-Setup.exe
+            dist/BeatVault.exe
           if-no-files-found: error
 
       - name: Publish to GitHub Release (Tag Triggered)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/BeatVault.exe
-          name: "BeatVault ${{ github.ref_name }} (Standalone Windows App)"
+          name: "BeatVault ${{ github.ref_name }} (Windows Setup & Portable)"
+          files: |
+            dist/BeatVault-Setup.exe
+            dist/BeatVault.exe
           generate_release_notes: true
           draft: false
           prerelease: false
@@ -71,8 +93,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.release_tag }}
-          name: "BeatVault ${{ github.event.inputs.release_tag }} (Standalone Windows App)"
-          files: dist/BeatVault.exe
+          name: "BeatVault ${{ github.event.inputs.release_tag }} (Windows Setup & Portable)"
+          files: |
+            dist/BeatVault-Setup.exe
+            dist/BeatVault.exe
           generate_release_notes: true
           draft: false
           prerelease: false
