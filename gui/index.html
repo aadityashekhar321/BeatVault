@@ -783,7 +783,7 @@
     <div class="header-actions">
       <div class="badge-feature">
         <span class="badge-dot"></span>
-        <span>⚡ 2x Parallel Downloads</span>
+        <span id="headerConcurrencyBadge">⚡ 2x Parallel Downloads</span>
       </div>
       <button class="btn btn-secondary" onclick="minimizeToTray()" title="Minimize to Windows System Tray">
         🪟 Minimize to Tray
@@ -1064,8 +1064,17 @@
         </div>
       </div>
 
-      <div style="background: rgba(29, 185, 84, 0.08); border: 1px solid rgba(29, 185, 84, 0.25); border-radius: 8px; padding: 10px 14px; font-size: 0.78rem; color: #6ee7b7;">
-        ⚡ <b>Smart Concurrency:</b> Configured to 2 parallel downloads with intelligent duration matching (+/- 12s) and 100% fallback guarantee.
+      <div class="field-group">
+        <label class="field-label">Parallel Download Concurrency</label>
+        <select id="downloadConcurrency" class="input-text">
+          <option value="1">1x (Conservative - Low CPU / Safe)</option>
+          <option value="2" selected>2x (Recommended - Balanced & Fast)</option>
+          <option value="3">3x (Turbo - High Speed Broadband)</option>
+          <option value="4">4x (Maximum - Ultra Fast Gigabit)</option>
+        </select>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">
+          Simultaneous audio downloads and MP3 conversions in parallel.
+        </div>
       </div>
 
       <button class="btn btn-primary" style="justify-content: center;" onclick="closeSettingsModal()">
@@ -1149,15 +1158,63 @@
     });
 
     async function initApp() {
-      if (!window.pywebview || !window.pywebview.api) return;
-      try {
-        const defaultFolder = await window.pywebview.api.get_default_folder();
-        if (defaultFolder) {
-          document.getElementById('destinationFolder').value = defaultFolder;
+      let savedSettings = null;
+
+      // 1. Try loading persisted settings from Backend settings.json
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.get_settings) {
+        try {
+          const res = await window.pywebview.api.get_settings();
+          if (res && res.success && res.settings) {
+            savedSettings = res.settings;
+          }
+        } catch (e) {
+          console.error('Backend get_settings error:', e);
         }
-      } catch (e) {
-        console.error('Default folder error:', e);
       }
+
+      // 2. Fallback to browser localStorage
+      if (!savedSettings) {
+        try {
+          const stored = localStorage.getItem('beatvault_settings');
+          if (stored) savedSettings = JSON.parse(stored);
+        } catch (e) {}
+      }
+
+      // 3. Apply saved settings to UI
+      if (savedSettings) {
+        if (savedSettings.concurrency) {
+          document.getElementById('downloadConcurrency').value = String(savedSettings.concurrency);
+          updateConcurrencyUI(savedSettings.concurrency);
+        }
+        if (savedSettings.filename_template) {
+          document.getElementById('filenameTemplate').value = savedSettings.filename_template;
+        }
+        if (savedSettings.audio_quality) {
+          document.getElementById('audioQuality').value = savedSettings.audio_quality;
+        }
+        if (savedSettings.embed_lyrics !== undefined) {
+          document.getElementById('embedLyricsCheckbox').checked = !!savedSettings.embed_lyrics;
+        }
+        if (savedSettings.auto_skip_duplicates !== undefined) {
+          document.getElementById('autoSkipCheckbox').checked = !!savedSettings.auto_skip_duplicates;
+        }
+        if (savedSettings.destination_folder) {
+          document.getElementById('destinationFolder').value = savedSettings.destination_folder;
+        }
+      } else {
+        // Fetch default folder from API if no saved folder
+        try {
+          if (window.pywebview && window.pywebview.api) {
+            const defaultFolder = await window.pywebview.api.get_default_folder();
+            if (defaultFolder) {
+              document.getElementById('destinationFolder').value = defaultFolder;
+            }
+          }
+        } catch (e) {
+          console.error('Default folder error:', e);
+        }
+      }
+
       setupAudioPlayerEvents();
     }
 
@@ -1471,16 +1528,18 @@
       const autoSkip = document.getElementById('autoSkipCheckbox').checked;
       const filenameTemplate = document.getElementById('filenameTemplate').value;
       const embedLyrics = document.getElementById('embedLyricsCheckbox').checked;
+      const concurrency = parseInt(document.getElementById('downloadConcurrency').value) || 2;
 
       try {
         const res = await window.pywebview.api.start_download(
           selectedTracks,
           folder,
-          currentPlaylist ? currentPlaylist.title : 'Spotify Playlist',
+          currentPlaylist ? currentPlaylist.title : 'Music Playlist',
           quality,
           filenameTemplate,
           embedLyrics,
-          true // save_lrc_file
+          true, // save_lrc_file
+          concurrency
         );
 
         if (!res.success) throw new Error(res.error || 'Failed to start download');
@@ -1493,7 +1552,8 @@
         showBanner(err.message || 'Could not start download');
         isDownloading = false;
         document.getElementById('btnStartDownload').classList.remove('btn-disabled');
-        document.getElementById('startBtnText').textContent = 'Start Download (2x Fast)';
+        const currentConcurrency = parseInt(document.getElementById('downloadConcurrency').value) || 2;
+        document.getElementById('startBtnText').textContent = `Start Download (${currentConcurrency}x Fast)`;
       }
     }
 
@@ -1518,7 +1578,8 @@
         isDownloading = false;
         document.getElementById('progressCurrentTrack').textContent = 'Downloads cancelled';
         document.getElementById('btnStartDownload').classList.remove('btn-disabled');
-        document.getElementById('startBtnText').textContent = 'Start Download (2x Fast)';
+        const currentConcurrency = parseInt(document.getElementById('downloadConcurrency').value) || 2;
+        document.getElementById('startBtnText').textContent = `Start Download (${currentConcurrency}x Fast)`;
       }
     }
 
@@ -1579,7 +1640,8 @@
         document.getElementById('progressFill').style.width = '100%';
         document.getElementById('progressCurrentTrack').textContent = 'All downloads completed!';
         document.getElementById('btnStartDownload').classList.remove('btn-disabled');
-        document.getElementById('startBtnText').textContent = 'Start Download (2x Fast)';
+        const currentConcurrency = parseInt(document.getElementById('downloadConcurrency').value) || 2;
+        document.getElementById('startBtnText').textContent = `Start Download (${currentConcurrency}x Fast)`;
         showBanner(`Finished! Completed: ${data.completed}, Skipped: ${data.skipped}, Failed: ${data.failed}.`, 'info');
       }
     };
@@ -1620,12 +1682,61 @@
       }
     }
 
-    // Settings Modal
+    // Settings Modal & Persistence
     function openSettingsModal() {
       document.getElementById('settingsModal').classList.add('active');
     }
-    function closeSettingsModal() {
+
+    async function closeSettingsModal() {
+      await saveSettings();
       document.getElementById('settingsModal').classList.remove('active');
+    }
+
+    async function saveSettings() {
+      const concurrency = parseInt(document.getElementById('downloadConcurrency').value) || 2;
+      const filenameTemplate = document.getElementById('filenameTemplate').value;
+      const audioQuality = document.getElementById('audioQuality').value;
+      const embedLyrics = document.getElementById('embedLyricsCheckbox').checked;
+      const autoSkip = document.getElementById('autoSkipCheckbox').checked;
+      const destFolder = document.getElementById('destinationFolder').value;
+
+      const settings = {
+        concurrency: concurrency,
+        filename_template: filenameTemplate,
+        audio_quality: audioQuality,
+        embed_lyrics: embedLyrics,
+        auto_skip_duplicates: autoSkip,
+        destination_folder: destFolder
+      };
+
+      // 1. Save to browser localStorage
+      try {
+        localStorage.setItem('beatvault_settings', JSON.stringify(settings));
+      } catch (e) {}
+
+      // 2. Persist to backend settings.json
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.save_settings) {
+        try {
+          await window.pywebview.api.save_settings(settings);
+        } catch (e) {
+          console.error('Failed to save settings to backend:', e);
+        }
+      }
+
+      // 3. Update UI dynamic badges
+      updateConcurrencyUI(concurrency);
+      showBanner(`Settings saved: ${concurrency}x Parallel • ${audioQuality} kbps • Custom template applied!`, 'info');
+    }
+
+    function updateConcurrencyUI(concurrency) {
+      const badge = document.getElementById('headerConcurrencyBadge');
+      if (badge) {
+        badge.textContent = `⚡ ${concurrency}x Parallel Downloads`;
+      }
+      const startBtnText = document.getElementById('startBtnText');
+      if (startBtnText && !isDownloading) {
+        startBtnText.textContent = `Start Download (${concurrency}x Fast)`;
+      }
     }
 
     let currentPlayback = null; // { type: 'preview'|'track', index: number, title, artist, cover, src }

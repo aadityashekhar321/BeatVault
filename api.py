@@ -26,6 +26,49 @@ class AppAPI:
     def set_tray_service(self, tray_service):
         self.tray_service = tray_service
 
+    def _get_config_path(self) -> str:
+        """Returns standard path to persisted settings.json in %APPDATA%/BeatVault."""
+        app_data = os.getenv("APPDATA") or os.path.expanduser("~")
+        config_dir = os.path.join(app_data, "BeatVault")
+        os.makedirs(config_dir, exist_ok=True)
+        return os.path.join(config_dir, "settings.json")
+
+    def get_settings(self) -> Dict[str, Any]:
+        """Loads persisted user settings, falling back to defaults."""
+        default_folder = self.get_default_folder()
+        defaults = {
+            "concurrency": 2,
+            "audio_quality": "192",
+            "filename_template": "title_artist",
+            "embed_lyrics": True,
+            "destination_folder": default_folder,
+            "auto_skip_duplicates": False
+        }
+        config_file = self._get_config_path()
+        if os.path.exists(config_file):
+            try:
+                with open(config_file, "r", encoding="utf-8") as f:
+                    saved = json.load(f)
+                    defaults.update(saved)
+            except Exception as e:
+                logger.warning(f"Error reading settings.json: {e}")
+        return {"success": True, "settings": defaults}
+
+    def save_settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        """Saves user settings to persisted settings.json."""
+        config_file = self._get_config_path()
+        try:
+            current_res = self.get_settings()
+            current = current_res.get("settings", {})
+            if isinstance(settings, dict):
+                current.update(settings)
+            with open(config_file, "w", encoding="utf-8") as f:
+                json.dump(current, f, indent=2, ensure_ascii=False)
+            return {"success": True, "settings": current}
+        except Exception as e:
+            logger.error(f"Error saving settings: {e}")
+            return {"success": False, "error": str(e)}
+
     def get_default_folder(self) -> str:
         """Returns standard user Music directory, falling back to Downloads."""
         music_dir = os.path.join(os.path.expanduser("~"), "Music", "BeatVault Downloads")
@@ -192,10 +235,11 @@ class AppAPI:
         audio_quality: str = "192",
         filename_template: str = "title_artist",
         embed_lyrics: bool = True,
-        save_lrc_file: bool = True
+        save_lrc_file: bool = True,
+        concurrency: int = 2
     ) -> Dict[str, Any]:
         """
-        Starts the download queue worker with concurrency = 2 in a background thread.
+        Starts the download queue worker with configurable concurrency in a background thread.
         """
         if self.current_worker and self.current_worker.stats.get("is_active"):
             return {"success": False, "error": "A download session is already active"}
@@ -207,6 +251,12 @@ class AppAPI:
             return {"success": False, "error": "No tracks to download"}
 
         os.makedirs(destination_folder, exist_ok=True)
+
+        try:
+            concurrency_val = int(concurrency)
+        except (ValueError, TypeError):
+            concurrency_val = 2
+        concurrency_val = max(1, min(concurrency_val, 8))
 
         def on_progress(payload):
             self._send_event_to_frontend("download_progress", payload)
@@ -231,7 +281,7 @@ class AppAPI:
             filename_template=filename_template,
             embed_lyrics=embed_lyrics,
             save_lrc_file=save_lrc_file,
-            max_concurrency=2,  # Exactly 2 parallel downloads
+            max_concurrency=concurrency_val,
             on_progress=on_progress,
             on_track_complete=on_track_complete,
             on_duplicate_detected=on_duplicate_detected,

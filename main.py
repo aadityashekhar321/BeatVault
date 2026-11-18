@@ -183,11 +183,23 @@ def run_browser_mode(port=8080):
                         });
                         return await r.json();
                       },
-                      start_download: async (tracks, folder, title, quality, filename_template, embed_lyrics, save_lrc_file) => {
+                      start_download: async (tracks, folder, title, quality, filename_template, embed_lyrics, save_lrc_file, concurrency) => {
                         const r = await fetch('/api/start_download', {
                           method: 'POST',
                           headers: {'Content-Type': 'application/json'},
-                          body: JSON.stringify({tracks, folder, title, quality, filename_template, embed_lyrics, save_lrc_file})
+                          body: JSON.stringify({tracks, folder, title, quality, filename_template, embed_lyrics, save_lrc_file, concurrency})
+                        });
+                        return await r.json();
+                      },
+                      get_settings: async () => {
+                        const r = await fetch('/api/get_settings');
+                        return await r.json();
+                      },
+                      save_settings: async (settings) => {
+                        const r = await fetch('/api/save_settings', {
+                          method: 'POST',
+                          headers: {'Content-Type': 'application/json'},
+                          body: JSON.stringify({settings})
                         });
                         return await r.json();
                       },
@@ -247,6 +259,10 @@ def run_browser_mode(port=8080):
             elif parsed.path == "/api/get_default_folder":
                 folder = app_api.get_default_folder()
                 self._send_json({"folder": folder})
+
+            elif parsed.path == "/api/get_settings":
+                res = app_api.get_settings()
+                self._send_json(res)
 
             elif parsed.path == "/api/select_folder":
                 folder = app_api.select_folder()
@@ -315,8 +331,13 @@ def run_browser_mode(port=8080):
                     payload.get("quality", "192"),
                     payload.get("filename_template", "title_artist"),
                     payload.get("embed_lyrics", True),
-                    payload.get("save_lrc_file", True)
+                    payload.get("save_lrc_file", True),
+                    payload.get("concurrency", 2)
                 )
+                self._send_json(res)
+
+            elif parsed.path == "/api/save_settings":
+                res = app_api.save_settings(payload.get("settings", {}))
                 self._send_json(res)
 
             elif parsed.path == "/api/respond_duplicate":
