@@ -73,6 +73,17 @@ Downloads/
 *.swp
 *.swo
 
+# Temporary & Scratch files
+*.log
+*.tmp
+*.temp
+*.bak
+*~
+*.orig
+*.rej
+.mypy_cache/
+.ruff_cache/
+
 # OS generated files
 Thumbs.db
 ehthumbs.db
