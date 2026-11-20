@@ -42,7 +42,8 @@ class AppAPI:
             "filename_template": "title_artist",
             "embed_lyrics": True,
             "destination_folder": default_folder,
-            "auto_skip_duplicates": False
+            "auto_skip_duplicates": False,
+            "theme_accent": "green"
         }
         config_file = self._get_config_path()
         if os.path.exists(config_file):
@@ -191,6 +192,22 @@ class AppAPI:
             data_uri = f"data:audio/mp3;base64,{encoded}"
             return {"success": True, "data_url": data_uri}
         except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_lyrics(self, title: str, artist: str = "", duration_sec: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Fetches synchronized and plain lyrics for the studio karaoke drawer.
+        """
+        if not title:
+            return {"success": False, "error": "Title is required"}
+        try:
+            from lyrics_service import LyricsService
+            lyrics = LyricsService.fetch_lyrics(title, artist, duration_sec)
+            if lyrics:
+                return {"success": True, "lyrics": lyrics}
+            return {"success": False, "error": "No lyrics found"}
+        except Exception as e:
+            logger.error(f"Error fetching lyrics: {e}")
             return {"success": False, "error": str(e)}
 
     def scan_duplicates(self, tracks: List[Dict[str, Any]], folder: str) -> Dict[str, Any]:
