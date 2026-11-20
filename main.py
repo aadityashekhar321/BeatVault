@@ -29,6 +29,7 @@ except Exception as e:
     logger.warning(f"Static FFmpeg path init warning: {e}")
 
 from api import AppAPI
+from version import __version__, APP_NAME, APP_TITLE
 from tray_and_media_service import SystemTrayService, GlobalMediaKeyService
 
 def run_desktop_app():
@@ -43,7 +44,7 @@ def run_desktop_app():
     
     logger.info("Creating desktop window...")
     window = webview.create_window(
-        title="BeatVault - Music & Lyrics Studio",
+        title=f"{APP_TITLE} v{__version__}",
         url=f"file:///{html_file.replace(os.sep, '/')}",
         js_api=app_api,
         width=1120,
@@ -53,6 +54,9 @@ def run_desktop_app():
     )
 
     app_api.set_window(window)
+
+    # Start non-blocking background update check
+    app_api.start_background_update_check(delay_seconds=2.5)
 
     # Initialize System Tray and Global Media Keys
     icon_path = os.path.join(current_dir, "assets", "icon.png")
@@ -230,6 +234,34 @@ def run_browser_mode(port=8080):
                       restore_from_tray: async () => {
                         const r = await fetch('/api/restore_from_tray');
                         return await r.json();
+                      },
+                      get_version_info: async () => {
+                        const r = await fetch('/api/get_version_info');
+                        return await r.json();
+                      },
+                      check_for_updates: async (manual = false) => {
+                        const r = await fetch('/api/check_for_updates', {
+                          method: 'POST',
+                          headers: {'Content-Type': 'application/json'},
+                          body: JSON.stringify({manual})
+                        });
+                        return await r.json();
+                      },
+                      open_release_page: async (url) => {
+                        const r = await fetch('/api/open_release_page', {
+                          method: 'POST',
+                          headers: {'Content-Type': 'application/json'},
+                          body: JSON.stringify({url})
+                        });
+                        return await r.json();
+                      },
+                      download_update_asset: async (download_url) => {
+                        const r = await fetch('/api/download_update_asset', {
+                          method: 'POST',
+                          headers: {'Content-Type': 'application/json'},
+                          body: JSON.stringify({download_url})
+                        });
+                        return await r.json();
                       }
                     }
                   };
@@ -293,6 +325,9 @@ def run_browser_mode(port=8080):
             elif parsed.path == "/api/restore_from_tray":
                 self._send_json(app_api.restore_from_tray())
 
+            elif parsed.path == "/api/get_version_info":
+                self._send_json(app_api.get_version_info())
+
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -347,6 +382,18 @@ def run_browser_mode(port=8080):
                 )
                 self._send_json(res)
 
+            elif parsed.path == "/api/check_for_updates":
+                res = app_api.check_for_updates(payload.get("manual", False))
+                self._send_json(res)
+
+            elif parsed.path == "/api/open_release_page":
+                res = app_api.open_release_page(payload.get("url", None))
+                self._send_json(res)
+
+            elif parsed.path == "/api/download_update_asset":
+                res = app_api.download_update_asset(payload.get("download_url", ""))
+                self._send_json(res)
+
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -366,12 +413,13 @@ def run_browser_mode(port=8080):
         event_queue.put({"event": event_name, "data": data})
 
     app_api._send_event_to_frontend = browser_event_sender
+    app_api.start_background_update_check(delay_seconds=2.5)
 
     server = HTTPServer(("127.0.0.1", port), RequestHandler)
     url = f"http://127.0.0.1:{port}"
     print(f"\n==========================================")
-    print(f"  BeatVault Music Studio running at:")
-    print(f"  {url}")
+    print(f"  {APP_TITLE} v{__version__} (Browser Mode)")
+    print(f"  Running at: {url}")
     print(f"==========================================\n")
     webbrowser.open(url)
     try:

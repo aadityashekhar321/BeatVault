@@ -33,6 +33,8 @@ hiddenimports = [
     'PIL.Image',
     'platform_service',
     'tray_and_media_service',
+    'version',
+    'updater',
 ]
 
 a = Analysis(

@@ -998,6 +998,114 @@
     .toast-info { background: rgba(56, 189, 248, 0.16); border: 1px solid rgba(56, 189, 248, 0.25); color: var(--accent-blue); }
     .toast.removing { animation: toastOut 0.3s ease forwards; }
 
+    /* Auto-Updater Toast & Banner Styles */
+    .toast-update {
+      background: linear-gradient(135deg, rgba(29, 185, 84, 0.22), rgba(0, 210, 255, 0.16));
+      border: 1px solid rgba(29, 185, 84, 0.45);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 18px;
+    }
+    .toast-update-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .toast-update-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .btn-update-view {
+      background: var(--accent-green);
+      color: #000;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-update-view:hover {
+      background: #1ed760;
+      transform: translateY(-1px);
+    }
+    .btn-update-dismiss {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-update-dismiss:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+    .update-banner {
+      background: linear-gradient(90deg, rgba(29, 185, 84, 0.2), rgba(0, 210, 255, 0.14));
+      border-bottom: 1px solid rgba(29, 185, 84, 0.35);
+      padding: 9px 24px;
+      animation: fadeSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      z-index: 100;
+    }
+    .update-banner-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .update-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .update-banner-badge {
+      background: var(--accent-green);
+      color: #000;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .update-banner-text {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .update-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .spin {
+      animation: spin 0.8s linear infinite !important;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
     /* ══════════════════════════════════════════════════════════════
        EMPTY STATES
        ══════════════════════════════════════════════════════════════ */
@@ -1116,6 +1224,25 @@
       </button>
     </div>
   </header>
+
+  <!-- ═══════════ AUTO-UPDATER RELEASE BANNER ═══════════ -->
+  <div id="updateBanner" class="update-banner" style="display:none;">
+    <div class="update-banner-inner">
+      <div class="update-banner-left">
+        <span class="update-banner-badge">Update</span>
+        <span id="updateBannerText" class="update-banner-text">🎉 BeatVault v1.1.0 is available!</span>
+      </div>
+      <div class="update-banner-actions">
+        <button class="btn-update-view" id="btnUpdateView" onclick="App.updates.openRelease()" title="View on GitHub">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          View Release
+        </button>
+        <button class="btn-update-dismiss" onclick="App.updates.dismissBanner()" title="Dismiss update notification">
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══════════ TAB NAVIGATION ═══════════ -->
   <nav class="tab-nav">
@@ -1528,6 +1655,26 @@
         </div>
       </div>
 
+      <!-- App Version & Updates -->
+      <div class="modal-section">
+        <div class="modal-section-title">Application &amp; Updates</div>
+        <div class="setting-row" style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:0.88rem;font-weight:600;color:#fff;display:flex;align-items:center;gap:8px;">
+              BeatVault
+              <span id="settingsVersionBadge" class="badge" style="background:rgba(29, 185, 84, 0.2);color:#4ade80;border:1px solid rgba(29, 185, 84, 0.4);padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:700;">v1.0.0</span>
+            </div>
+            <div id="settingsUpdateStatus" style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">
+              Synchronized with GitHub Releases
+            </div>
+          </div>
+          <button id="btnCheckUpdates" class="btn btn-secondary" style="font-size:0.8rem;padding:6px 14px;height:34px;" onclick="App.updates.checkForUpdates(true)">
+            <svg id="updateCheckIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.5s ease;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span id="updateCheckText">Check for Updates</span>
+          </button>
+        </div>
+      </div>
+
       <button class="btn btn-primary" style="justify-content:center;margin-top:6px;" onclick="App.ui.closeSettingsModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
         Save &amp; Apply Settings
@@ -1642,6 +1789,7 @@
       init() {
         this.cacheElements();
         this.settings.load();
+        this.updates.init();
         this.player.init();
         this.visualizer.init();
         this.lyrics.init();
@@ -1653,6 +1801,13 @@
         this.elements = {
           audioPlayer: document.getElementById('audioPlayer'),
           toastContainer: document.getElementById('toastContainer'),
+          updateBanner: document.getElementById('updateBanner'),
+          updateBannerText: document.getElementById('updateBannerText'),
+          settingsVersionBadge: document.getElementById('settingsVersionBadge'),
+          settingsUpdateStatus: document.getElementById('settingsUpdateStatus'),
+          btnCheckUpdates: document.getElementById('btnCheckUpdates'),
+          updateCheckIcon: document.getElementById('updateCheckIcon'),
+          updateCheckText: document.getElementById('updateCheckText'),
           playlistUrl: document.getElementById('playlistUrl'),
           destinationFolder: document.getElementById('destinationFolder'),
           folderStatus: document.getElementById('folderStatus'),
@@ -1721,7 +1876,10 @@
         if (window.pywebview && window.pywebview.api && window.pywebview.api.get_settings) {
           try {
             const res = await window.pywebview.api.get_settings();
-            if (res && res.success && res.settings) saved = res.settings;
+            if (res && res.success) {
+              if (res.settings) saved = res.settings;
+              if (res.app_version && App.updates) App.updates.setVersion(res.app_version);
+            }
           } catch (e) { console.error('get_settings error:', e); }
         }
         if (!saved) {
@@ -1797,6 +1955,148 @@
     };
 
     /* ══════════════════════════════════════════════════════════════
+       IN-APP AUTO-UPDATER & RELEASE SYNC MODULE
+       ══════════════════════════════════════════════════════════════ */
+    App.updates = {
+      state: {
+        currentVersion: '1.0.0',
+        latestVersion: null,
+        releaseUrl: 'https://github.com/aadityashekhar321/BeatVault/releases',
+        isChecking: false,
+        updateAvailable: false
+      },
+
+      async init() {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.get_version_info) {
+          try {
+            const res = await window.pywebview.api.get_version_info();
+            if (res && res.success && res.info) {
+              this.state.currentVersion = res.info.version || '1.0.0';
+              if (res.info.releases_url) this.state.releaseUrl = res.info.releases_url;
+            }
+          } catch (e) {}
+        }
+        this.updateVersionUI();
+      },
+
+      setVersion(ver) {
+        if (ver) {
+          this.state.currentVersion = ver;
+          this.updateVersionUI();
+        }
+      },
+
+      updateVersionUI() {
+        const badge = document.getElementById('settingsVersionBadge');
+        if (badge) badge.textContent = `v${this.state.currentVersion}`;
+      },
+
+      async checkForUpdates(manual = false) {
+        if (this.state.isChecking) return;
+        this.state.isChecking = true;
+
+        const btn = document.getElementById('btnCheckUpdates');
+        const icon = document.getElementById('updateCheckIcon');
+        const txt = document.getElementById('updateCheckText');
+        const status = document.getElementById('settingsUpdateStatus');
+
+        if (btn) btn.disabled = true;
+        if (icon) icon.classList.add('spin');
+        if (txt) txt.textContent = 'Checking...';
+        if (status) status.textContent = 'Connecting to GitHub Releases...';
+
+        try {
+          let res = null;
+          if (window.pywebview && window.pywebview.api && window.pywebview.api.check_for_updates) {
+            res = await window.pywebview.api.check_for_updates(manual);
+          }
+
+          if (res && res.success) {
+            if (res.current_version) {
+              this.state.currentVersion = res.current_version;
+              this.updateVersionUI();
+            }
+
+            if (res.update_available) {
+              this.handleUpdateAvailable(res);
+              if (status) {
+                status.innerHTML = `<span style="color:#4ade80;font-weight:600;">Update found: v${App.utils.escapeHtml(res.latest_version)}!</span>`;
+              }
+            } else {
+              this.state.updateAvailable = false;
+              if (status) {
+                status.textContent = `You're running the latest release (v${this.state.currentVersion})`;
+              }
+              if (manual) {
+                App.ui.showToast(`You're running the latest version of BeatVault (v${this.state.currentVersion}) 🚀`, 'success');
+              }
+            }
+          } else {
+            const msg = (res && res.status_message) ? res.status_message : 'Unable to check for updates';
+            if (status) status.textContent = msg;
+            if (manual) App.ui.showToast(msg, 'error');
+          }
+        } catch (e) {
+          console.error('Update check error:', e);
+          if (status) status.textContent = 'Network error checking for updates';
+          if (manual) App.ui.showToast('Could not connect to GitHub. Check internet connection.', 'error');
+        } finally {
+          this.state.isChecking = false;
+          if (btn) btn.disabled = false;
+          if (icon) icon.classList.remove('spin');
+          if (txt) txt.textContent = 'Check for Updates';
+        }
+      },
+
+      handleUpdateAvailable(data) {
+        this.state.updateAvailable = true;
+        this.state.latestVersion = data.latest_version;
+        this.state.releaseUrl = data.html_url || data.download_url || this.state.releaseUrl;
+
+        // 1. Show Top Banner
+        const banner = document.getElementById('updateBanner');
+        const text = document.getElementById('updateBannerText');
+        if (banner && text) {
+          text.textContent = `🎉 BeatVault v${data.latest_version} is available!`;
+          banner.style.display = 'block';
+        }
+
+        // 2. Show interactive Toast
+        App.ui.showUpdateToast(data);
+
+        // 3. Update Settings Modal indicator
+        const status = document.getElementById('settingsUpdateStatus');
+        if (status) {
+          status.innerHTML = `<span style="color:#4ade80;font-weight:600;">🎉 v${App.utils.escapeHtml(data.latest_version)} available!</span> <a href="#" onclick="App.updates.openRelease(); return false;" style="color:var(--accent-green);margin-left:6px;text-decoration:underline;">View</a>`;
+        }
+      },
+
+      dismissBanner() {
+        const banner = document.getElementById('updateBanner');
+        if (banner) {
+          banner.style.animation = 'fadeSlideUp 0.25s ease forwards';
+          setTimeout(() => {
+            banner.style.display = 'none';
+            banner.style.animation = '';
+          }, 240);
+        }
+      },
+
+      async openRelease() {
+        const url = this.state.releaseUrl || 'https://github.com/aadityashekhar321/BeatVault/releases';
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.open_release_page) {
+          try {
+            await window.pywebview.api.open_release_page(url);
+            return;
+          } catch (e) {
+            console.error('open_release_page error:', e);
+          }
+        }
+        window.open(url, '_blank');
+      }
+    };
+
+    /* ══════════════════════════════════════════════════════════════
        UI & PLAYLIST INTERACTION MODULE
        ══════════════════════════════════════════════════════════════ */
     App.ui = {
@@ -1816,6 +2116,36 @@
           toast.classList.add('removing');
           setTimeout(() => toast.remove(), 300);
         }, 4500);
+      },
+
+      showUpdateToast(data) {
+        const container = App.elements.toastContainer;
+        if (!container) return;
+
+        // Prevent duplicate toasts
+        if (document.getElementById('toastUpdateNotification')) return;
+
+        const toast = document.createElement('div');
+        toast.id = 'toastUpdateNotification';
+        toast.className = 'toast toast-update';
+
+        const versionStr = App.utils.escapeHtml(data.latest_version || 'new');
+        toast.innerHTML = `
+          <div class="toast-update-header">
+            <span>🎉</span>
+            <span style="font-weight:600;">BeatVault v${versionStr} is available!</span>
+          </div>
+          <div class="toast-update-actions">
+            <button class="btn-update-view" onclick="App.updates.openRelease(); document.getElementById('toastUpdateNotification')?.remove();">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              View Release
+            </button>
+            <button class="btn-update-dismiss" onclick="document.getElementById('toastUpdateNotification')?.remove();">
+              Dismiss
+            </button>
+          </div>
+        `;
+        container.appendChild(toast);
       },
 
       switchTab(tab) {
@@ -3017,6 +3347,9 @@
         App.ui.showToast(`Batch completed! ${data.completed} saved, ${data.skipped} skipped, ${data.failed} failed.`, 'success');
         App.ui.updateFilterCounts();
       }
+      else if (eventName === 'update_available') {
+        if (App.updates) App.updates.handleUpdateAvailable(data);
+      }
     };
 
     /* ══════════════════════════════════════════════════════════════
@@ -3130,7 +3463,9 @@
     window.minimizeToTray = () => App.ui.minimizeToTray();
     window.showToast = (msg, type) => App.ui.showToast(msg, type);
     window.showBanner = (msg, type) => App.ui.showToast(msg, type === 'info' ? 'success' : type);
-    window.dismissBanner = () => {};
+    window.dismissBanner = () => { if (App.updates) App.updates.dismissBanner(); };
+    window.checkForUpdates = (manual) => { if (App.updates) App.updates.checkForUpdates(manual); };
+    window.openRelease = () => { if (App.updates) App.updates.openRelease(); };
   </script>
 </body>
 </html>

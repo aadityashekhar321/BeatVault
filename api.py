@@ -9,16 +9,20 @@ from typing import Dict, Any, List, Optional
 from platform_service import PlatformService
 from duplicate_detector import DuplicateDetector
 from downloader import DownloadWorker
+from version import __version__, get_version_info
+from updater import UpdateChecker, open_release_page, download_release_asset
 
 logger = logging.getLogger("api")
 
 class AppAPI:
     def __init__(self, window=None):
         self.window = window
+        self.version = __version__
         self.platform_service = PlatformService()
         self.current_worker: Optional[DownloadWorker] = None
         self.worker_thread: Optional[threading.Thread] = None
         self.tray_service = None
+        self.update_checker = UpdateChecker(current_version=__version__)
 
     def set_window(self, window):
         self.window = window
@@ -53,7 +57,7 @@ class AppAPI:
                     defaults.update(saved)
             except Exception as e:
                 logger.warning(f"Error reading settings.json: {e}")
-        return {"success": True, "settings": defaults}
+        return {"success": True, "settings": defaults, "app_version": self.version}
 
     def save_settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
         """Saves user settings to persisted settings.json."""
@@ -385,3 +389,63 @@ class AppAPI:
                 self.window.evaluate_js(js_code)
             except Exception as e:
                 logger.debug(f"Failed to evaluate js event {event_name}: {e}")
+
+    def get_version_info(self) -> Dict[str, Any]:
+        """Returns version and repository metadata."""
+        return {"success": True, "info": get_version_info()}
+
+    def check_for_updates(self, manual: bool = False) -> Dict[str, Any]:
+        """Checks GitHub for application updates (non-blocking safe)."""
+        try:
+            return self.update_checker.check_for_updates(manual=manual)
+        except Exception as e:
+            logger.error(f"Error checking for updates: {e}")
+            return {
+                "success": False,
+                "update_available": False,
+                "current_version": self.version,
+                "latest_version": self.version,
+                "error": str(e),
+                "status_message": f"Error checking updates: {e}",
+            }
+
+    def open_release_page(self, url: Optional[str] = None) -> Dict[str, Any]:
+        """Opens the GitHub release page or download URL in default browser."""
+        try:
+            success = open_release_page(url)
+            return {"success": success}
+        except Exception as e:
+            logger.error(f"Error opening release page: {e}")
+            return {"success": False, "error": str(e)}
+
+    def download_update_asset(self, download_url: str) -> Dict[str, Any]:
+        """Downloads the installer asset directly to user Downloads folder."""
+        def progress_cb(current, total):
+            pct = int((current / total) * 100) if total > 0 else 0
+            self._send_event_to_frontend("update_download_progress", {
+                "current": current,
+                "total": total,
+                "percent": pct,
+            })
+
+        try:
+            res = download_release_asset(download_url, progress_callback=progress_cb)
+            if res.get("success"):
+                self._send_event_to_frontend("update_download_complete", res)
+            return res
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def start_background_update_check(self, delay_seconds: float = 2.5):
+        """Runs background check at startup; dispatches 'update_available' if newer release exists."""
+        def on_checked(result: Dict[str, Any]):
+            if result.get("update_available"):
+                logger.info(f"Update available: {result.get('latest_version')}. Sending to UI...")
+                self._send_event_to_frontend("update_available", result)
+
+        return self.update_checker.check_for_updates_async(
+            callback=on_checked,
+            manual=False,
+            delay_seconds=delay_seconds,
+        )
+
