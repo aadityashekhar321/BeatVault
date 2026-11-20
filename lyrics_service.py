@@ -1,7 +1,7 @@
 import os
 import re
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
 import requests
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, USLT, TXXX
@@ -19,6 +19,54 @@ class LyricsService:
         # Remove (feat. ...), [official audio], etc.
         cleaned = re.sub(r"[\(\[\{].*?[\)\]\}]", "", text)
         return cleaned.strip()
+
+    @staticmethod
+    def parse_timecode(tag: str) -> Optional[float]:
+        """
+        Parses [mm:ss.xx] or [mm:ss.xxx] or mm:ss.xx into total seconds as a float.
+        Returns None if format does not match.
+        """
+        if not tag or not isinstance(tag, str):
+            return None
+        match = re.search(r"\[?(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]?", tag)
+        if not match:
+            return None
+        mins = int(match.group(1))
+        secs = int(match.group(2))
+        ms_str = match.group(3) or "0"
+        ms_val = int(ms_str.ljust(3, "0")[:3])
+        return round(mins * 60 + secs + (ms_val / 1000.0), 3)
+
+    @classmethod
+    def parse_lrc(cls, lrc_text: str) -> List[Dict[str, Any]]:
+        """
+        Parses LRC synced lyrics text into structured entries:
+        [{'time': float, 'text': str}, ...] sorted by time.
+        Handles multiple tags per line, e.g. [00:10.50][00:20.50]Repeat verse
+        and skips metadata headers like [ar:...], [ti:...].
+        """
+        if not lrc_text or not isinstance(lrc_text, str):
+            return []
+
+        tag_regex = re.compile(r"\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]")
+        lines = lrc_text.splitlines()
+        entries = []
+
+        for line in lines:
+            matches = list(tag_regex.finditer(line))
+            if not matches:
+                continue
+            text = tag_regex.sub("", line).strip()
+            for m in matches:
+                mins = int(m.group(1))
+                secs = int(m.group(2))
+                ms_str = m.group(3) or "0"
+                ms_val = int(ms_str.ljust(3, "0")[:3])
+                t = mins * 60 + secs + (ms_val / 1000.0)
+                entries.append({"time": round(t, 3), "text": text})
+
+        entries.sort(key=lambda x: x["time"])
+        return entries
 
     @classmethod
     def fetch_lyrics(cls, title: str, artist: str, duration_sec: Optional[int] = None) -> Optional[Dict[str, str]]:

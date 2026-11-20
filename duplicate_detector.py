@@ -184,8 +184,8 @@ class DuplicateDetector:
         Guarantees existing files are never overwritten without explicit permission.
         Returns (full_path, basename).
         """
-        clean_artist = self.sanitize_filename(artist)
-        clean_title = self.sanitize_filename(title)
+        clean_artist = self.sanitize_filename(artist) if artist and str(artist).strip() else ""
+        clean_title = self.sanitize_filename(title) or "untitled"
 
         if template == "artist_title" and clean_artist:
             base_name = f"{clean_artist} - {clean_title}"
