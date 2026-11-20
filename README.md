@@ -1,391 +1,177 @@
-<div align="center">
-
-<img src="assets/icon.png" width="120" height="120" alt="BeatVault Logo" style="border-radius: 50%; box-shadow: 0 8px 24px rgba(29, 185, 84, 0.3);" />
-
-```
-██████╗ ███████╗ █████╗ ████████╗██╗   ██╗ █████╗ ██╗   ██╗██╗  ████████╗
-██╔══██╗██╔════╝██╔══██╗╚══██╔══╝██║   ██║██╔══██╗██║   ██║██║  ╚══██╔══╝
-██████╔╝█████╗  ███████║   ██║   ██║   ██║███████║██║   ██║██║     ██║   
-██╔══██╗██╔══╝  ██╔══██║   ██║   ╚██╗ ██╔╝██╔══██║██║   ██║██║     ██║   
-██████╔╝███████╗██║  ██║   ██║    ╚████╔╝ ██║  ██║╚██████╔╝███████╗██║   
-╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝     ╚═══╝  ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝   
-```
-
-# 🎵 BEATVAULT
-### *The Studio-Grade Music Archival & Synchronized Lyrics Workstation*
+# <p align="center"><img src="assets/icon_transparent.png" width="120" height="120" alt="BeatVault Logo" /><br>BeatVault</p>
 
 <p align="center">
-  <b>High-Speed 2x Parallel Ingestion • Multi-Platform (Spotify • YouTube • Apple Music • SoundCloud) • System Tray & Global Media Keys</b>
+  <b>Studio-Grade Multi-Platform Music Archival, Real-Time Synced Lyrics & Audio Workstation</b><br>
+  <i>Lightning-fast, lossless-ready, and beautifully designed for Windows 10 & 11</i>
 </p>
 
 <p align="center">
-  <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
-    <img src="https://img.shields.io/badge/⬇️_Download-BeatVault--Setup.exe_(Installer)-1DB954?style=for-the-badge&logo=windows&logoColor=white" alt="Download Setup Installer" />
-  </a>
-  <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
-    <img src="https://img.shields.io/badge/📦_Portable-BeatVault.exe-3B82F6?style=for-the-badge&logo=windows&logoColor=white" alt="Download Portable App" />
-  </a>
-  <a href="https://github.com/aadityashekhar321/BeatVault/stargazers">
-    <img src="https://img.shields.io/github/stars/aadityashekhar321/BeatVault?style=for-the-badge&logo=github&color=E3A008" alt="GitHub Stars" />
-  </a>
+  <img src="https://img.shields.io/badge/Version-v1.0.0-1db954?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square" alt="Python" />
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078d4?style=flat-square" alt="Platform" />
+  <img src="https://img.shields.io/badge/Tests-108%20Passed%20(100%25)-4ade80?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Installer-Inno%20Setup%20Wizard-brightgreen?style=flat-square" alt="Installer" />
+  <img src="https://img.shields.io/badge/License-MIT-gray?style=flat-square" alt="License" />
 </p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows" />
-  <img src="https://img.shields.io/badge/Multi--Platform-Spotify%20•%20YouTube%20•%20Apple%20Music%20•%20SoundCloud-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="Platforms" />
-  <img src="https://img.shields.io/badge/Tray%20%26%20Hotkeys-Global%20Media%20Keys-FF5722?style=flat-square&logo=windows&logoColor=white" alt="Tray and Keys" />
-  <img src="https://img.shields.io/badge/Audio%20Engine-yt--dlp%20%2B%20FFmpeg-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="Engine" />
-  <img src="https://img.shields.io/badge/Lyrics-LRCLIB%20Synced%20.LRC-8A2BE2?style=flat-square&logo=genius&logoColor=white" alt="Lyrics" />
-  <img src="https://img.shields.io/badge/UI-Fluent%20Dark%20WebView2-1DB954?style=flat-square&logo=spotify&logoColor=white" alt="UI" />
-  <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT License" />
-</p>
-
-<br/>
-
-**BeatVault** is an all-in-one studio workstation that imports playlists, albums, and tracks across **Spotify, YouTube / YouTube Music, Apple Music, and SoundCloud**, transcoding them into pristine, metadata-complete MP3 files. Engineered with **2x parallel multi-threaded downloading**, **authentic per-track album covers**, **synchronized karaoke (.lrc) companion files**, **smart acoustic duration matching**, **non-destructive duplicate protection**, **Windows System Tray background execution**, and **native Global Media Keys support**.
-
-<br/>
-
-[⚡ Quick Start](#-quick-start) • [✨ Feature Cards](#-core-capabilities) • [📊 Comparison](#-comparison-matrix) • [🏗️ Architecture](#️-system-architecture) • [🎧 Audio Player](#-in-app-audio-player--controls) • [⚙️ Settings](#️-settings--customization) • [❓ FAQ](#-faq)
-
-</div>
 
 ---
 
-## ⚡ Quick Start
+## 🌟 Overview
 
-### 🎯 Option A: Official Windows Packages • *Zero Setup / No Python Needed*
-> **Recommended for all users.** Both options include all dependencies and static FFmpeg pre-bundled.
+**BeatVault** is an all-in-one studio workstation that allows you to effortlessly archive high-bitrate audio and time-synchronized lyrics from **Spotify**, **YouTube**, **Apple Music**, and **SoundCloud**. 
 
-* **⭐ Setup Installer (Recommended):**
-  1. Download **`BeatVault-Setup.exe`** from **[GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases/latest)**.
-  2. Run the modern setup wizard: automatically creates a **Desktop Shortcut**, registers in **Start Menu**, and provides a clean Windows uninstaller.
-* **📦 Portable Executable:**
-  1. Download **`BeatVault.exe`** from **[GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases/latest)**.
-  2. Double-click to run anywhere directly without any installation.
+Engineered with an **Apple Music & Spotify Studio inspired GUI**, multi-threaded parallel download pipelines, an in-app **60 FPS audio visualizer**, **line-by-line glowing karaoke lyrics**, an automated **GitHub Release auto-updater**, and a rock-solid suite of **108 automated quality tests**.
 
 ---
 
-### 💻 Option B: Run From Source (Developers)
-```powershell
-# 1. Clone the repository
+## ✨ Key Features
+
+### 🎨 1. Studio-Grade GUI v2.0
+* **Glassmorphism & Depth:** Multi-layer cards with 28px backdrop blur, specular edge reflections, and a 35-second animated ambient gradient mesh background with fractal noise.
+* **4 Switchable Studio Theme Accents:**
+  * 🟢 **Cyber Green** *(Default Spotify signature neon)*
+  * 🔵 **Electric Cyan** *(Deep ocean cyber-tech)*
+  * 🟣 **Neon Purple** *(Apple Music synthwave)*
+  * 🟠 **Sunset Orange** *(Warm acoustic studio)*
+  * Persists across sessions in `%APPDATA%\BeatVault\settings.json` and `localStorage`.
+* **Crisp Vector Iconography:** Replaced low-DPI emojis with high-definition inline SVGs (Lucide icon set).
+* **Floating Toast Notification System:** Modern slide-in alerts replacing clunky banners.
+
+### 🎤 2. Real-Time Synced Karaoke Lyrics
+* **Apple Music Style Glowing Lyrics:** Active lyrics illuminate with luminescence and smoothly scroll to the viewport center in real-time as the song plays.
+* **Interactive Tap-to-Seek:** Click any lyric line to jump playback directly to that timestamp.
+* **Dynamic Ambient Art Wash:** Blurred album art background creates a color wash behind the lyrics.
+* **Automatic `.lrc` Export & ID3 Embedding:** Saves timestamped `.lrc` companion files alongside MP3s and embeds synced tags directly into audio files for phones and portable players.
+
+### 🌊 3. Dynamic 60 FPS HTML5 Canvas Sound Visualizer
+* **Dual-Mode Canvas Engine:** Connects to Web Audio API (`AudioContext` / FFT frequency analyzer) with an automated procedural studio harmonic fallback.
+* **3 Interactive Visualizer Styles (Click to Cycle):**
+  1. *Studio Frequency Bars* (Smooth gradient bars)
+  2. *Neon Sine Waves* (Oscillating smooth wave)
+  3. *Mirror Spectrum* (Dual symmetric waveform)
+
+### 🌐 4. Universal Multi-Platform Importer
+* **Spotify:** Playlists, Albums, and Individual Tracks via Spotify Web API.
+* **YouTube:** Full Playlists, Videos, Shorts, and YouTube Music links.
+* **Apple Music:** Playlists, Albums, and Tracks via structured JSON-LD scraping.
+* **SoundCloud:** Public Tracks and Sets with automatic metadata extraction.
+* **Direct Search:** Search any song or artist in the search tab with 1-click preview and download.
+
+### ⚡ 5. Configurable Parallel Download Concurrency
+* **Parallel Pipelines:** Choose between **1x (Conservative)**, **2x (Recommended)**, **3x (Turbo)**, or **4x (Maximum)** concurrency in the Settings modal.
+* **Live Telemetry per Track:** Individual track rows feature mini real-time progress bars, download speed indicators (e.g. `2.8 MB/s`), and estimated time remaining (ETA).
+
+### 🔄 6. In-App 1-Click Auto-Updater
+* **GitHub Release Sync:** Non-blocking background check against the GitHub Releases API on startup.
+* **Settings Modal Trigger:** Manual "Check for Updates" button with version display (`v1.0.0`).
+* **Slide-Down Announcement Banner:** Instant notification with `[View Release]` link when new versions are published.
+
+### 🛡️ 7. Intelligent Duplicate Prevention
+* **Multi-Layer Detection:** Levenshtein fuzzy string matching (confidence >= 0.83), audio duration matching, and ID3 metadata verification.
+* **1-Click Deselect Duplicates:** Easily untick all detected existing songs in a playlist with one click so only new songs are downloaded.
+* **Duplicate Decision Dialog:** Modal dialog with `Skip`, `Download Again`, or `Apply to All` options.
+
+### 🪟 8. System Tray & Global Media Keys
+* **Background Workstation:** Minimize BeatVault to the Windows System Tray to keep downloads running in the background.
+* **Hardware Media Keys:** Control Play/Pause, Next Track, and Previous Track using your keyboard multimedia keys even when the app is minimized.
+
+### ⌨️ 9. Keyboard Shortcuts
+| Shortcut | Action |
+| :--- | :--- |
+| `Space` | Play / Pause Audio |
+| `Shift + →` | Next Track |
+| `Shift + ←` | Previous Track |
+| `↑` / `↓` | Volume Up / Down (5% steps) |
+| `Ctrl + ,` | Open Settings Modal |
+| `?` | Toggle Keyboard Shortcuts Overlay |
+| `Esc` | Close Active Modal / Overlay |
+
+---
+
+## 🧪 108 Automated Tests & Quality Shield
+
+BeatVault is built with high reliability and zero regressions. It includes an automated test suite with **108 tests** and 100% pass rate:
+
+```bash
+python run_tests.py
+```
+
+```text
+===========================================================================
+          BEATVAULT AUTOMATED TEST SUITE & QUALITY SHIELD
+===========================================================================
+ Total Tests Run : 108
+ Passed          : 108 (100.0%)
+ Failed          : 0
+ Total Duration  : 0.66 seconds
+ [STATUS] ALL TESTS PASSED - CODE QUALITY SHIELD VERIFIED! [OK]
+===========================================================================
+```
+
+---
+
+## 🚀 Installation & Getting Started
+
+### Option 1: 1-Click Wizard Installer (Recommended)
+Download and run **`BeatVault-Setup.exe`** from [GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases):
+* Standard Windows setup wizard (Welcome, Destination, Desktop icon).
+* Automatically registers in Windows Start Menu and Control Panel / Settings (Installed Apps).
+* Non-admin friendly (`privileges: lowest` with optional elevation).
+
+### Option 2: Portable Executable
+Download **`BeatVault.exe`** from [GitHub Releases](https://github.com/aadityashekhar321/BeatVault/releases) and double-click to run without installing.
+
+### Option 3: Run from Source
+```bash
+# 1. Clone repository
 git clone https://github.com/aadityashekhar321/BeatVault.git
 cd BeatVault
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Launch Desktop GUI (Fluent Dark WebView2)
+# 3. Launch BeatVault
 python main.py
-
-# Or 1-Click Batch Launcher
-run_beatvault.bat
-```
-
-> [!NOTE]
-> Static **FFmpeg** and **FFprobe** binaries are automatically provisioned in-memory via `static-ffmpeg`. Zero manual PATH manipulation required.
-
----
-
-### 🔨 Option C: Build Standalone .exe & Setup Installer
-```powershell
-# 1. Build Inno Setup Installer (Creates dist/BeatVault-Setup.exe)
-build_installer.bat
-# Or: python build_installer.py
-
-# 2. Build Portable Executable (Creates dist/BeatVault.exe)
-build_exe.bat
-# Or: python build_exe.py
 ```
 
 ---
 
-## 📊 Comparison Matrix
+## 🏗️ Project Architecture
 
-| Capability | Generic Downloaders / Bots | 🎵 **BeatVault** |
-| :--- | :---: | :---: |
-| **Platform Ingestion** | ❌ Single platform / Spotify only | **🌐 Multi-Platform (Spotify, YouTube, Apple Music, SoundCloud)** |
-| **Download Pipeline** | ❌ Sequential 1-by-1 (Slow) | **⚡ 2x Parallel ThreadPool (4x Faster)** |
-| **System Tray & Hotkeys** | ❌ Closes completely on exit | **🪟 Windows System Tray + Global Physical Media Keys** |
-| **Song Artwork** | ❌ Repeats generic playlist cover | **🖼️ Authentic per-track covers (Spotify CDN, Apple 1200x630, YT maxres)** |
-| **Karaoke Lyrics** | ❌ None | **🎤 Synced `.lrc` file + ID3 `USLT` tags** |
-| **Duration Filtering** | ❌ Random search (picks 8-min bootlegs) | **🎯 Smart Duration Matching ($\pm12$s filter)** |
-| **Download Guarantee** | ⚠️ Drops songs if criteria fail | **🛡️ 100% Fallback Guarantee (Never drops tracks)** |
-| **Duplicate Prevention** | ⚠️ Silently overwrites files | **🛡️ ID3 tag inspection + Safe `(1).mp3` copies** |
-| **File Naming System** | ❌ Rigid / Arbitrary | **🏷️ Song Name Priority + 4 Custom Templates** |
-| **Integrated Player** | ❌ None | **🎧 Real-time Scrubbable Mini Player + Next/Prev & Auto-Advance** |
-| **Single Track Search** | ❌ Spotify URL only | **🔍 Direct Instant Search (iTunes/Apple audio API)** |
-| **Zero-Install Binary** | ❌ Python script only | **📦 Standalone 23MB `.exe` + GitHub Actions CI/CD** |
-| **API Keys Required** | ⚠️ Requires Spotify Developer API keys | **✅ Zero Setup (100% Keyless Scrapers)** |
-
----
-
-## ✨ Core Capabilities
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <h3>⚡ 2x Parallel Threading</h3>
-      <ul>
-        <li>Dual concurrent worker threads download and transcode 2 songs simultaneously.</li>
-        <li><b>Speed Benchmark:</b> A 50-song playlist downloads in <b>~3 minutes</b> instead of ~12 minutes sequentially.</li>
-        <li>Thread-safe queues prevent rate limits or socket exhaustion.</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>🎤 Synchronized Karaoke (.lrc)</h3>
-      <ul>
-        <li>Real-time queries to <b>LRCLIB</b> fetch millisecond-accurate lyrics.</li>
-        <li>Embeds plain text into the ID3 <code>USLT</code> tag.</li>
-        <li>Outputs companion <code>{Song}.lrc</code> files for scrolling lyric display in Poweramp, Apple Music, and foobar2000.</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <h3>🖼️ True Per-Track Artwork</h3>
-      <ul>
-        <li>Generic scrapers stamp the playlist's banner onto every song.</li>
-        <li>BeatVault queries each song's individual <b>Spotify oEmbed endpoint</b> to fetch its genuine high-resolution album cover.</li>
-        <li>Embeds front-cover <code>APIC</code> frames into the MP3 container.</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>🎯 100% Download Guarantee</h3>
-      <ul>
-        <li>Compares audio length against Spotify's official duration with a strict &plusmn;12s tolerance filter.</li>
-        <li>Automatically discards live bootlegs, slowed edits, and audience noise.</li>
-        <li><b>Zero Drops:</b> If no exact match is found, immediately falls back to the top-ranked official feed.</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <h3>🌐 Multi-Platform Ingestion</h3>
-      <ul>
-        <li><b>Spotify:</b> Public embed JSON parser for playlists, albums, and tracks.</li>
-        <li><b>YouTube & YouTube Music:</b> Fast flat extraction for playlists and direct videos.</li>
-        <li><b>Apple Music:</b> Schema.org JSON-LD parser extracting metadata and 1200x630 lossless covers.</li>
-        <li><b>SoundCloud:</b> Seamless track and set discovery with direct audio routing.</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>🪟 Windows System Tray & Global Media Keys</h3>
-      <ul>
-        <li><b>System Tray:</b> Minimizes cleanly to notification area with background playback status.</li>
-        <li><b>Global Hotkeys:</b> Controls in-app audio with physical keyboard multimedia keys (<code>Play/Pause</code>, <code>Next Track</code>, <code>Prev Track</code>, <code>Stop</code>) even when minimized.</li>
-        <li><b>Auto-Advance:</b> Seamlessly queues and plays the next downloaded song when current track ends.</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <h3>🛡️ Non-Destructive Duplicate Shield</h3>
-      <ul>
-        <li>Inspects destination folder using <b>Mutagen ID3 inspection</b> and fuzzy title/artist string comparison.</li>
-        <li>Prompts with <i>Skip</i> or <i>Download Again</i>.</li>
-        <li>Saves as <code>Song - Artist (1).mp3</code> so original files are never overwritten.</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>🔍 Instant Search & In-App Player</h3>
-      <ul>
-        <li><b>Direct Search:</b> Type any title or artist directly (e.g. <i>"Starboy"</i>, <i>"Espresso"</i>) for instant previews and 1-click downloads.</li>
-        <li><b>Integrated Dock:</b> In-app scrubber, volume slider, auto-advance on track completion, and spacebar play/pause shortcut.</li>
-      </ul>
-    </td>
-  </tr>
-</table>
-
----
-
-## 🖥️ Desktop User Interface
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ 🟢 BeatVault                                 [⚡ 2x Parallel Active]   [⚙️ Settings]   │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [ 📋 Spotify Playlist / Album ]      [ 🔍 Direct Single Song Search ]                  │
-│                                                                                        │
-│  ┌────────────────────────────────────┐  ┌───────────────────────────────────────────┐ │
-│  │ 1. Spotify Playlist Link           │  │ 2. Save Destination Folder                │ │
-│  │ [ https://open.spotify.com/...   ] │  │ [ C:\Users\aadit\Music\BeatVault Downloads] │ │
-│  │ [ 📋 Paste ]   [ 📥 Load ]         │  │ [ 📁 Browse... ]   [ 📂 Open Folder ]     │ │
-│  └────────────────────────────────────┘  └───────────────────────────────────────────┘ │
-│                                                                                        │
-│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ [Cover Art]  Today's Top Hits • By Spotify • 50 tracks • 2 duplicates detected   │  │
-│  ├──────────────────────────────────────────────────────────────────────────────────┤  │
-│  │ [x] Select All (50/50)   [🔍 Scan Duplicates]   [ ] Auto-Skip   [ Download (2x) ]│  │
-│  └──────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                                                        │
-│  #   Sel   Title & Artist                     Duration    Status              Play     │
-│  ────────────────────────────────────────────────────────────────────────────────────  │
-│  1   [x]   Stop The Wedding! - Ashe           3:18        ✓ Saved             [▶ Play] │
-│  2   [x]   Espresso - Sabrina Carpenter       2:55        Downloading (64%)   --       │
-│  3   [x]   Birds of a Feather - Billie Eilish 3:03        Downloading (22%)   --       │
-│  4   [x]   Good Luck, Babe! - Chappell Roan   3:38        Queued              --       │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-│ 🎧 Stop The Wedding! - Ashe    [ ⏸ ]   01:14 ━━━━━━⚪────────── 03:18   🔊 ━━━━⚪─   [✕] │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🏗️ System Architecture
-
-```mermaid
-flowchart TD
-    User["User Input (Spotify URL or Direct Query)"] --> Mode{"Mode Selector"}
-    
-    Mode -->|"Spotify URL"| Scraping["SpotifyService: Parse Public Embed JSON"]
-    Mode -->|"Direct Search"| Itunes["iTunes Audio Query Engine"]
-    
-    Scraping --> DupScan["Batch Duplicate Pre-Scan (Mutagen ID3 + Fuzzy)"]
-    Itunes --> DupScan
-    
-    DupScan --> Queue["ThreadPoolExecutor (2x Parallel Workers)"]
-    
-    subgraph Parallel Worker Pipeline
-        Queue --> Filter["Smart Duration Matcher (±12s Filter)"]
-        Filter --> Found{"Within ±12s?"}
-        Found -->|"Yes"| StreamA["Targeted Audio Stream"]
-        Found -->|"No (Fallback)"| StreamB["Top Ranked Audio Feed"]
-        
-        StreamA --> FFmpeg["Static FFmpeg Transcoder (MP3)"]
-        StreamB --> FFmpeg
-        
-        FFmpeg --> OEmbed["Spotify Track oEmbed (High-Res Cover)"]
-        OEmbed --> LRCLIB["LRCLIB API (Plain & Synced Lyrics)"]
-        LRCLIB --> Mutagen["Mutagen ID3v2 Embedder (TIT2, TPE1, APIC, USLT)"]
-        Mutagen --> WriteLRC["Write Companion .lrc File"]
-    end
-    
-    WriteLRC --> LocalDisk["Saved to Music/BeatVault Downloads"]
-    LocalDisk --> Player["In-App Mini Player (Real-time Scrubbing)"]
-```
-
----
-
-## 🎧 In-App Audio Player & Controls
-
-| Action | Control | Description |
-| :---: | :---: | :--- |
-| **Play Track** | `▶ Preview` / `▶ Play` | Plays 30s preview (in search) or full audio (downloaded tracks) |
-| **Next / Previous Track** | `⏭` / `⏮` or Keyboard Keys | Skips to next or previous track in the active queue |
-| **Global Media Keys** | <kbd>Play/Pause</kbd>, <kbd>Next</kbd>, <kbd>Prev</kbd> | Native Windows global multimedia keys work in background or while minimized |
-| **System Tray Control** | Notification Tray Menu | Right-click BeatVault tray icon to Play/Pause, Skip, or Restore window |
-| **Toggle Play/Pause** | <kbd>Spacebar</kbd> | In-app keyboard shortcut (active outside input text fields) |
-| **Scrub / Seek** | `Timeline Scrubber` | Drag slider to jump to any point in the track |
-| **Volume Control** | `Volume Slider` | Real-time audio volume attenuation |
-| **Auto-Advance** | Automatic | Plays next track automatically when current song reaches the end |
-| **Dismiss Player** | `✕ Close` | Stops stream and hides bottom mini dock |
-
----
-
-## ⚙️ Settings & Customization
-
-Click the **⚙️ Settings** icon in the top header to configure preferences:
-
-### 1. Filename Templates
-* **`title_artist`** *(Default)*: `Song Name - Artist.mp3` *(Song name prioritized first)*
-* **`artist_title`**: `Artist - Song Name.mp3`
-* **`track_title_artist`**: `01. Song Name - Artist.mp3` *(Retains original album/playlist numbering)*
-* **`title_only`**: `Song Name.mp3`
-
-### 2. Audio Quality Bitrate
-* **192 kbps (High Quality):** Fast downloads, lightweight footprint (~4MB per track).
-* **320 kbps (Ultra High Quality):** Maximum acoustic fidelity for studio monitors and premium headphones.
-
-### 3. Lyric Synchronization
-* Toggle automatic search and generation of synchronized `.lrc` companion files.
-
----
-
-## 📁 Repository Structure
-
-```
+```text
 BeatVault/
-├── .github/
-│   └── workflows/
-│       └── build-release.yml  # Automated GitHub Actions Windows .exe CI/CD builder
-├── assets/
-│   ├── icon.ico               # Multi-resolution Windows app icon (16x16 to 256x256)
-│   └── icon.png               # High-res master brand icon
+├── assets/                  # High-res icons, logos & multi-res ICOs
+│   ├── icon.ico             # Windows multi-resolution icon (16x16 to 256x256)
+│   ├── icon_transparent.png # Pure transparent background Vinyl Safe logo
+│   └── icon.png             # 1024x1024 master app icon
 ├── gui/
-│   └── index.html             # Fluent Dark responsive GUI (Tailwind/CSS, Player, Modals)
-├── api.py                     # Python-to-JavaScript IPC bridge & folder picker
-├── downloader.py              # Parallel download manager (Concurrency=2) & duration filter
-├── duplicate_detector.py      # Mutagen ID3 inspector & non-destructive name generator
-├── lyrics_service.py          # LRCLIB API client (.lrc creator & ID3 USLT embedder)
-├── platform_service.py        # Multi-Platform Router (Spotify, YouTube, Apple Music, SoundCloud)
-├── spotify_service.py         # Zero-config Spotify playlist & album scraper
-├── tray_and_media_service.py  # Windows System Tray (pystray) & Global Media Keys (ctypes)
-├── main.py                    # PyWebView desktop entrypoint + local browser server
+│   └── index.html           # Studio-grade frontend (HTML5/CSS3/ES6 Modular)
 ├── installer/
-│   └── BeatVault.iss          # Inno Setup modern wizard installer definition
-├── BeatVault.spec             # PyInstaller standalone binary specification
-├── build_installer.py         # Automated Inno Setup compiler runner
-├── build_installer.bat        # 1-Click Setup Installer builder
-├── build_exe.py               # Standalone portable compilation automation engine
-├── build_exe.bat              # 1-Click portable .exe compiler for Windows
-├── requirements.txt           # Python package dependencies
-├── run_beatvault.bat          # 1-Click launcher for BeatVault
-├── LICENSE                    # MIT License
-└── README.md                  # Comprehensive documentation
+│   └── BeatVault.iss        # Inno Setup modern wizard installer script
+├── tests/                   # 108 automated unit & integration tests
+│   ├── test_duplicate_detector.py
+│   ├── test_platform_service.py
+│   ├── test_lyrics_service.py
+│   ├── test_downloader.py
+│   ├── test_api_settings.py
+│   └── test_updater.py
+├── api.py                   # Pywebview backend API bridge
+├── downloader.py            # Multi-threaded download & conversion engine
+├── duplicate_detector.py    # Fuzzy matching & duplicate detection logic
+├── lyrics_service.py        # Synchronized LRC lyrics search & tagger
+├── platform_service.py      # Multi-platform URL routing & metadata scrapers
+├── spotify_service.py       # Spotify Web API parser
+├── updater.py               # Asynchronous GitHub Releases auto-updater
+├── version.py               # Version metadata (v1.0.0)
+├── tray_and_media_service.py# System tray & global hardware media keys
+├── build_installer.py       # Automated Inno Setup compiler script
+├── run_tests.py             # 1-Click automated test runner
+├── requirements.txt         # Project dependencies
+└── main.py                  # Desktop application entry point
 ```
 
 ---
 
-## ❓ FAQ
+## 📄 License
 
-<details>
-<summary><b>Q: Does BeatVault require a Spotify Premium account or API developer credentials?</b></summary>
-<br/>
-<b>No.</b> BeatVault uses public embed scrapers to retrieve tracklists, durations, and original cover art with zero credentials or accounts needed.
-</details>
-
-<details>
-<summary><b>Q: Do I need to install Python or FFmpeg manually to use BeatVault.exe?</b></summary>
-<br/>
-<b>No.</b> The standalone <code>BeatVault.exe</code> includes all dependencies, runtimes, and static FFmpeg binaries bundled in a single file. Just double-click to run!
-</details>
-
-<details>
-<summary><b>Q: What happens if a song already exists in my selected folder?</b></summary>
-<br/>
-The duplicate engine detects existing tracks using ID3 metadata tags and asks whether you'd like to <b>Skip</b> or <b>Download Again</b>. If downloading again, it saves as <code>Song - Artist (1).mp3</code> so your original file is never overwritten.
-</details>
-
-<details>
-<summary><b>Q: Why is concurrency set to 2 parallel downloads?</b></summary>
-<br/>
-Concurrency of 2 parallel workers balances high speed with network safety—achieving quadruple throughput while preventing audio source rate limits, socket drops, and high CPU spikes during FFmpeg transcoding.
-</details>
-
----
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=aadityashekhar321/BeatVault&type=Date)](https://star-history.com/#aadityashekhar321/BeatVault&Date)
-
----
-
-## 🛡️ Legal & Compliance
-
-This software is developed strictly for educational and personal archival purposes:
-* **No DRM Circumvention:** This application **does not decrypt, circumvent, or tap into protected Spotify DRM audio streams**.
-* **Public Metadata Usage:** Spotify URLs are queried solely for public track metadata (title, artist, album art).
-* **Authorized Audio Sources:** Audio streams are sourced from publicly accessible, legally authorized feeds matched against track metadata.
-
----
-
-<div align="center">
-
-Crafted with ❤️ by [Aaditya Shekhar](https://github.com/aadityashekhar321)
-
-⭐ **Star BeatVault on GitHub if you find it helpful!**
-
-[▲ Back to Top](#-beatvault)
-
-</div>
+This project is licensed under the [MIT License](LICENSE).
