@@ -314,13 +314,42 @@ class AppAPI:
 
         return {"success": True, "message": "Download started"}
 
-    def respond_duplicate(self, decision: str, apply_to_all: bool = False) -> Dict[str, Any]:
+    def respond_duplicate(self, *args, **kwargs) -> Dict[str, Any]:
         """
         Handles duplicate confirmation response from user:
-        decision: 'skip' | 'download_again' | 'replace'
+        Supports:
+          respond_duplicate(decision: str, apply_to_all: bool = False)
+          respond_duplicate(track_id: str, action: str, apply_to_all: bool = False)
+        decision: 'skip' | 'download_again' | 'replace' | 'overwrite'
         """
         if not self.current_worker:
             return {"success": False, "error": "No active worker"}
+
+        decision = "skip"
+        apply_to_all = False
+
+        if len(args) >= 3:
+            # (track_id, action, apply_to_all)
+            decision = str(args[1])
+            apply_to_all = bool(args[2])
+        elif len(args) == 2:
+            decision = str(args[0])
+            apply_to_all = bool(args[1])
+        elif len(args) == 1:
+            decision = str(args[0])
+
+        if "action" in kwargs:
+            decision = kwargs["action"]
+        elif "decision" in kwargs:
+            decision = kwargs["decision"]
+
+        if "apply_to_all" in kwargs:
+            apply_to_all = bool(kwargs["apply_to_all"])
+        elif "applyToAll" in kwargs:
+            apply_to_all = bool(kwargs["applyToAll"])
+
+        if decision == "overwrite":
+            decision = "replace"
 
         self.current_worker.provide_duplicate_decision(decision, apply_to_all)
         return {"success": True}

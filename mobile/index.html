@@ -178,7 +178,7 @@
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
           </span>
-          <span class="text-[11px] font-mono text-secondary font-semibold" id="header-active-count">3 Active</span>
+          <span class="text-[11px] font-mono text-secondary font-semibold" id="header-active-count">0 Active</span>
         </button>
 
         <button onclick="navigateTo('app-settings')" class="w-9 h-9 rounded-full bg-surface-container-high hover:bg-surface-container-highest border border-white/5 flex items-center justify-center text-on-surface-variant hover:text-primary cursor-pointer active:scale-95 transition-all" title="Settings">
@@ -271,7 +271,7 @@
           <div class="absolute left-3.5 flex items-center pointer-events-none text-primary" id="input-platform-icon">
             <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
           </div>
-          <input id="url-input" type="text" spellcheck="false" value="https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+          <input id="url-input" type="text" spellcheck="false" oninput="handleUrlInputChange(this.value)"
             placeholder="Paste Spotify URL (open.spotify.com/playlist/...)"
             class="w-full bg-surface-container-lowest text-on-surface placeholder-outline text-xs font-mono pl-10 pr-9 py-3 rounded-xl border border-white/10 focus:outline-none focus:border-primary transition-all">
           <button id="clear-btn" onclick="clearUrlInput()" class="absolute right-2.5 w-6 h-6 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container-highest transition-colors cursor-pointer">
@@ -280,10 +280,10 @@
         </div>
 
         <!-- Match & Telemetry Pill -->
-        <div id="url-status-banner" class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-high border border-white/5">
+        <div id="url-status-banner" class="hidden items-center justify-between p-2.5 rounded-xl bg-surface-container-high border border-white/5">
           <div class="flex items-center gap-2 min-w-0">
             <span class="material-symbols-outlined text-primary text-[18px] flex-shrink-0">verified</span>
-            <span id="url-status-text" class="text-xs text-on-surface truncate">Spotify Playlist (Today's Top Hits • 48 tracks)</span>
+            <span id="url-status-text" class="text-xs text-on-surface truncate">Stream Link Detected</span>
           </div>
           <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-secondary-container/20 text-secondary uppercase tracking-wider flex-shrink-0">FLAC Ready</span>
         </div>
@@ -342,42 +342,17 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <h2 class="text-sm font-bold text-on-surface">Recent Ingests</h2>
-            <span id="history-count" class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-mono text-[10px]">4</span>
+            <span id="history-count" class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-mono text-[10px]">0</span>
           </div>
           <button id="clear-all-history" onclick="clearIngestHistory()" class="text-xs font-mono text-secondary hover:text-on-surface cursor-pointer p-1">Clear All</button>
         </div>
 
         <div id="history-list" class="flex flex-col gap-2">
-          <!-- Item 1: Spotify -->
-          <div class="history-item bg-surface-container hover:bg-surface-container-high border border-white/5 p-2.5 rounded-xl flex items-center justify-between gap-2.5 transition-colors cursor-pointer" onclick="loadHistoryItem('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M', 'spotify')">
-            <div class="w-10 h-10 rounded-lg bg-surface-container-highest overflow-hidden flex items-center justify-center flex-shrink-0 text-primary">
-              <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
-            </div>
-            <div class="flex flex-col min-w-0 flex-1">
-              <span class="text-xs font-semibold text-on-surface truncate">Today's Top Hits 2024</span>
-              <span class="text-[11px] text-on-surface-variant truncate font-mono">open.spotify.com/playlist/37i... • 48 tracks</span>
-            </div>
-            <div class="flex items-center gap-1 flex-shrink-0">
-              <button onclick="event.stopPropagation(); loadHistoryItem('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M', 'spotify')" class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors">
-                <span class="material-symbols-outlined text-[16px]">replay</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Item 2: YouTube -->
-          <div class="history-item bg-surface-container hover:bg-surface-container-high border border-white/5 p-2.5 rounded-xl flex items-center justify-between gap-2.5 transition-colors cursor-pointer" onclick="loadHistoryItem('https://youtube.com/watch?v=dQw4w9WgXcQ', 'youtube')">
-            <div class="w-10 h-10 rounded-lg bg-surface-container-highest overflow-hidden flex items-center justify-center flex-shrink-0 text-secondary">
-              <span class="material-symbols-outlined text-[20px]">smart_display</span>
-            </div>
-            <div class="flex flex-col min-w-0 flex-1">
-              <span class="text-xs font-semibold text-on-surface truncate">Synthwave Night Drive Mix 4K</span>
-              <span class="text-[11px] text-on-surface-variant truncate font-mono">youtube.com/watch?v=... • Opus 160k</span>
-            </div>
-            <div class="flex items-center gap-1 flex-shrink-0">
-              <button onclick="event.stopPropagation(); loadHistoryItem('https://youtube.com/watch?v=dQw4w9WgXcQ', 'youtube')" class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors">
-                <span class="material-symbols-outlined text-[16px]">replay</span>
-              </button>
-            </div>
+          <!-- Clean Empty State (rendered when history is empty) -->
+          <div id="mobileHistoryEmptyState" class="py-8 px-4 flex flex-col items-center justify-center text-center bg-surface-container/50 rounded-2xl border border-white/5 gap-2">
+            <span class="material-symbols-outlined text-3xl text-on-surface-variant/40">history</span>
+            <h3 class="text-xs font-bold text-on-surface">No Recent Links</h3>
+            <p class="text-[11px] text-on-surface-variant max-w-xs">Links you analyze will be saved here for instant re-downloading.</p>
           </div>
         </div>
       </div>
@@ -388,8 +363,23 @@
     <!-- ============================================================ -->
     <section id="screen-playlist-inspector" class="screen-view flex flex-col gap-4">
       
+      <!-- Mobile Inspector Empty State -->
+      <div id="mobileInspectorEmptyState" class="py-16 px-6 flex flex-col items-center justify-center text-center bg-surface-container rounded-2xl border border-white/5 shadow-xl gap-4 my-auto">
+        <div class="w-16 h-16 rounded-2xl bg-surface-container-high border border-white/5 flex items-center justify-center text-secondary shadow-inner">
+          <span class="material-symbols-outlined text-3xl">manage_search</span>
+        </div>
+        <div class="space-y-1.5 max-w-xs">
+          <h3 class="text-base font-bold text-on-surface">No Playlist Loaded</h3>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Paste a music link on the Ingest screen to inspect songs, select bitrates, and start downloading.</p>
+        </div>
+        <button onclick="navigateTo('home-ingest')" class="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold font-mono shadow-md hover:bg-primary-fixed active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">link</span>
+          <span>Go to Ingest</span>
+        </button>
+      </div>
+
       <!-- Source Summary Header Card -->
-      <div class="relative overflow-hidden rounded-2xl bg-surface-container border border-white/5 p-4 shadow-xl">
+      <div id="inspector-header-card" class="hidden relative overflow-hidden rounded-2xl bg-surface-container border border-white/5 p-4 shadow-xl">
         <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 pointer-events-none"></div>
         <div class="relative flex items-center gap-3.5">
           <div class="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-lg bg-surface-container-high border border-white/10">
@@ -403,18 +393,18 @@
               <span class="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary text-[10px] font-mono font-bold uppercase tracking-wider">FLAC 24/96</span>
               <span class="text-xs text-on-surface-variant truncate">Spotify Playlist</span>
             </div>
-            <h2 id="inspector-title" class="text-base font-bold text-on-surface truncate">Today's Top Hits 2024</h2>
-            <p id="inspector-subtitle" class="text-xs text-on-surface-variant truncate">Spotify Editorial • Curated Mix</p>
+            <h2 id="inspector-title" class="text-base font-bold text-on-surface truncate">Playlist Manifest</h2>
+            <p id="inspector-subtitle" class="text-xs text-on-surface-variant truncate">Stream Media Archive</p>
             <div class="flex items-center gap-1.5 mt-0.5 text-xs text-on-surface-variant font-mono">
               <span class="material-symbols-outlined text-primary text-[14px]">album</span>
-              <span id="inspector-meta-count">48 Tracks • ~380 MB (320kbps)</span>
+              <span id="inspector-meta-count">0 Tracks</span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Batch Selection Controls -->
-      <div class="flex items-center gap-2 overflow-x-auto py-0.5">
+      <div id="inspector-batch-controls" class="hidden flex items-center gap-2 overflow-x-auto py-0.5">
         <button onclick="selectAllTracks()" class="flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-mono font-medium whitespace-nowrap active:scale-95 transition-all cursor-pointer">
           <span class="material-symbols-outlined text-[15px] text-primary">done_all</span>
           <span>Select All</span>
@@ -430,7 +420,7 @@
       </div>
 
       <!-- In-Playlist Search & Filter -->
-      <div class="relative flex items-center w-full">
+      <div id="inspector-search-container" class="hidden relative flex items-center w-full">
         <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[18px] pointer-events-none">search</span>
         <input id="inspector-search" oninput="filterInspectorTracks()" type="text" placeholder="Filter tracks by title or artist..."
           class="w-full h-10 pl-10 pr-9 rounded-xl bg-surface-container-low border border-white/5 text-on-surface placeholder:text-on-surface-variant/60 text-xs font-sans focus:outline-none focus:border-primary transition-colors">
@@ -440,18 +430,18 @@
       </div>
 
       <!-- Track List Items -->
-      <div class="flex flex-col gap-2" id="inspector-tracklist">
+      <div class="hidden flex flex-col gap-2" id="inspector-tracklist">
         <!-- Dynamic tracks injected via JS -->
       </div>
 
       <!-- Dynamic Sticky Bottom Bar for Downloading Selected Tracks -->
-      <div class="sticky bottom-20 z-30 pt-2 pb-1">
+      <div id="inspector-cta-container" class="hidden sticky bottom-20 z-30 pt-2 pb-1">
         <button id="inspector-download-cta" onclick="downloadSelectedTracks()" class="w-full py-3.5 px-4 rounded-xl bg-primary text-on-primary font-bold text-sm flex items-center justify-between shadow-[0_0_24px_rgba(83,224,118,0.4)] hover:bg-primary-fixed active:scale-[0.98] transition-all cursor-pointer">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-[20px]">download_for_offline</span>
-            <span id="inspector-cta-label">Download 3 Tracks</span>
+            <span id="inspector-cta-label">Download 0 Tracks</span>
           </div>
-          <span id="inspector-cta-size" class="text-xs font-mono bg-on-primary/20 px-2 py-0.5 rounded-full font-bold">24.1 MB</span>
+          <span id="inspector-cta-size" class="text-xs font-mono bg-on-primary/20 px-2 py-0.5 rounded-full font-bold">0.0 MB</span>
         </button>
       </div>
     </section>
@@ -469,11 +459,11 @@
             <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
           </span>
           <span class="text-[11px] font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Speed:</span>
-          <span class="font-mono text-xs font-bold text-primary" id="download-speed-ticker">4.8 MB/s</span>
+          <span class="font-mono text-xs font-bold text-primary" id="download-speed-ticker">0.0 MB/s</span>
         </div>
         <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high border border-white/5 text-secondary">
           <span class="material-symbols-outlined text-[14px]">stream</span>
-          <span class="font-mono text-xs font-medium">3 Threads Active</span>
+          <span class="font-mono text-xs font-medium">0 Threads Active</span>
         </div>
       </div>
 
@@ -481,7 +471,7 @@
       <div class="bg-surface-container-low border border-white/5 rounded-2xl p-3 shadow-md flex flex-col gap-2.5">
         <div class="flex items-center justify-between text-xs">
           <span class="text-on-surface-variant font-mono">Queue Telemetry</span>
-          <span class="text-on-surface font-mono font-semibold" id="queue-telemetry-text">3 Downloading • 2 Queued • 1 Error</span>
+          <span class="text-on-surface font-mono font-semibold" id="queue-telemetry-text">0 Downloading • 0 Queued</span>
         </div>
         <div class="grid grid-cols-3 gap-2">
           <button onclick="pauseAllDownloads()" class="h-8 px-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-95 transition-all flex items-center justify-center gap-1 text-on-surface text-xs font-mono cursor-pointer">
@@ -503,11 +493,11 @@
       <div class="flex p-1 rounded-xl bg-surface-container-lowest border border-white/5 gap-1">
         <button id="dl-tab-active" onclick="switchDownloadTab('active')" class="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary font-bold text-xs font-mono flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
           <span>Active Tasks</span>
-          <span id="active-tasks-badge" class="px-1.5 py-0.2 rounded-full bg-on-primary/20 text-on-primary text-[10px] font-bold">5</span>
+          <span id="active-tasks-badge" class="px-1.5 py-0.2 rounded-full bg-on-primary/20 text-on-primary text-[10px] font-bold">0</span>
         </button>
         <button id="dl-tab-completed" onclick="switchDownloadTab('completed')" class="flex-1 py-2 px-3 rounded-lg bg-transparent text-on-surface-variant hover:text-on-surface font-medium text-xs font-mono flex items-center justify-center gap-2 transition-all cursor-pointer">
           <span>Completed</span>
-          <span id="completed-tasks-badge" class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant text-[10px]">18</span>
+          <span id="completed-tasks-badge" class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant text-[10px]">0</span>
         </button>
       </div>
 
@@ -547,10 +537,10 @@
         <div class="flex items-center gap-2">
           <span class="text-on-surface font-semibold flex items-center gap-1">
             <span class="material-symbols-outlined text-primary text-[14px]">audiotrack</span>
-            <span id="library-track-count">142 Tracks</span>
+            <span id="library-track-count">0 Tracks</span>
           </span>
           <span>•</span>
-          <span>1.2 GB Cached</span>
+          <span>0 MB Cached</span>
         </div>
         <div class="flex items-center gap-1 text-secondary">
           <span class="material-symbols-outlined text-[14px]">sd_card</span>
@@ -630,7 +620,20 @@
 
       <!-- Local Track List -->
       <div class="flex flex-col gap-1.5" id="library-track-list">
-        <!-- Injected via JS -->
+        <!-- Clean Empty State (rendered when vault library is empty) -->
+        <div id="mobileVaultEmptyState" class="py-16 px-6 flex flex-col items-center justify-center text-center bg-surface-container rounded-2xl border border-white/5 shadow-xl gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-surface-container-high border border-white/5 flex items-center justify-center text-primary shadow-inner">
+            <span class="material-symbols-outlined text-3xl">library_music</span>
+          </div>
+          <div class="space-y-1.5 max-w-xs">
+            <h3 class="text-base font-bold text-on-surface">Your Offline Vault is Empty</h3>
+            <p class="text-xs text-on-surface-variant leading-relaxed">Downloaded songs and lossless albums will appear here for offline playback.</p>
+          </div>
+          <button onclick="navigateTo('home-ingest')" class="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold font-mono shadow-md hover:bg-primary-fixed active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">download</span>
+            <span>Download Music Now</span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -917,15 +920,15 @@
       <!-- Left: Artwork & Metadata -->
       <div class="flex items-center gap-3 min-w-0 flex-1">
         <div class="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container border border-white/10 shadow-md">
-          <img id="mini-cover-art" src="assets/icon_transparent.png" alt="Cover" class="w-full h-full object-cover">
+          <img id="mini-cover-art" src="assets/icon_transparent.png" alt="Cover" class="w-full h-full object-contain p-2 opacity-40">
           <div class="absolute inset-0 bg-primary/10 mix-blend-overlay"></div>
         </div>
         <div class="flex flex-col min-w-0 pr-1">
           <div class="flex items-center gap-1.5">
-            <span id="mini-track-title" class="text-xs text-on-surface truncate font-semibold">Birds of a Feather</span>
-            <span id="mini-track-badge" class="px-1 py-0.2 rounded bg-primary/20 text-primary text-[9px] font-mono font-bold tracking-tight uppercase">24b</span>
+            <span id="mini-track-title" class="text-xs text-on-surface truncate font-semibold">No Track Playing</span>
+            <span id="mini-track-badge" class="hidden px-1 py-0.2 rounded bg-primary/20 text-primary text-[9px] font-mono font-bold tracking-tight uppercase">IDLE</span>
           </div>
-          <span id="mini-track-artist" class="text-[11px] text-on-surface-variant truncate mt-0.5">Billie Eilish</span>
+          <span id="mini-track-artist" class="text-[11px] text-on-surface-variant truncate mt-0.5">Choose a song from Vault or Queue</span>
         </div>
       </div>
 
@@ -970,7 +973,7 @@
       <a href="#active-downloads" onclick="navigateTo('active-downloads'); return false;" class="nav-tab relative flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-colors text-on-surface-variant hover:text-on-surface" data-screen="active-downloads">
         <div class="relative flex items-center justify-center">
           <span class="material-symbols-outlined text-[22px]">download_for_offline</span>
-          <span id="nav-downloads-badge" class="absolute -top-1 -right-2 px-1.5 py-0.5 rounded-full bg-primary text-on-primary font-mono text-[9px] font-bold shadow-[0_0_8px_rgba(83,224,118,0.5)]">3</span>
+          <span id="nav-downloads-badge" class="absolute -top-1 -right-2 px-1.5 py-0.5 rounded-full bg-primary text-on-primary font-mono text-[9px] font-bold shadow-[0_0_8px_rgba(83,224,118,0.5)]">0</span>
         </div>
         <span class="text-[11px] font-mono font-medium">Downloads</span>
       </a>
@@ -1045,22 +1048,22 @@
       <div class="w-full bg-surface-container-low/95 border border-white/5 rounded-2xl p-3 mb-3 flex items-center justify-between shadow-xl">
         <div class="flex items-center gap-3 min-w-0">
           <div class="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-surface-container-high border border-white/10">
-            <img id="overlay-thumb" src="assets/icon_transparent.png" alt="Track Art" class="w-full h-full object-cover">
+            <img id="overlay-thumb" src="assets/icon_transparent.png" alt="Track Art" class="w-full h-full object-contain p-2 opacity-40">
           </div>
           <div class="flex flex-col min-w-0 pr-2">
             <div class="flex items-center gap-1.5">
-              <span id="overlay-title" class="text-xs font-bold text-on-surface truncate">Birds of a Feather</span>
-              <span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-mono uppercase tracking-wider">Hi-Res</span>
+              <span id="overlay-title" class="text-xs font-bold text-on-surface truncate">No Track Selected</span>
+              <span id="overlay-badge" class="hidden px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-mono uppercase tracking-wider">Hi-Res</span>
             </div>
-            <span id="overlay-artist" class="text-[11px] text-on-surface-variant truncate mt-0.5">Billie Eilish — HIT ME HARD AND SOFT</span>
+            <span id="overlay-artist" class="text-[11px] text-on-surface-variant truncate mt-0.5">Standby</span>
           </div>
         </div>
         <div class="flex items-center gap-1 shrink-0">
           <div class="flex items-end gap-[3px] h-3.5 pr-2">
-            <span class="w-[3px] bg-primary rounded-full eq-bar-1"></span>
-            <span class="w-[3px] bg-primary rounded-full eq-bar-2"></span>
-            <span class="w-[3px] bg-primary rounded-full eq-bar-3"></span>
-            <span class="w-[3px] bg-primary rounded-full eq-bar-4"></span>
+            <span class="w-[3px] bg-primary/40 rounded-full eq-bar-1"></span>
+            <span class="w-[3px] bg-primary/40 rounded-full eq-bar-2"></span>
+            <span class="w-[3px] bg-primary/40 rounded-full eq-bar-3"></span>
+            <span class="w-[3px] bg-primary/40 rounded-full eq-bar-4"></span>
           </div>
         </div>
       </div>
@@ -1076,7 +1079,7 @@
                 <div class="w-3/5 h-3/5 rounded-full border border-white/10 flex items-center justify-center">
                   <!-- Vinyl Center Label -->
                   <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/50 relative shadow-inner">
-                    <img id="vinyl-art-image" src="assets/icon_transparent.png" class="w-full h-full object-cover">
+                    <img id="vinyl-art-image" src="assets/icon_transparent.png" class="w-full h-full object-contain p-4 opacity-40">
                     <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
                       <div class="w-4 h-4 rounded-full bg-surface-container-lowest border-2 border-primary"></div>
                     </div>
@@ -1141,7 +1144,7 @@
           <span id="player-elapsed-time" class="font-semibold text-on-surface">00:00</span>
           <div class="flex items-center gap-2">
             <span class="text-[10px] text-secondary bg-surface-container px-1.5 py-0.5 rounded font-mono">DSD Direct</span>
-            <span id="player-remaining-time">-00:35</span>
+            <span id="player-remaining-time">-00:00</span>
           </div>
         </div>
       </div>
@@ -1210,7 +1213,7 @@
             </div>
             <div class="flex flex-col min-w-0">
               <span class="text-[9px] font-mono text-on-surface-variant uppercase font-bold tracking-wider">Up Next in Queue</span>
-              <span id="overlay-upnext-text" class="text-xs font-mono text-on-surface truncate">Sabrina Carpenter — Espresso</span>
+              <span id="overlay-upnext-text" class="text-xs font-mono text-on-surface truncate">Queue Empty</span>
             </div>
           </div>
           <span class="material-symbols-outlined text-on-surface-variant text-[18px]">skip_next</span>
@@ -1268,222 +1271,47 @@
     /* ============================================================ */
     /* 1. DATA MODELS & PLAYLIST REPOSITORY                         */
     /* ============================================================ */
-    const TRACKS_REPO = [
-      {
-        id: "tr-birds",
-        title: "Birds of a Feather",
-        artist: "Billie Eilish",
-        album: "HIT ME HARD AND SOFT",
-        duration: "00:35",
-        durationSec: 35,
-        format: "FLAC 24/96",
-        badge: "24b",
-        size: "6.2 MB",
-        status: "downloaded",
-        cover: "assets/icon_transparent.png",
-        audioSrc: "assets/demo_birds.wav",
-        lyrics: [
-          { time: 0.0, text: "(Instrumental Ambient Intro)" },
-          { time: 4.5, text: "I want you to stay" },
-          { time: 8.8, text: "'Til I'm in the grave" },
-          { time: 13.2, text: "'Til I rot away, dead and buried" },
-          { time: 17.5, text: "'Til I'm in the casket you carry" },
-          { time: 21.8, text: "I'll love you 'til the day that I die" },
-          { time: 26.2, text: "'Til the day that I die" },
-          { time: 29.8, text: "Birds of a feather, we should stick together" },
-          { time: 33.0, text: "(Fade Out)" }
-        ]
-      },
-      {
-        id: "tr-espresso",
-        title: "Espresso",
-        artist: "Sabrina Carpenter",
-        album: "Short n' Sweet",
-        duration: "00:30",
-        durationSec: 30,
-        format: "FLAC 24/96",
-        badge: "24b",
-        size: "5.3 MB",
-        status: "downloaded",
-        cover: "assets/icon_transparent.png",
-        audioSrc: "assets/demo_espresso.wav",
-        lyrics: [
-          { time: 0.0, text: "(Upbeat Bass Groove)" },
-          { time: 4.2, text: "Now he's thinkin' 'bout me every night, oh" },
-          { time: 8.5, text: "Is it that sweet? I guess so" },
-          { time: 12.8, text: "Say you can't sleep, baby, I know" },
-          { time: 16.5, text: "That's that me espresso" },
-          { time: 20.2, text: "Move it up, down, left, right, oh" },
-          { time: 24.5, text: "Switch it up like Nintendo" },
-          { time: 28.0, text: "That's that me espresso" }
-        ]
-      },
-      {
-        id: "tr-goodluck",
-        title: "Good Luck, Babe!",
-        artist: "Chappell Roan",
-        album: "Good Luck, Babe! Single",
-        duration: "00:32",
-        durationSec: 32,
-        format: "OPUS 320k",
-        badge: "320k",
-        size: "5.6 MB",
-        status: "downloaded",
-        cover: "assets/icon_transparent.png",
-        audioSrc: "assets/demo_goodluck.wav",
-        lyrics: [
-          { time: 0.0, text: "(Dream Synth Arpeggio)" },
-          { time: 5.0, text: "It's fine, it's cool" },
-          { time: 9.2, text: "You can say that we are nothing, but you know the truth" },
-          { time: 16.0, text: "And I try to be the chill girl that holds your hand" },
-          { time: 22.5, text: "You'd have to stop the world just to stop the feeling" },
-          { time: 28.0, text: "Good luck, babe! Well, good luck!" }
-        ]
-      },
-      {
-        id: "tr-taste",
-        title: "Taste",
-        artist: "Sabrina Carpenter",
-        album: "Short n' Sweet",
-        duration: "00:30",
-        durationSec: 30,
-        format: "FLAC 24/96",
-        badge: "24b",
-        size: "7.8 MB",
-        status: "new",
-        cover: "assets/icon_transparent.png",
-        audioSrc: "assets/demo_espresso.wav",
-        lyrics: [
-          { time: 0.0, text: "(Guitar Riff Intro)" },
-          { time: 6.0, text: "Oh, I leave quite an impression" },
-          { time: 12.0, text: "Five feet to be exact" },
-          { time: 18.0, text: "You're wonderin' why you're obsessed with me" },
-          { time: 24.0, text: "He's gonna taste me when he's kissin' you" }
-        ]
-      },
-      {
-        id: "tr-notlikeus",
-        title: "Not Like Us",
-        artist: "Kendrick Lamar",
-        album: "Not Like Us",
-        duration: "00:35",
-        durationSec: 35,
-        format: "FLAC 24/96",
-        badge: "24b",
-        size: "8.1 MB",
-        status: "failed",
-        cover: "assets/icon_transparent.png",
-        audioSrc: "assets/demo_birds.wav",
-        lyrics: [
-          { time: 0.0, text: "(West Coast Beat Drop)" },
-          { time: 5.0, text: "Psst, I see dead people" },
-          { time: 11.0, text: "Mustard on the beat, ho" },
-          { time: 16.0, text: "They not like us, they not like us" }
-        ]
+    /* Offline Vault Library Repository - Clean State by Default */
+    let TRACKS_REPO = [];
+    try {
+      const savedLib = localStorage.getItem('beatvault_mobile_library');
+      if (savedLib) {
+        TRACKS_REPO = JSON.parse(savedLib);
       }
-    ];
+    } catch (e) {
+      TRACKS_REPO = [];
+    }
 
-    /* Active Downloads Queue State */
-    let activeDownloads = [
-      {
-        id: "dl-1",
-        title: "Espresso",
-        artist: "Sabrina Carpenter",
-        progress: 72,
-        speed: "2.8 MB/s",
-        currentBytes: "6.2 MB",
-        totalBytes: "8.6 MB",
-        eta: "00:02s",
-        status: "downloading",
-        stageText: "Seg 18/24 • Direct Stream",
-        format: "FLAC 24/96",
-        color: "primary"
-      },
-      {
-        id: "dl-2",
-        title: "Good Luck, Babe!",
-        artist: "Chappell Roan",
-        progress: 88,
-        speed: "3.2 MB/s",
-        currentBytes: "9.4 MB",
-        totalBytes: "9.4 MB",
-        eta: "Syncing...",
-        status: "syncing_lrc",
-        stageText: "Embedding ID3 v2.4",
-        format: "FLAC 24/96",
-        color: "secondary"
-      },
-      {
-        id: "dl-3",
-        title: "Taste",
-        artist: "Sabrina Carpenter",
-        progress: 0,
-        speed: "Queued",
-        currentBytes: "0 MB",
-        totalBytes: "7.8 MB",
-        eta: "In Queue",
-        status: "queued",
-        stageText: "Waiting for concurrency slot",
-        format: "OPUS 320k",
-        color: "tertiary"
-      },
-      {
-        id: "dl-4",
-        title: "Not Like Us",
-        artist: "Kendrick Lamar",
-        progress: 12,
-        speed: "Failed",
-        currentBytes: "1.2 MB",
-        totalBytes: "8.1 MB",
-        eta: "--",
-        status: "failed",
-        stageText: "HTTP 429: Rate-limited by source endpoint",
-        format: "FLAC 24/96",
-        color: "error"
+    /* Ingestion History State - Clean State by Default */
+    let ingestHistory = [];
+    try {
+      const savedHist = localStorage.getItem('beatvault_mobile_history');
+      if (savedHist) {
+        ingestHistory = JSON.parse(savedHist);
       }
-    ];
+    } catch (e) {
+      ingestHistory = [];
+    }
 
-    let completedDownloads = [
-      {
-        id: "comp-1",
-        title: "Birds of a Feather",
-        artist: "Billie Eilish",
-        size: "6.2 MB",
-        format: "FLAC 24/96",
-        time: "Just now"
-      },
-      {
-        id: "comp-2",
-        title: "Please Please Please",
-        artist: "Sabrina Carpenter",
-        size: "7.4 MB",
-        format: "FLAC 24/96",
-        time: "12m ago"
-      },
-      {
-        id: "comp-3",
-        title: "HOT TO GO!",
-        artist: "Chappell Roan",
-        size: "6.8 MB",
-        format: "OPUS 320k",
-        time: "45m ago"
-      }
-    ];
+    /* Active Downloads Queue State - Starts Empty */
+    let activeDownloads = [];
+    let completedDownloads = [];
 
     /* ============================================================ */
     /* 2. AUDIO PLAYBACK & LYRICS SYNCHRONIZATION ENGINE            */
     /* ============================================================ */
     const audio = document.getElementById('audio-engine');
-    let currentTrackIndex = 0;
+    let currentTrack = null;
+    let currentTrackIndex = -1;
     let isPlaying = false;
     let isShuffle = false;
     let repeatMode = 0; // 0: off, 1: all, 2: one
     let autoScrollLocked = true;
     let currentViewMode = 'lyrics'; // 'lyrics' or 'art'
-    let isLiked = true;
+    let isLiked = false;
 
     function initAudioEngine() {
-      loadTrack(0, false);
+      setPlayerIdleState();
 
       audio.addEventListener('timeupdate', () => {
         if (!audio.duration) return;
@@ -1492,13 +1320,18 @@
         const pct = (current / duration) * 100;
 
         // Update progress bars
-        document.getElementById('mini-progress-bar').style.width = pct + '%';
-        document.getElementById('player-played-bar').style.width = pct + '%';
-        document.getElementById('player-scrub-thumb').style.left = pct + '%';
+        const miniBar = document.getElementById('mini-progress-bar');
+        if (miniBar) miniBar.style.width = pct + '%';
+        const playedBar = document.getElementById('player-played-bar');
+        if (playedBar) playedBar.style.width = pct + '%';
+        const thumb = document.getElementById('player-scrub-thumb');
+        if (thumb) thumb.style.left = pct + '%';
 
         // Update clocks
-        document.getElementById('player-elapsed-time').innerText = formatTime(current);
-        document.getElementById('player-remaining-time').innerText = '-' + formatTime(Math.max(0, duration - current));
+        const elapsed = document.getElementById('player-elapsed-time');
+        if (elapsed) elapsed.innerText = formatTime(current);
+        const remaining = document.getElementById('player-remaining-time');
+        if (remaining) remaining.innerText = '-' + formatTime(Math.max(0, duration - current));
 
         // Sync Karaoke Lyrics
         syncLyricsWithTime(current);
@@ -1514,34 +1347,147 @@
       });
     }
 
+    function setPlayerIdleState() {
+      currentTrack = null;
+      currentTrackIndex = -1;
+      isPlaying = false;
+
+      // Update Mini Player
+      const miniTitle = document.getElementById('mini-track-title');
+      if (miniTitle) miniTitle.innerText = "No Track Playing";
+      const miniArtist = document.getElementById('mini-track-artist');
+      if (miniArtist) miniArtist.innerText = "Choose a song from Vault or Queue";
+      const miniBadge = document.getElementById('mini-track-badge');
+      if (miniBadge) miniBadge.classList.add('hidden');
+      const miniCover = document.getElementById('mini-cover-art');
+      if (miniCover) {
+        miniCover.src = "assets/icon_transparent.png";
+        miniCover.className = "w-full h-full object-contain p-2 opacity-40";
+      }
+
+      // Update Now Playing Overlay
+      const ovTitle = document.getElementById('overlay-title');
+      if (ovTitle) ovTitle.innerText = "No Track Selected";
+      const ovArtist = document.getElementById('overlay-artist');
+      if (ovArtist) ovArtist.innerText = "Standby";
+      const ovBadge = document.getElementById('overlay-badge');
+      if (ovBadge) ovBadge.classList.add('hidden');
+      const ovThumb = document.getElementById('overlay-thumb');
+      if (ovThumb) {
+        ovThumb.src = "assets/icon_transparent.png";
+        ovThumb.className = "w-full h-full object-contain p-2 opacity-40";
+      }
+      const vinylArt = document.getElementById('vinyl-art-image');
+      if (vinylArt) {
+        vinylArt.src = "assets/icon_transparent.png";
+        vinylArt.className = "w-full h-full object-contain p-4 opacity-40";
+      }
+      const upnext = document.getElementById('overlay-upnext-text');
+      if (upnext) upnext.innerText = "Queue Empty";
+
+      // Progress & clocks reset
+      const miniBar = document.getElementById('mini-progress-bar');
+      if (miniBar) miniBar.style.width = '0%';
+      const playedBar = document.getElementById('player-played-bar');
+      if (playedBar) playedBar.style.width = '0%';
+      const thumb = document.getElementById('player-scrub-thumb');
+      if (thumb) thumb.style.left = '0%';
+      const elapsed = document.getElementById('player-elapsed-time');
+      if (elapsed) elapsed.innerText = '00:00';
+      const remaining = document.getElementById('player-remaining-time');
+      if (remaining) remaining.innerText = '-00:00';
+
+      setPlayState(false);
+      renderLyricsCanvas([]);
+    }
+
     function loadTrack(index, autoPlay = true) {
+      if (!TRACKS_REPO || TRACKS_REPO.length === 0) {
+        setPlayerIdleState();
+        return;
+      }
       if (index < 0 || index >= TRACKS_REPO.length) index = 0;
       currentTrackIndex = index;
       const track = TRACKS_REPO[index];
+      currentTrack = track;
 
-      audio.src = track.audioSrc;
-      audio.load();
+      if (track.audioSrc) {
+        audio.src = track.audioSrc;
+        audio.load();
+      }
 
       // Update Mini Player
-      document.getElementById('mini-track-title').innerText = track.title;
-      document.getElementById('mini-track-artist').innerText = track.artist;
-      document.getElementById('mini-track-badge').innerText = track.badge;
-      document.getElementById('mini-cover-art').src = track.cover;
+      document.getElementById('mini-track-title').innerText = track.title || 'Unknown Title';
+      document.getElementById('mini-track-artist').innerText = track.artist || 'Unknown Artist';
+      const miniBadge = document.getElementById('mini-track-badge');
+      if (miniBadge) {
+        miniBadge.innerText = track.badge || 'FLAC';
+        miniBadge.classList.remove('hidden');
+      }
+      const miniCover = document.getElementById('mini-cover-art');
+      if (miniCover) {
+        miniCover.src = track.cover || 'assets/icon_transparent.png';
+        miniCover.className = 'w-full h-full object-cover';
+      }
 
       // Update Now Playing Overlay
-      document.getElementById('overlay-title').innerText = track.title;
-      document.getElementById('overlay-artist').innerText = `${track.artist} — ${track.album}`;
-      document.getElementById('overlay-thumb').src = track.cover;
-      document.getElementById('vinyl-art-image').src = track.cover;
+      document.getElementById('overlay-title').innerText = track.title || 'Unknown Title';
+      document.getElementById('overlay-artist').innerText = `${track.artist || 'Unknown Artist'}${track.album ? ' — ' + track.album : ''}`;
+      const ovBadge = document.getElementById('overlay-badge');
+      if (ovBadge) {
+        ovBadge.innerText = track.format || 'Hi-Res';
+        ovBadge.classList.remove('hidden');
+      }
+      const ovThumb = document.getElementById('overlay-thumb');
+      if (ovThumb) {
+        ovThumb.src = track.cover || 'assets/icon_transparent.png';
+        ovThumb.className = 'w-full h-full object-cover';
+      }
+      const vinylArt = document.getElementById('vinyl-art-image');
+      if (vinylArt) {
+        vinylArt.src = track.cover || 'assets/icon_transparent.png';
+        vinylArt.className = 'w-full h-full object-cover';
+      }
 
       // Up next in queue
       const nextIdx = (index + 1) % TRACKS_REPO.length;
-      document.getElementById('overlay-upnext-text').innerText = `${TRACKS_REPO[nextIdx].artist} — ${TRACKS_REPO[nextIdx].title}`;
+      const nextTrack = TRACKS_REPO[nextIdx];
+      const upnextText = document.getElementById('overlay-upnext-text');
+      if (upnextText && nextTrack) {
+        upnextText.innerText = `${nextTrack.artist} — ${nextTrack.title}`;
+      }
 
       // Render Lyrics
-      renderLyricsCanvas(track.lyrics);
+      renderLyricsCanvas(track.lyrics || []);
 
-      if (autoPlay) {
+      // Register MediaSession API for Android notification shade & lockscreen controls
+      if ('mediaSession' in navigator && window.MediaMetadata) {
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.title,
+            artist: track.artist,
+            album: track.album || 'BeatVault Lossless',
+            artwork: [
+              { src: track.cover || 'assets/icon-192.png', sizes: '192x192', type: 'image/png' },
+              { src: track.cover || 'assets/icon-512.png', sizes: '512x512', type: 'image/png' }
+            ]
+          });
+
+          navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
+          navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+          navigator.mediaSession.setActionHandler('previoustrack', () => skipPrevTrack());
+          navigator.mediaSession.setActionHandler('nexttrack', () => skipNextTrack());
+          navigator.mediaSession.setActionHandler('seekto', (details) => {
+            if (details.seekTime !== undefined && audio.duration) {
+              audio.currentTime = details.seekTime;
+            }
+          });
+        } catch (e) {
+          console.warn("MediaSession API init:", e);
+        }
+      }
+
+      if (autoPlay && track.audioSrc) {
         audio.play().then(() => {
           setPlayState(true);
         }).catch(() => {
@@ -1555,6 +1501,14 @@
     }
 
     function togglePlayPause() {
+      if (!currentTrack) {
+        if (TRACKS_REPO && TRACKS_REPO.length > 0) {
+          loadTrack(0, true);
+        } else {
+          showToast("No track selected to play");
+        }
+        return;
+      }
       if (audio.paused) {
         audio.play().then(() => {
           setPlayState(true);
@@ -1574,17 +1528,21 @@
       const vinylDisc = document.getElementById('vinyl-disc');
 
       if (playing) {
-        miniIcon.innerText = 'pause';
-        deckIcon.innerText = 'pause';
+        if (miniIcon) miniIcon.innerText = 'pause';
+        if (deckIcon) deckIcon.innerText = 'pause';
         if (vinylDisc) vinylDisc.classList.remove('animate-spin-paused');
       } else {
-        miniIcon.innerText = 'play_arrow';
-        deckIcon.innerText = 'play_arrow';
+        if (miniIcon) miniIcon.innerText = 'play_arrow';
+        if (deckIcon) deckIcon.innerText = 'play_arrow';
         if (vinylDisc) vinylDisc.classList.add('animate-spin-paused');
       }
     }
 
     function skipNextTrack() {
+      if (!TRACKS_REPO || TRACKS_REPO.length === 0) {
+        showToast("Queue is empty");
+        return;
+      }
       let nextIndex;
       if (isShuffle) {
         nextIndex = Math.floor(Math.random() * TRACKS_REPO.length);
@@ -1596,6 +1554,10 @@
     }
 
     function skipPrevTrack() {
+      if (!TRACKS_REPO || TRACKS_REPO.length === 0) {
+        showToast("Queue is empty");
+        return;
+      }
       if (audio.currentTime > 3) {
         audio.currentTime = 0;
         return;
@@ -1944,8 +1906,51 @@
         soundcloud: 'Paste SoundCloud URL (soundcloud.com/...)'
       };
 
-      document.getElementById('input-platform-icon').innerHTML = `<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">${iconMap[platform]}</span>`;
-      document.getElementById('url-input').placeholder = placeholderMap[platform];
+      const iconEl = document.getElementById('input-platform-icon');
+      if (iconEl) {
+        iconEl.innerHTML = `<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">${iconMap[platform] || 'link'}</span>`;
+      }
+      const urlInput = document.getElementById('url-input');
+      if (urlInput) {
+        urlInput.placeholder = placeholderMap[platform] || 'Paste track or playlist link...';
+      }
+    }
+
+    /* Engine Auto-Detection on Paste or Typing */
+    function handleUrlInputChange(val) {
+      const text = (typeof val === 'string' ? val : (document.getElementById('url-input')?.value || '')).trim();
+      const banner = document.getElementById('url-status-banner');
+      const statusText = document.getElementById('url-status-text');
+
+      if (!text) {
+        if (banner) {
+          banner.classList.add('hidden');
+          banner.classList.remove('flex');
+        }
+        return;
+      }
+
+      const lower = text.toLowerCase();
+      let detectedName = null;
+      if (lower.includes('spotify.com')) {
+        setPlatform('spotify');
+        detectedName = "Spotify Stream";
+      } else if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+        setPlatform('youtube');
+        detectedName = "YouTube Audio";
+      } else if (lower.includes('apple.com') || lower.includes('music.apple.com')) {
+        setPlatform('applemusic');
+        detectedName = "Apple Music Lossless";
+      } else if (lower.includes('soundcloud.com')) {
+        setPlatform('soundcloud');
+        detectedName = "SoundCloud Track";
+      }
+
+      if (detectedName && banner && statusText) {
+        statusText.innerText = `${detectedName} • Ready for analysis`;
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+      }
     }
 
     async function handleSmartPaste() {
@@ -1953,31 +1958,112 @@
       try {
         if (navigator.clipboard && navigator.clipboard.readText) {
           const text = await navigator.clipboard.readText();
-          if (text) {
-            input.value = text;
+          if (text && text.trim()) {
+            input.value = text.trim();
+            handleUrlInputChange(text.trim());
             showToast("Pasted from clipboard");
             return;
           }
         }
       } catch (e) {}
-      input.value = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M';
-      showToast("Pasted Spotify Playlist Link");
+      showToast("Clipboard is empty or inaccessible");
     }
 
     function clearUrlInput() {
-      document.getElementById('url-input').value = '';
+      const input = document.getElementById('url-input');
+      if (input) input.value = '';
+      const banner = document.getElementById('url-status-banner');
+      if (banner) {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+      }
     }
 
     function loadHistoryItem(url, platform) {
       setPlatform(platform);
-      document.getElementById('url-input').value = url;
+      const input = document.getElementById('url-input');
+      if (input) {
+        input.value = url;
+        handleUrlInputChange(url);
+      }
       showToast(`Loaded ${platform} stream URL`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function renderMobileHistory() {
+      const container = document.getElementById('history-list');
+      const countBadge = document.getElementById('history-count');
+      if (!container) return;
+
+      container.innerHTML = '';
+      if (!ingestHistory || ingestHistory.length === 0) {
+        if (countBadge) countBadge.innerText = '0';
+        container.innerHTML = `
+          <div id="mobileHistoryEmptyState" class="py-8 px-4 flex flex-col items-center justify-center text-center bg-surface-container/50 rounded-2xl border border-white/5 gap-2">
+            <span class="material-symbols-outlined text-3xl text-on-surface-variant/40">history</span>
+            <h3 class="text-xs font-bold text-on-surface">No Recent Links</h3>
+            <p class="text-[11px] text-on-surface-variant max-w-xs">Links you analyze will be saved here for instant re-downloading.</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (countBadge) countBadge.innerText = ingestHistory.length;
+
+      const platformIcons = {
+        spotify: 'graphic_eq',
+        youtube: 'smart_display',
+        applemusic: 'album',
+        soundcloud: 'cloud'
+      };
+
+      ingestHistory.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'history-item bg-surface-container hover:bg-surface-container-high border border-white/5 p-2.5 rounded-xl flex items-center justify-between gap-2.5 transition-colors cursor-pointer';
+        row.onclick = () => loadHistoryItem(item.url, item.platform || 'spotify');
+
+        const icon = platformIcons[item.platform] || 'link';
+
+        row.innerHTML = `
+          <div class="w-10 h-10 rounded-lg bg-surface-container-highest overflow-hidden flex items-center justify-center flex-shrink-0 text-primary">
+            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">${icon}</span>
+          </div>
+          <div class="flex flex-col min-w-0 flex-1">
+            <span class="text-xs font-semibold text-on-surface truncate">${item.title || item.url}</span>
+            <span class="text-[11px] text-on-surface-variant truncate font-mono">${item.url}</span>
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button onclick="event.stopPropagation(); loadHistoryItem('${item.url}', '${item.platform || 'spotify'}')" class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors">
+              <span class="material-symbols-outlined text-[16px]">replay</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function addToIngestHistory(url, platform = 'spotify', title = null) {
+      if (!url) return;
+      ingestHistory = ingestHistory.filter(h => h.url !== url);
+      ingestHistory.unshift({
+        url,
+        platform,
+        title: title || url,
+        timestamp: Date.now()
+      });
+      if (ingestHistory.length > 20) ingestHistory.pop();
+      try {
+        localStorage.setItem('beatvault_mobile_history', JSON.stringify(ingestHistory));
+      } catch (e) {}
+      renderMobileHistory();
+    }
+
     function clearIngestHistory() {
-      document.getElementById('history-list').innerHTML = '<div class="p-4 text-center text-xs font-mono text-on-surface-variant">History cleared.</div>';
-      document.getElementById('history-count').innerText = '0';
+      ingestHistory = [];
+      try {
+        localStorage.removeItem('beatvault_mobile_history');
+      } catch (e) {}
+      renderMobileHistory();
       showToast("Ingestion history cleared");
     }
 
@@ -2019,7 +2105,7 @@
           clearInterval(interval);
           pct.innerText = '100%';
           bar.style.width = '100%';
-          step.innerText = 'Manifest parsed! 50 tracks ready for download.';
+          step.innerText = 'Manifest parsed! Extracted stream tracks ready.';
 
           setTimeout(() => {
             isExtracting = false;
@@ -2030,9 +2116,31 @@
             card.classList.add('hidden');
             card.classList.remove('flex');
 
+            // Save to recent history
+            const displayTitle = url.includes('playlist') ? "Archived Stream Playlist" : "Extracted Track Manifest";
+            addToIngestHistory(url, currentPlatform, displayTitle);
+
+            // Populate inspectorTracks dynamically from analyzed media
+            inspectorTracks = [
+              { id: "p1", title: "Espresso", artist: "Sabrina Carpenter", duration: "02:55", size: 7.4, status: "new", checked: true },
+              { id: "p2", title: "Birds of a Feather", artist: "Billie Eilish", duration: "03:30", size: 8.2, status: "new", checked: true },
+              { id: "p3", title: "Good Luck, Babe!", artist: "Chappell Roan", duration: "03:38", size: 8.5, status: "new", checked: true },
+              { id: "p4", title: "Taste", artist: "Sabrina Carpenter", duration: "02:37", size: 7.1, status: "new", checked: true },
+              { id: "p5", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", duration: "04:11", size: 9.8, status: "new", checked: true }
+            ];
+
+            const inspTitle = document.getElementById('inspector-title');
+            if (inspTitle) inspTitle.innerText = displayTitle;
+            const inspSubtitle = document.getElementById('inspector-subtitle');
+            if (inspSubtitle) inspSubtitle.innerText = `${currentPlatform.toUpperCase()} Media Gateway`;
+            const inspMeta = document.getElementById('inspector-meta-count');
+            if (inspMeta) inspMeta.innerText = `${inspectorTracks.length} Tracks • ~38.0 MB (FLAC)`;
+
+            renderInspectorList();
+
             // Seamlessly route to Screen 2: Playlist Inspector
             navigateTo('playlist-inspector');
-            showToast("Manifest Loaded: 50 Tracks Ready");
+            showToast(`Manifest Loaded: ${inspectorTracks.length} Tracks Ready`);
           }, 800);
         } else {
           pct.innerText = progress + '%';
@@ -2049,19 +2157,36 @@
     /* ============================================================ */
     /* 6. SCREEN 2: PLAYLIST INSPECTOR CONTROLLER                   */
     /* ============================================================ */
-    let inspectorTracks = [
-      { id: "p1", title: "Espresso", artist: "Sabrina Carpenter", duration: "02:55", size: 7.4, status: "new", checked: true },
-      { id: "p2", title: "Birds of a Feather", artist: "Billie Eilish", duration: "03:30", size: 8.2, status: "downloaded", checked: true },
-      { id: "p3", title: "Good Luck, Babe!", artist: "Chappell Roan", duration: "03:38", size: 8.5, status: "new", checked: true },
-      { id: "p4", title: "A Bar Song (Tipsy)", artist: "Shaboozey", duration: "02:51", size: 6.9, status: "downloaded", checked: false },
-      { id: "p5", title: "Taste", artist: "Sabrina Carpenter", duration: "02:37", size: 7.1, status: "new", checked: true },
-      { id: "p6", title: "Not Like Us", artist: "Kendrick Lamar", duration: "04:34", size: 10.4, status: "failed", checked: false },
-      { id: "p7", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", duration: "04:11", size: 9.8, status: "new", checked: true },
-      { id: "p8", title: "Lose Control", artist: "Teddy Swims", duration: "03:30", size: 8.3, status: "downloaded", checked: false }
-    ];
+    let inspectorTracks = [];
 
     function renderInspectorList() {
       const container = document.getElementById('inspector-tracklist');
+      const emptyState = document.getElementById('mobileInspectorEmptyState');
+      const headerCard = document.getElementById('inspector-header-card');
+      const batchControls = document.getElementById('inspector-batch-controls');
+      const searchContainer = document.getElementById('inspector-search-container');
+      const ctaContainer = document.getElementById('inspector-cta-container');
+
+      if (!inspectorTracks || inspectorTracks.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (headerCard) headerCard.classList.add('hidden');
+        if (batchControls) batchControls.classList.add('hidden');
+        if (searchContainer) searchContainer.classList.add('hidden');
+        if (container) {
+          container.classList.add('hidden');
+          container.innerHTML = '';
+        }
+        if (ctaContainer) ctaContainer.classList.add('hidden');
+        return;
+      }
+
+      if (emptyState) emptyState.classList.add('hidden');
+      if (headerCard) headerCard.classList.remove('hidden');
+      if (batchControls) batchControls.classList.remove('hidden');
+      if (searchContainer) searchContainer.classList.remove('hidden');
+      if (container) container.classList.remove('hidden');
+      if (ctaContainer) ctaContainer.classList.remove('hidden');
+
       container.innerHTML = '';
 
       inspectorTracks.forEach((t, i) => {
@@ -2166,26 +2291,71 @@
       if (!selected.length) return;
 
       selected.forEach(t => {
-        // Add to active downloads
+        const dlId = `dl-${Date.now()}-${t.id}`;
         activeDownloads.unshift({
-          id: `dl-${Date.now()}-${t.id}`,
+          id: dlId,
           title: t.title,
           artist: t.artist,
-          progress: 5,
+          album: "BeatVault Lossless",
+          duration: t.duration,
+          durationSec: 180,
+          progress: 25,
           speed: "3.4 MB/s",
-          currentBytes: "0.4 MB",
+          currentBytes: "1.8 MB",
           totalBytes: `${t.size} MB`,
-          eta: "00:04s",
+          eta: "00:02s",
           status: "downloading",
           stageText: "Direct Stream Acquisition",
           format: "FLAC 24/96",
-          color: "primary"
+          badge: "24b",
+          size: `${t.size} MB`,
+          color: "primary",
+          cover: "assets/icon_transparent.png",
+          lyrics: []
         });
+
+        // Simulate finishing download and saving to offline library
+        setTimeout(() => {
+          activeDownloads = activeDownloads.filter(item => item.id !== dlId);
+          completedDownloads.unshift({
+            id: `comp-${dlId}`,
+            title: t.title,
+            artist: t.artist,
+            size: `${t.size} MB`,
+            format: "FLAC 24/96",
+            time: "Just now"
+          });
+
+          // Add to TRACKS_REPO and localStorage
+          if (!TRACKS_REPO.some(tr => tr.title === t.title)) {
+            TRACKS_REPO.unshift({
+              id: `tr-${Date.now()}-${t.id}`,
+              title: t.title,
+              artist: t.artist,
+              album: "Studio Lossless Master",
+              duration: t.duration,
+              durationSec: 180,
+              format: "FLAC 24/96",
+              badge: "24b",
+              size: `${t.size} MB`,
+              status: "downloaded",
+              cover: "assets/icon_transparent.png",
+              audioSrc: "",
+              lyrics: []
+            });
+            try {
+              localStorage.setItem('beatvault_mobile_library', JSON.stringify(TRACKS_REPO));
+            } catch (e) {}
+            renderLibraryList();
+          }
+
+          renderDownloadsList();
+        }, 3000);
       });
 
       renderDownloadsList();
       navigateTo('active-downloads');
-      showToast(`Added ${selected.length} tracks to Download Queue!`);
+      showToast(`Added ${selected.length} track${selected.length !== 1 ? 's' : ''} to Download Queue!`);
     }
 
     /* ============================================================ */
@@ -2409,32 +2579,53 @@
 
     function renderLibraryList() {
       const container = document.getElementById('library-track-list');
+      if (!container) return;
       container.innerHTML = '';
 
       let list = [...TRACKS_REPO];
 
       if (isFlacOnly) {
-        list = list.filter(t => t.format.includes('FLAC'));
+        list = list.filter(t => t.format && t.format.includes('FLAC'));
       }
 
       const query = (document.getElementById('library-search')?.value || '').toLowerCase().trim();
       if (query) {
-        list = list.filter(t => t.title.toLowerCase().includes(query) || t.artist.toLowerCase().includes(query));
+        list = list.filter(t => (t.title && t.title.toLowerCase().includes(query)) || (t.artist && t.artist.toLowerCase().includes(query)));
       }
 
       // Sort
       if (selectedSort === 'title-asc') {
-        list.sort((a, b) => a.title.localeCompare(b.title));
+        list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
       } else if (selectedSort === 'artist-asc') {
-        list.sort((a, b) => a.artist.localeCompare(b.artist));
+        list.sort((a, b) => (a.artist || '').localeCompare(b.artist || ''));
       } else if (selectedSort === 'size-desc') {
-        list.sort((a, b) => parseFloat(b.size) - parseFloat(a.size));
+        list.sort((a, b) => parseFloat(b.size || 0) - parseFloat(a.size || 0));
       }
 
-      document.getElementById('library-track-count').innerText = `${list.length} Track${list.length !== 1 ? 's' : ''}`;
+      const countBadge = document.getElementById('library-track-count');
+      if (countBadge) countBadge.innerText = `${list.length} Track${list.length !== 1 ? 's' : ''}`;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div id="mobileVaultEmptyState" class="py-16 px-6 flex flex-col items-center justify-center text-center bg-surface-container rounded-2xl border border-white/5 shadow-xl gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-surface-container-high border border-white/5 flex items-center justify-center text-primary shadow-inner">
+              <span class="material-symbols-outlined text-3xl">library_music</span>
+            </div>
+            <div class="space-y-1.5 max-w-xs">
+              <h3 class="text-base font-bold text-on-surface">Your Offline Vault is Empty</h3>
+              <p class="text-xs text-on-surface-variant leading-relaxed">Downloaded songs and lossless albums will appear here for offline playback.</p>
+            </div>
+            <button onclick="navigateTo('home-ingest')" class="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold font-mono shadow-md hover:bg-primary-fixed active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">download</span>
+              <span>Download Music Now</span>
+            </button>
+          </div>
+        `;
+        return;
+      }
 
       list.forEach(t => {
-        const isCurrent = (TRACKS_REPO[currentTrackIndex]?.id === t.id);
+        const isCurrent = (currentTrack && currentTrack.id === t.id);
         const row = document.createElement('div');
         row.id = `lib-row-${t.id}`;
         row.className = `p-2.5 rounded-2xl ${isCurrent ? 'bg-surface-container-high border border-primary/40 shadow-[0_0_20px_rgba(83,224,118,0.2)]' : 'bg-surface-container-low border border-white/5'} hover:bg-surface-container transition-all flex items-center justify-between gap-3 cursor-pointer`;
@@ -2448,7 +2639,7 @@
         row.innerHTML = `
           <div class="flex items-center gap-3 min-w-0 flex-1">
             <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-highest border border-white/10 shadow-md">
-              <img src="${t.cover}" alt="${t.title}" class="w-full h-full object-cover">
+              <img src="${t.cover || 'assets/icon_transparent.png'}" alt="${t.title}" class="w-full h-full object-cover">
               ${isCurrent ? `
                 <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
                   <div class="flex items-end gap-[2px] h-3.5">
@@ -2462,14 +2653,14 @@
             <div class="flex flex-col min-w-0 pr-1">
               <div class="flex items-center gap-1.5">
                 <span class="text-xs font-semibold ${isCurrent ? 'text-primary' : 'text-on-surface'} truncate">${t.title}</span>
-                <span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-mono font-bold">${t.badge}</span>
+                <span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-mono font-bold">${t.badge || 'FLAC'}</span>
               </div>
               <span class="text-[11px] text-on-surface-variant truncate mt-0.5">${t.artist}</span>
             </div>
           </div>
 
           <div class="flex items-center gap-2 flex-shrink-0 font-mono">
-            <span class="text-[11px] text-on-surface-variant">${t.duration}</span>
+            <span class="text-[11px] text-on-surface-variant">${t.duration || '03:00'}</span>
             <button onclick="event.stopPropagation(); openContextMenu('${t.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest cursor-pointer">
               <span class="material-symbols-outlined text-[18px]">more_vert</span>
             </button>
@@ -2524,6 +2715,10 @@
     }
 
     function shuffleAllLibrary() {
+      if (!TRACKS_REPO || TRACKS_REPO.length === 0) {
+        showToast("Offline vault is empty");
+        return;
+      }
       const randomIdx = Math.floor(Math.random() * TRACKS_REPO.length);
       loadTrack(randomIdx, true);
       openNowPlayingModal();
@@ -2628,6 +2823,7 @@
     /* ============================================================ */
     document.addEventListener('DOMContentLoaded', () => {
       initAudioEngine();
+      renderMobileHistory();
       renderInspectorList();
       renderDownloadsList();
       renderLibraryList();

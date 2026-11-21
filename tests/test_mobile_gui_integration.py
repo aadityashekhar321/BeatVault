@@ -420,5 +420,240 @@ class TestDesktopGUIFixesAndParity(unittest.TestCase):
         self.assertIn("pointer-events-none", self.html)
 
 
+class TestDesktopCleanStateAndDynamicLogic(unittest.TestCase):
+    """Test suite ensuring GUI initializes in a clean, professional, dynamic empty state without mock leaks."""
+
+    @classmethod
+    def setUpClass(cls):
+        assert os.path.isfile(GUI_HTML_PATH), "gui/index.html must exist"
+        with open(GUI_HTML_PATH, "r", encoding="utf-8") as f:
+            cls.html = f.read()
+
+    def test_media_url_input_empty_default(self):
+        """1. Verify mediaUrlInput has an empty default value (no preset or hardcoded URL)."""
+        match = re.search(r'<input id="mediaUrlInput"[^>]*>', self.html)
+        self.assertTrue(match, "mediaUrlInput element must be present in HTML")
+        tag = match.group(0)
+        self.assertNotIn('value="http', tag, "mediaUrlInput must not contain a hardcoded URL in value attribute")
+        self.assertNotIn('value="https://open.spotify.com', tag, "Spotify URL leak removed from mediaUrlInput")
+
+    def test_no_sample_playlist_or_sample_library_in_app_init(self):
+        """2. Verify App.init() does NOT auto-load SAMPLE_PLAYLIST or loadSampleLibrary() on startup."""
+        match = re.search(r'async init\(\)\s*\{([\s\S]*?)\n\s{6}\}\n\s{4}\};', self.html)
+        self.assertTrue(match, "App.init() method body must be located")
+        init_body = match.group(1)
+        self.assertNotIn("loadPlaylistData(SAMPLE_PLAYLIST)", init_body, "App.init must NOT load SAMPLE_PLAYLIST on startup")
+        self.assertNotIn("loadSampleLibrary()", init_body, "App.init must NOT load sample library on startup")
+
+    def test_inspector_empty_state_present(self):
+        """3. Verify inspector empty state container exists and is configured for empty initial state."""
+        self.assertIn('id="inspectorEmptyState"', self.html, "Inspector must define #inspectorEmptyState container")
+        self.assertIn('id="inspectorContent"', self.html, "Inspector content must be wrapped in #inspectorContent")
+        self.assertIn("No Tracks Loaded", self.html, "Inspector empty state must display 'No Tracks Loaded'")
+        self.assertIn("manage_search", self.html, "Inspector empty state must feature manage_search icon")
+        self.assertIn("Go to Ingest Gateway", self.html, "Action button to navigate to ingest must exist")
+
+    def test_library_empty_state_and_clean_badges(self):
+        """4. Verify library empty state container exists and default badges indicate 0 tracks cached."""
+        self.assertIn('id="libraryEmptyState"', self.html, "Library must define #libraryEmptyState container")
+        self.assertIn("Your Offline Vault is Empty", self.html, "Library empty state must display 'Your Offline Vault is Empty'")
+        self.assertIn("Archive Music Now", self.html, "Library empty state action button must exist")
+        self.assertIn("0 Tracks • 0 MB Cached", self.html, "Library header badge must default to 0 Tracks")
+        self.assertIn("0% Lossless FLAC", self.html, "Library FLAC badge must default to 0%")
+
+    def test_player_bar_initializes_in_clean_idle_state(self):
+        """5. Verify player bar initializes in clean idle state (No Track Selected)."""
+        self.assertIn('>No Track Selected<', self.html, "Player title must default to 'No Track Selected'")
+        self.assertIn('>Select a track to play<', self.html, "Player artist must default to 'Select a track to play'")
+        self.assertIn('>Standby<', self.html, "Player format badge must default to 'Standby'")
+        
+        # Scrubber and duration check
+        dur_match = re.search(r'<span id="playerDuration"[^>]*>([^<]+)</span>', self.html)
+        self.assertTrue(dur_match, "playerDuration element must exist")
+        self.assertEqual(dur_match.group(1).strip(), "0:00", "Player duration must default to 0:00")
+
+        # Player cover must not use hardcoded sample cover
+        cover_match = re.search(r'<img id="playerCover"[^>]*src="([^"]+)"', self.html)
+        self.assertTrue(cover_match, "playerCover element must exist")
+        self.assertNotIn("photo-1614613535308", cover_match.group(1), "Player cover must not use hardcoded Unsplash sample image")
+
+    def test_recent_ingests_clean_empty_state_and_persistence(self):
+        """6. Verify recent ingests reads from beatvault_recent_ingests and renders clean empty state when empty."""
+        self.assertIn("beatvault_recent_ingests", self.html, "Must use localStorage key beatvault_recent_ingests")
+        self.assertIn("history_toggle_off", self.html, "Empty state must display history_toggle_off icon")
+        self.assertIn("No recent ingests yet", self.html, "Empty state must display 'No recent ingests yet'")
+        self.assertIn("URLs you analyze will be remembered here for quick access", self.html)
+
+    def test_media_session_api_integration(self):
+        """Verify OS Media Session API (System Media Transport Controls) integration."""
+        self.assertIn("'mediaSession' in navigator", self.html, "Must check for mediaSession support")
+        self.assertIn("navigator.mediaSession.metadata", self.html, "Must set MediaMetadata")
+        self.assertIn("navigator.mediaSession.setActionHandler('play'", self.html, "Must set play action handler")
+        self.assertIn("navigator.mediaSession.setActionHandler('pause'", self.html, "Must set pause action handler")
+        self.assertIn("navigator.mediaSession.setActionHandler('previoustrack'", self.html, "Must set previoustrack action handler")
+        self.assertIn("navigator.mediaSession.setActionHandler('nexttrack'", self.html, "Must set nexttrack action handler")
+        self.assertIn("navigator.mediaSession.setActionHandler('seekto'", self.html, "Must set seekto action handler")
+        self.assertIn("navigator.mediaSession.playbackState = 'playing'", self.html, "Must set playbackState to playing")
+        self.assertIn("navigator.mediaSession.playbackState = 'paused'", self.html, "Must set playbackState to paused")
+
+    def test_global_keyboard_shortcuts_and_audiophile_ux(self):
+        """Verify global keyboard shortcuts with input guards and modal dismissals."""
+        self.assertIn("document.addEventListener('keydown'", self.html, "Must register global keydown listener")
+        self.assertIn("App.player.togglePlay()", self.html, "Space must trigger togglePlay")
+        self.assertIn("App.player.toggleMute()", self.html, "KeyM must trigger toggleMute")
+        self.assertIn("App.player.seekTo", self.html, "Arrow keys must trigger seekTo")
+        self.assertIn("isContentEditable", self.html, "Must guard editable elements")
+        self.assertIn("mediaUrlInput", self.html, "Shortcut must focus mediaUrlInput")
+
+    def test_image_loading_failure_resilience(self):
+        """Verify image fallback handler and global error capture."""
+        self.assertIn("fallbackImage(imgElement)", self.html, "Must provide fallbackImage helper")
+        self.assertIn("icon_transparent.png", self.html, "Must use safe transparent icon fallback")
+        self.assertIn("window.addEventListener('error'", self.html, "Must have capture-phase error listener")
+
+    def test_visualizer_power_optimization_visibilitychange(self):
+        """Verify 60fps canvas visualizer stops rendering when tab/window is hidden."""
+        self.assertIn("visibilitychange", self.html, "Must listen to visibilitychange")
+        self.assertIn("document.hidden", self.html, "Must check document.hidden")
+        self.assertIn("App.visualizer.stop()", self.html, "Must stop visualizer when document is hidden")
+
+    def test_pywebview_bridge_guard_and_safe_ipc(self):
+        """Verify pywebviewready listener log and unhandled rejection protection."""
+        self.assertIn("PyWebView native bridge connected", self.html, "Must log PyWebView native bridge connected")
+        self.assertIn("unhandledrejection", self.html, "Must handle unhandledrejection for safe IPC")
+
+    def test_enhanced_time_and_size_formatting(self):
+        """Verify formatTime supports hour-long audio (H:MM:SS) and formatBytes uses 1024 divisor."""
+        self.assertIn("formatTime(sec)", self.html, "Must define formatTime")
+        self.assertIn("3600", self.html, "formatTime must divide by 3600 for hour calculation")
+        self.assertIn("formatBytes(bytes", self.html, "Must define formatBytes helper")
+        self.assertIn("1024", self.html, "formatBytes must use 1024 divisor")
+
+
+class TestMobileCleanStateAndDynamicLogic(unittest.TestCase):
+    """Test suite ensuring Mobile GUI initializes in clean, dynamic empty state without mock leaks."""
+
+    @classmethod
+    def setUpClass(cls):
+        assert os.path.isfile(MOBILE_HTML_PATH), "mobile/index.html must exist"
+        with open(MOBILE_HTML_PATH, "r", encoding="utf-8") as f:
+            cls.html = f.read()
+
+    def test_mobile_url_input_no_preset_value(self):
+        """1. Verify mobile url-input has no hardcoded value attribute."""
+        match = re.search(r'<input id="url-input"[^>]*>', self.html)
+        self.assertTrue(match, "url-input element must be present in mobile/index.html")
+        tag = match.group(0)
+        self.assertNotIn('value="', tag, "url-input must not contain a hardcoded value attribute")
+        self.assertNotIn('value="https://open.spotify.com', tag, "Spotify URL leak removed from url-input")
+
+    def test_no_preset_dummy_tracks_loaded_on_launch(self):
+        """2. Verify mobile app initializes TRACKS_REPO, activeDownloads, completedDownloads, and inspectorTracks as empty arrays on launch."""
+        self.assertIn("let TRACKS_REPO = [];", self.html, "TRACKS_REPO must initialize empty")
+        self.assertIn("let activeDownloads = [];", self.html, "activeDownloads must initialize empty")
+        self.assertIn("let completedDownloads = [];", self.html, "completedDownloads must initialize empty")
+        self.assertIn("let inspectorTracks = [];", self.html, "inspectorTracks must initialize empty")
+        self.assertIn("beatvault_mobile_library", self.html, "Must check localStorage beatvault_mobile_library")
+
+    def test_mobile_inspector_empty_state_exists(self):
+        """3. Verify #mobileInspectorEmptyState exists and displays elegant empty state when 0 tracks loaded."""
+        self.assertIn('id="mobileInspectorEmptyState"', self.html, "Must have #mobileInspectorEmptyState container")
+        self.assertIn("No Playlist Loaded", self.html, "Empty state must display 'No Playlist Loaded'")
+        self.assertIn("Paste a music link on the Ingest screen", self.html)
+        self.assertIn("Go to Ingest", self.html, "Must have 'Go to Ingest' button")
+        self.assertIn('id="inspector-header-card"', self.html, "Inspector header must have #inspector-header-card")
+
+    def test_mobile_vault_empty_state_exists(self):
+        """4. Verify #mobileVaultEmptyState exists and displays elegant empty state when library is empty."""
+        self.assertIn('id="mobileVaultEmptyState"', self.html, "Must have #mobileVaultEmptyState container")
+        self.assertIn("Your Offline Vault is Empty", self.html, "Must display 'Your Offline Vault is Empty'")
+        self.assertIn("Download Music Now", self.html, "Must have 'Download Music Now' button")
+        self.assertIn('id="library-track-count">0 Tracks<', self.html, "Library track count must start at 0 Tracks")
+
+    def test_mobile_mini_player_and_overlay_standby_state(self):
+        """5. Verify mini player and now playing overlay start in idle/standby state."""
+        self.assertIn('>No Track Playing<', self.html, "Mini player title must default to 'No Track Playing'")
+        self.assertIn('>Choose a song from Vault or Queue<', self.html, "Mini player artist must default to Vault prompt")
+        self.assertIn('>No Track Selected<', self.html, "Overlay title must default to 'No Track Selected'")
+        self.assertIn('>Standby<', self.html, "Overlay artist must default to 'Standby'")
+        self.assertIn('>Queue Empty<', self.html, "Overlay up next must default to 'Queue Empty'")
+        self.assertIn('setPlayerIdleState', self.html, "Must define setPlayerIdleState method")
+
+    def test_mobile_history_reads_local_storage_and_empty_state(self):
+        """6. Verify mobile history reads from beatvault_mobile_history and has clean empty state."""
+        self.assertIn("beatvault_mobile_history", self.html, "Must use localStorage beatvault_mobile_history key")
+        self.assertIn('id="mobileHistoryEmptyState"', self.html, "Must define #mobileHistoryEmptyState")
+        self.assertIn("No Recent Links", self.html, "Empty state must display 'No Recent Links'")
+        self.assertTrue(re.search(r'id="history-count"[^>]*>0</span>', self.html), "History count must default to 0")
+
+    def test_mobile_engine_auto_detection(self):
+        """7. Verify engine auto-detection on typing/pasting for Spotify, YouTube, Apple Music, and SoundCloud."""
+        self.assertIn("handleUrlInputChange", self.html, "Must define handleUrlInputChange handler")
+        self.assertIn("spotify.com", self.html)
+        self.assertIn("youtube.com", self.html)
+        self.assertIn("apple.com", self.html)
+        self.assertIn("soundcloud.com", self.html)
+
+    def test_mobile_media_session_api_integration(self):
+        """8. Verify Mobile Media Session API configuration for Android notification shade & lockscreen controls."""
+        self.assertIn("'mediaSession' in navigator", self.html, "Must check for mediaSession support")
+        self.assertIn("navigator.mediaSession.metadata", self.html, "Must set MediaMetadata")
+        self.assertIn("navigator.mediaSession.setActionHandler('play'", self.html, "Must set play handler")
+        self.assertIn("navigator.mediaSession.setActionHandler('pause'", self.html, "Must set pause handler")
+        self.assertIn("navigator.mediaSession.setActionHandler('previoustrack'", self.html, "Must set prev handler")
+        self.assertIn("navigator.mediaSession.setActionHandler('nexttrack'", self.html, "Must set next handler")
+
+
+class TestLegacyFeaturesAdapted(unittest.TestCase):
+    """Test suite ensuring all legacy UI/UX features are cleanly adapted into Obsidian Sonic GUI."""
+
+    @classmethod
+    def setUpClass(cls):
+        assert os.path.isfile(GUI_HTML_PATH), "gui/index.html must exist"
+        with open(GUI_HTML_PATH, "r", encoding="utf-8") as f:
+            cls.html = f.read()
+
+    def test_total_album_duration_badge_and_multi_format_summation(self):
+        """1. Verify inspectorDurationBadge formats album length and parses ms/sec/formatted durations."""
+        self.assertIn('id="inspectorDurationBadge"', self.html)
+        self.assertIn("duration_ms", self.html)
+        self.assertIn("duration_sec", self.html)
+        self.assertIn("duration_formatted", self.html)
+        self.assertIn("min", self.html)
+
+    def test_pre_scan_folder_duplicates_and_auto_uncheck(self):
+        """2. Verify scanFolderDuplicates pre-checks destination vault, tags Already in Vault, and auto-unchecks."""
+        self.assertIn("scanFolderDuplicates", self.html)
+        self.assertIn("scan_duplicates", self.html)
+        self.assertIn("Already in Vault", self.html)
+        self.assertIn("btnDeselectDuplicates", self.html)
+        self.assertIn("deselectDuplicates", self.html)
+
+    def test_inspector_filter_chips_and_search_filter(self):
+        """3. Verify quick tracklist filter chips (All, Selected, Unselected, Vault) and search bar."""
+        self.assertIn('id="inspectorFilterChips"', self.html)
+        self.assertIn('id="inspectorSearchInput"', self.html)
+        self.assertIn('id="btnClearInspectorSearch"', self.html)
+        self.assertIn('id="chipFilterDuplicates"', self.html)
+        self.assertIn('data-filter="all"', self.html)
+        self.assertIn('data-filter="selected"', self.html)
+        self.assertIn('data-filter="unselected"', self.html)
+
+    def test_clipboard_fallback_graceful_prompt(self):
+        """4. Verify clipboard paste failure provides prompt fallback for Linux/restricted WebViews."""
+        self.assertIn("navigator.clipboard.readText", self.html)
+        self.assertIn("prompt('Paste playlist or track URL", self.html)
+
+    def test_theme_accent_swatches_and_persistence(self):
+        """5. Verify Studio Theme Accent switcher (Green, Cyan, Purple, Orange) and localStorage persistence."""
+        self.assertIn("theme-accent-btn", self.html)
+        self.assertIn('data-theme-accent="green"', self.html)
+        self.assertIn('data-theme-accent="cyan"', self.html)
+        self.assertIn('data-theme-accent="purple"', self.html)
+        self.assertIn('data-theme-accent="orange"', self.html)
+        self.assertIn("setThemeAccent", self.html)
+        self.assertIn("beatvault_theme_accent", self.html)
+
+
 if __name__ == "__main__":
     unittest.main()

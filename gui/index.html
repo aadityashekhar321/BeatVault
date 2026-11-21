@@ -75,6 +75,24 @@
     :root {
       color-scheme: dark;
     }
+
+    /* Dynamic Theme Accent System */
+    html[data-accent="cyan"] {
+      --primary: #4cd7f6;
+      --primary-container: #03b5d3;
+    }
+    html[data-accent="purple"] {
+      --primary: #af8eff;
+      --primary-container: #9333ea;
+    }
+    html[data-accent="orange"] {
+      --primary: #fb923c;
+      --primary-container: #ea580c;
+    }
+    html[data-accent="green"], :root {
+      --primary: #53e076;
+      --primary-container: #1db954;
+    }
     html, body {
       margin: 0;
       padding: 0;
@@ -401,7 +419,7 @@
                   <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-2 rounded-xl bg-surface-container-lowest border border-white/5 shadow-inner focus-within:border-primary/50 transition-colors">
                     <div class="flex items-center gap-3 flex-1 px-3 py-1.5 min-w-0">
                       <span class="material-symbols-outlined text-on-surface-variant text-[20px] shrink-0">link</span>
-                      <input id="mediaUrlInput" type="url" class="w-full bg-transparent text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none min-w-0" placeholder="Paste track, album, or playlist URL (Spotify, YouTube, Apple, SoundCloud)..." value="https://open.spotify.com/album/7aJuG4TFXa2hmE4z1yxc3n"/>
+                      <input id="mediaUrlInput" type="url" class="w-full bg-transparent text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none min-w-0" placeholder="Paste track, album, or playlist URL (Spotify, YouTube, Apple, SoundCloud)..."/>
                     </div>
                     <button id="btnPasteClip" type="button" class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface text-xs font-semibold transition-all shrink-0 border border-white/5">
                       <span class="material-symbols-outlined text-[17px]">content_paste</span>
@@ -508,7 +526,7 @@
             <!-- Auto-Tagger Status -->
             <div class="rounded-2xl bg-surface-container-high p-5 shadow-sm border border-white/5 flex items-center gap-4">
               <div class="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-container-lowest border border-white/10">
-                <img id="autoTaggerPreviewImg" class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&auto=format&fit=crop&q=80" alt="Cover Art"/>
+                <img id="autoTaggerPreviewImg" class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&auto=format&fit=crop&q=80" alt="Cover Art" onerror="App.ui.fallbackImage(this)"/>
               </div>
               <div class="flex flex-col gap-1 flex-1 min-w-0">
                 <div class="flex items-center gap-2">
@@ -541,136 +559,180 @@
       <!-- VIEW 2: PLAYLIST & TRACK INSPECTOR                       -->
       <!-- ======================================================== -->
       <section id="view-inspector" class="view-panel hidden flex flex-col gap-6">
-        <!-- Playlist Hero Banner Card -->
-        <div class="relative overflow-hidden rounded-2xl bg-surface-container p-6 lg:p-8 shadow-elevation-2 border border-white/5">
-          <div class="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl"></div>
-          <div class="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-secondary/10 blur-3xl"></div>
+        <!-- Inspector Empty State -->
+        <div id="inspectorEmptyState" class="py-20 px-6 flex flex-col items-center justify-center text-center bg-surface-container rounded-2xl border border-white/5 shadow-elevation-2 gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-surface-container-high border border-white/5 flex items-center justify-center text-secondary shadow-inner">
+            <span class="material-symbols-outlined text-[36px]">manage_search</span>
+          </div>
+          <div class="flex flex-col gap-1 max-w-md">
+            <h3 class="text-xl font-bold text-on-surface">No Tracks Loaded</h3>
+            <p class="text-xs text-on-surface-variant leading-relaxed">Paste a Spotify, YouTube, Apple Music, or SoundCloud link on the Ingest screen to inspect tracks, select bitrates, and archive.</p>
+          </div>
+          <button type="button" onclick="App.nav.goTo('ingest')" class="mt-2 flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-container text-on-primary-container text-xs font-bold shadow-glow-primary hover:bg-primary hover:text-on-primary transition-all">
+            <span class="material-symbols-outlined text-[18px]">input</span>
+            <span>Go to Ingest Gateway</span>
+          </button>
+        </div>
 
-          <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <!-- Playlist Art & Meta -->
-            <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div class="relative h-44 w-44 shrink-0 overflow-hidden rounded-2xl bg-surface-container-highest shadow-xl border border-white/10 group">
-                <img id="inspectorCover" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80" alt="Playlist Cover"/>
-                <div class="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 rounded-full bg-surface-container-lowest/90 px-2.5 py-1 backdrop-blur-md border border-white/10">
-                  <span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                  <span class="text-[10px] font-bold text-primary tracking-wider">HI-RES</span>
+        <!-- Inspector Content (Banner, Telemetry & Table) -->
+        <div id="inspectorContent" class="hidden flex flex-col gap-6">
+          <!-- Playlist Hero Banner Card -->
+          <div class="relative overflow-hidden rounded-2xl bg-surface-container p-6 lg:p-8 shadow-elevation-2 border border-white/5">
+            <div class="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-secondary/10 blur-3xl"></div>
+
+            <div class="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <!-- Playlist Art & Meta -->
+              <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
+                <div class="relative h-44 w-44 shrink-0 overflow-hidden rounded-2xl bg-surface-container-highest shadow-xl border border-white/10 group">
+                  <img id="inspectorCover" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" src="../assets/icon_transparent.png" alt="Playlist Cover" onerror="App.ui.fallbackImage(this)"/>
+                  <div class="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 rounded-full bg-surface-container-lowest/90 px-2.5 py-1 backdrop-blur-md border border-white/10">
+                    <span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    <span class="text-[10px] font-bold text-primary tracking-wider">HI-RES</span>
+                  </div>
+                </div>
+                <div class="flex min-w-0 flex-col gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-secondary">TRACK INSPECTOR</span>
+                    <span class="text-on-surface-variant">•</span>
+                    <span id="inspectorPlatformBadge" class="text-[11px] font-medium text-on-surface-variant">STUDIO MASTER</span>
+                  </div>
+                  <h2 id="inspectorTitle" class="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight truncate">No Playlist Loaded</h2>
+                  <p id="inspectorAuthor" class="text-xs text-on-surface-variant max-w-xl">Paste a music link to inspect tracks and lossless studio audio.</p>
+                  <div class="mt-2 flex flex-wrap items-center gap-2.5">
+                    <div class="flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 border border-white/5 text-xs">
+                      <span class="material-symbols-outlined text-[15px] text-primary">library_music</span>
+                      <span id="inspectorTrackCountBadge" class="tabular-nums">0 Tracks</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 border border-white/5 text-xs">
+                      <span class="material-symbols-outlined text-[15px] text-secondary">schedule</span>
+                      <span id="inspectorDurationBadge" class="tabular-nums">0m 0s</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 border border-white/5 text-xs">
+                      <span class="material-symbols-outlined text-[15px] text-tertiary">hard_drive</span>
+                      <span id="inspectorTotalSizeBadge" class="tabular-nums">0.0 MB</span>
+                      <span id="inspectorSizeBadge" class="hidden">0.0 MB</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="flex min-w-0 flex-col gap-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-[11px] font-bold uppercase tracking-wider text-secondary">TRACK INSPECTOR</span>
-                  <span class="text-on-surface-variant">•</span>
-                  <span id="inspectorPlatformBadge" class="text-[11px] font-medium text-on-surface-variant">SPOTIFY MASTER</span>
-                </div>
-                <h2 id="inspectorTitle" class="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight truncate">Midnight Synthwave &amp; Hi-Res</h2>
-                <p id="inspectorAuthor" class="text-xs text-on-surface-variant max-w-xl">Curated nocturnal electronics, analog basslines, and lossless studio masters verified for bit-perfect archival.</p>
-                <div class="mt-2 flex flex-wrap items-center gap-2.5">
-                  <div class="flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 border border-white/5 text-xs">
-                    <span class="material-symbols-outlined text-[15px] text-primary">library_music</span>
-                    <span id="inspectorTrackCountBadge" class="tabular-nums">8 Tracks</span>
-                  </div>
-                  <div class="flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 border border-white/5 text-xs">
-                    <span class="material-symbols-outlined text-[15px] text-secondary">schedule</span>
-                    <span id="inspectorDurationBadge" class="tabular-nums">34m 18s</span>
-                  </div>
-                  <div class="flex items-center gap-1.5 rounded-full bg-surface-container-high px-3 py-1 border border-white/5 text-xs">
-                    <span class="material-symbols-outlined text-[15px] text-tertiary">hard_drive</span>
-                    <span id="inspectorSizeBadge" class="tabular-nums">712.4 MB</span>
+
+              <!-- Target Quality Selector in Hero -->
+              <div class="flex flex-col items-start gap-4 lg:items-end">
+                <div class="flex flex-col gap-1.5 lg:items-end">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">TARGET QUALITY</span>
+                  <div class="flex items-center rounded-full bg-surface-container-lowest p-1 border border-white/5" id="qualitySelector">
+                    <button type="button" class="quality-btn rounded-full bg-primary-container px-4 py-1.5 text-xs font-bold text-on-primary-container transition-all" data-quality="flac">FLAC 24-bit</button>
+                    <button type="button" class="quality-btn rounded-full px-4 py-1.5 text-xs font-medium text-on-surface-variant hover:text-on-surface transition-all" data-quality="mp3">320kbps MP3</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Target Quality Selector in Hero -->
-            <div class="flex flex-col items-start gap-4 lg:items-end">
-              <div class="flex flex-col gap-1.5 lg:items-end">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">TARGET QUALITY</span>
-                <div class="flex items-center rounded-full bg-surface-container-lowest p-1 border border-white/5" id="qualitySelector">
-                  <button type="button" class="quality-btn rounded-full bg-primary-container px-4 py-1.5 text-xs font-bold text-on-primary-container transition-all" data-quality="flac">FLAC 24-bit</button>
-                  <button type="button" class="quality-btn rounded-full px-4 py-1.5 text-xs font-medium text-on-surface-variant hover:text-on-surface transition-all" data-quality="mp3">320kbps MP3</button>
-                </div>
+            <!-- Batch Selection Bar -->
+            <div class="relative z-10 mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl bg-surface-container-low px-5 py-3.5 border border-white/5">
+              <div class="flex flex-wrap items-center gap-4">
+                <label class="flex cursor-pointer items-center gap-2.5 select-none text-xs font-bold text-on-surface">
+                  <input id="selectAllCheckbox" type="checkbox" checked class="h-4 w-4 accent-primary-container rounded cursor-pointer"/>
+                  <span>Select All</span>
+                </label>
+                <span class="text-on-surface-variant/40">|</span>
+                <button type="button" onclick="App.inspector.selectNone()" class="text-xs text-on-surface-variant hover:text-on-surface transition-colors">None</button>
+                <button type="button" onclick="App.inspector.invertSelection()" class="text-xs text-on-surface-variant hover:text-on-surface transition-colors">Invert</button>
+                <button type="button" id="btnDeselectDuplicates" onclick="App.inspector.deselectDuplicates()" class="hidden text-xs text-secondary hover:underline transition-colors flex items-center gap-1 font-semibold" title="Uncheck duplicate tracks so you only download new music">
+                  <span class="material-symbols-outlined text-[14px]">remove_done</span>
+                  <span>Skip Vault Duplicates</span>
+                </button>
+                <span class="text-on-surface-variant/40">|</span>
+                <span id="selectionSummary" class="text-xs text-secondary font-medium tabular-nums">0 of 0 tracks selected</span>
+                <span class="text-on-surface-variant/40">|</span>
+                <span id="inspectorTotalSizeText" class="text-xs text-on-surface-variant font-medium tabular-nums">Total: 0.0 MB</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <button id="btnDownloadSelected" type="button" class="flex items-center gap-2 rounded-xl bg-primary-container px-6 py-2.5 text-xs font-bold text-on-primary-container shadow-glow-primary hover:bg-primary hover:text-on-primary transition-all">
+                  <span class="material-symbols-outlined text-[18px]">download</span>
+                  <span id="downloadBtnText">Download Selected (0 Tracks • 0.0 MB)</span>
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Batch Selection Bar -->
-          <div class="relative z-10 mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl bg-surface-container-low px-5 py-3.5 border border-white/5">
-            <div class="flex items-center gap-4">
-              <label class="flex cursor-pointer items-center gap-2.5 select-none text-xs font-bold text-on-surface">
-                <input id="selectAllCheckbox" type="checkbox" checked class="h-4 w-4 accent-primary-container rounded cursor-pointer"/>
-                <span>Select All</span>
-              </label>
-              <span class="text-on-surface-variant/40">|</span>
-              <button type="button" onclick="App.inspector.selectNone()" class="text-xs text-on-surface-variant hover:text-on-surface transition-colors">None</button>
-              <button type="button" onclick="App.inspector.invertSelection()" class="text-xs text-on-surface-variant hover:text-on-surface transition-colors">Invert</button>
-              <span class="text-on-surface-variant/40">|</span>
-              <span id="selectionSummary" class="text-xs text-secondary font-medium tabular-nums">8 of 8 tracks selected</span>
+          <!-- Telemetry Summary 3-Grid -->
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div class="flex items-center justify-between rounded-xl bg-surface-container p-4 border border-white/5">
+              <div class="flex flex-col gap-1">
+                <span class="text-[11px] font-bold uppercase text-on-surface-variant">Spectral Integrity</span>
+                <span class="text-lg font-bold text-primary">99.4% Lossless</span>
+                <span class="text-[11px] text-on-surface-variant">Verified 24kHz+ Studio Cutoff</span>
+              </div>
+              <svg class="h-10 w-20 text-primary" fill="none" viewBox="0 0 100 40">
+                <rect x="4" y="22" width="6" height="14" rx="2" fill="currentColor" opacity="0.4"/>
+                <rect x="16" y="14" width="6" height="22" rx="2" fill="currentColor" opacity="0.6"/>
+                <rect x="28" y="8" width="6" height="28" rx="2" fill="currentColor" opacity="0.8"/>
+                <rect x="40" y="18" width="6" height="18" rx="2" fill="currentColor" opacity="0.5"/>
+                <rect x="52" y="4" width="6" height="32" rx="2" fill="currentColor"/>
+                <rect x="64" y="12" width="6" height="24" rx="2" fill="currentColor" opacity="0.85"/>
+                <rect x="76" y="6" width="6" height="30" rx="2" fill="currentColor" opacity="0.9"/>
+                <rect x="88" y="16" width="6" height="20" rx="2" fill="currentColor" opacity="0.7"/>
+              </svg>
             </div>
-            <div class="flex items-center gap-3">
-              <button id="btnDownloadSelected" type="button" class="flex items-center gap-2 rounded-xl bg-primary-container px-6 py-2.5 text-xs font-bold text-on-primary-container shadow-glow-primary hover:bg-primary hover:text-on-primary transition-all">
-                <span class="material-symbols-outlined text-[18px]">download</span>
-                <span id="downloadBtnText">Download Selected (8 Tracks • 712.4 MB)</span>
+            <div class="flex items-center justify-between rounded-xl bg-surface-container p-4 border border-white/5">
+              <div class="flex flex-col gap-1">
+                <span class="text-[11px] font-bold uppercase text-on-surface-variant">Destination Target</span>
+                <span id="inspectorStoragePath" class="text-sm font-bold text-on-surface truncate max-w-[170px]">/Music/BeatVault</span>
+                <span class="text-[11px] text-secondary">SAF Write Access Active</span>
+              </div>
+              <button type="button" onclick="App.settings.selectFolder()" class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-container-high text-secondary hover:bg-surface-bright transition-colors">
+                <span class="material-symbols-outlined text-[20px]">folder_open</span>
               </button>
             </div>
+            <div class="flex items-center justify-between rounded-xl bg-surface-container p-4 border border-white/5">
+              <div class="flex flex-col gap-1">
+                <span class="text-[11px] font-bold uppercase text-on-surface-variant">Batch Concurrency</span>
+                <span id="inspectorConcurrencyText" class="text-lg font-bold text-on-surface">2 Threads Active</span>
+                <span class="text-[11px] text-on-surface-variant">Dynamic auto-clamped</span>
+              </div>
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-container-high text-primary">
+                <span class="material-symbols-outlined text-[20px]">speed</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Telemetry Summary 3-Grid -->
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div class="flex items-center justify-between rounded-xl bg-surface-container p-4 border border-white/5">
-            <div class="flex flex-col gap-1">
-              <span class="text-[11px] font-bold uppercase text-on-surface-variant">Spectral Integrity</span>
-              <span class="text-lg font-bold text-primary">99.4% Lossless</span>
-              <span class="text-[11px] text-on-surface-variant">Verified 24kHz+ Studio Cutoff</span>
+          <!-- Track Table Section -->
+          <div class="flex flex-col rounded-2xl bg-surface-container p-4 shadow-md border border-white/5">
+            <!-- Filter Chips & Search Toolbar -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 mb-2 border-b border-white/5">
+              <!-- Filter Chips -->
+              <div class="flex items-center gap-1.5 overflow-x-auto py-0.5" id="inspectorFilterChips">
+                <button type="button" class="inspector-filter-chip px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-xs font-bold transition-all shadow-sm" data-filter="all">All (<span id="chipCountAll">0</span>)</button>
+                <button type="button" class="inspector-filter-chip px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-on-surface text-xs font-semibold transition-all" data-filter="selected">Selected (<span id="chipCountSelected">0</span>)</button>
+                <button type="button" class="inspector-filter-chip px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-on-surface text-xs font-semibold transition-all" data-filter="unselected">Unselected (<span id="chipCountUnselected">0</span>)</button>
+                <button type="button" id="chipFilterDuplicates" class="hidden inspector-filter-chip px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-bright text-secondary text-xs font-semibold transition-all" data-filter="duplicates">Vault (<span id="chipCountDuplicates">0</span>)</button>
+              </div>
+              <!-- Quick Filter Search Input -->
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-container-low border border-white/5 focus-within:border-primary/50 transition-colors w-full sm:w-64">
+                <span class="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">search</span>
+                <input id="inspectorSearchInput" type="text" placeholder="Filter songs..." class="bg-transparent text-xs text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none w-full"/>
+                <button type="button" id="btnClearInspectorSearch" class="hidden text-on-surface-variant hover:text-on-surface flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[14px]">close</span>
+                </button>
+              </div>
             </div>
-            <svg class="h-10 w-20 text-primary" fill="none" viewBox="0 0 100 40">
-              <rect x="4" y="22" width="6" height="14" rx="2" fill="currentColor" opacity="0.4"/>
-              <rect x="16" y="14" width="6" height="22" rx="2" fill="currentColor" opacity="0.6"/>
-              <rect x="28" y="8" width="6" height="28" rx="2" fill="currentColor" opacity="0.8"/>
-              <rect x="40" y="18" width="6" height="18" rx="2" fill="currentColor" opacity="0.5"/>
-              <rect x="52" y="4" width="6" height="32" rx="2" fill="currentColor"/>
-              <rect x="64" y="12" width="6" height="24" rx="2" fill="currentColor" opacity="0.85"/>
-              <rect x="76" y="6" width="6" height="30" rx="2" fill="currentColor" opacity="0.9"/>
-              <rect x="88" y="16" width="6" height="20" rx="2" fill="currentColor" opacity="0.7"/>
-            </svg>
-          </div>
-          <div class="flex items-center justify-between rounded-xl bg-surface-container p-4 border border-white/5">
-            <div class="flex flex-col gap-1">
-              <span class="text-[11px] font-bold uppercase text-on-surface-variant">Destination Target</span>
-              <span id="inspectorStoragePath" class="text-sm font-bold text-on-surface truncate max-w-[170px]">/Music/BeatVault</span>
-              <span class="text-[11px] text-secondary">SAF Write Access Active</span>
-            </div>
-            <button type="button" onclick="App.settings.selectFolder()" class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-container-high text-secondary hover:bg-surface-bright transition-colors">
-              <span class="material-symbols-outlined text-[20px]">folder_open</span>
-            </button>
-          </div>
-          <div class="flex items-center justify-between rounded-xl bg-surface-container p-4 border border-white/5">
-            <div class="flex flex-col gap-1">
-              <span class="text-[11px] font-bold uppercase text-on-surface-variant">Batch Concurrency</span>
-              <span id="inspectorConcurrencyText" class="text-lg font-bold text-on-surface">2 Threads Active</span>
-              <span class="text-[11px] text-on-surface-variant">Dynamic auto-clamped</span>
-            </div>
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-container-high text-primary">
-              <span class="material-symbols-outlined text-[20px]">speed</span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Track Table Section -->
-        <div class="flex flex-col rounded-2xl bg-surface-container p-4 shadow-md border border-white/5">
-          <!-- Table Header -->
-          <div class="grid grid-cols-12 items-center gap-4 px-4 py-3 text-[11px] font-bold uppercase text-on-surface-variant border-b border-white/5">
-            <div class="col-span-1 flex items-center gap-2">
-              <span>#</span>
+            <!-- Table Header -->
+            <div class="grid grid-cols-12 items-center gap-4 px-4 py-3 text-[11px] font-bold uppercase text-on-surface-variant border-b border-white/5">
+              <div class="col-span-1 flex items-center gap-2">
+                <span>#</span>
+              </div>
+              <div class="col-span-5">TITLE &amp; ARTIST</div>
+              <div class="col-span-3 hidden md:block">ALBUM</div>
+              <div class="col-span-2">FORMAT</div>
+              <div class="col-span-1 text-right">TIME</div>
             </div>
-            <div class="col-span-5">TITLE &amp; ARTIST</div>
-            <div class="col-span-3 hidden md:block">ALBUM</div>
-            <div class="col-span-2">FORMAT</div>
-            <div class="col-span-1 text-right">TIME</div>
-          </div>
-          <!-- Track List Rows Container -->
-          <div id="inspectorTrackList" class="flex flex-col gap-1.5 mt-2">
-            <!-- Dynamic rows injected via JS -->
+            <!-- Track List Rows Container -->
+            <div id="inspectorTrackList" class="flex flex-col gap-1.5 mt-2">
+              <!-- Dynamic rows injected via JS -->
+            </div>
           </div>
         </div>
       </section>
@@ -702,7 +764,7 @@
             <div class="flex items-center gap-3 bg-surface-container-low px-4 py-2.5 rounded-xl border border-white/5">
               <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
               <div class="flex flex-col">
-                <span id="queueActiveThreadsText" class="text-xs font-bold text-on-surface">2 Threads Running</span>
+                <span id="queueActiveThreadsText" class="text-xs font-bold text-on-surface">0 Threads Running</span>
                 <span class="text-[11px] text-on-surface-variant">Worker thread pool</span>
               </div>
             </div>
@@ -795,11 +857,11 @@
               </div>
               <h1 class="text-3xl lg:text-4xl font-extrabold text-on-surface tracking-tight">Offline Music Library</h1>
               <div class="flex flex-wrap items-center gap-4 text-xs text-on-surface-variant font-medium">
-                <span id="libraryTrackCountBadge" class="tabular-nums">142 Tracks • 1.2 GB Cached</span>
+                <span id="libraryTrackCountBadge" class="tabular-nums">0 Tracks • 0 MB Cached</span>
                 <span class="text-white/20">•</span>
                 <span id="libraryFlacPercent" class="text-secondary font-semibold flex items-center gap-1">
                   <span class="material-symbols-outlined text-[15px]">graphic_eq</span>
-                  94% Lossless FLAC
+                  0% Lossless FLAC
                 </span>
               </div>
             </div>
@@ -809,11 +871,11 @@
               <div class="hidden sm:flex items-center gap-3 px-4 py-2.5 rounded-xl bg-surface-container-high border border-white/5 shadow-sm">
                 <svg class="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
                   <circle class="stroke-surface-container-highest" cx="18" cy="18" r="14" fill="none" stroke-width="4"></circle>
-                  <circle class="stroke-primary" cx="18" cy="18" r="14" fill="none" stroke-width="4" stroke-dasharray="82 100" stroke-linecap="round"></circle>
-                  <circle class="stroke-secondary" cx="18" cy="18" r="14" fill="none" stroke-width="4" stroke-dasharray="12 100" stroke-dashoffset="-82" stroke-linecap="round"></circle>
+                  <circle class="stroke-primary" cx="18" cy="18" r="14" fill="none" stroke-width="4" stroke-dasharray="0 100" stroke-linecap="round"></circle>
+                  <circle class="stroke-secondary" cx="18" cy="18" r="14" fill="none" stroke-width="4" stroke-dasharray="0 100" stroke-linecap="round"></circle>
                 </svg>
                 <div class="flex flex-col">
-                  <span class="text-xs font-bold text-on-surface">1.2 GB Cached</span>
+                  <span id="libraryStorageText" class="text-xs font-bold text-on-surface">0 MB Cached</span>
                   <span class="text-[11px] text-on-surface-variant">SAF Scoped Vault</span>
                 </div>
               </div>
@@ -825,51 +887,70 @@
           </div>
         </div>
 
-        <!-- Filter & Category Toolbar -->
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-wrap items-center justify-between gap-4">
-            <!-- Category Chips -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-1" id="categoryTabs">
-              <button type="button" class="cat-tab-btn px-4 py-1.5 rounded-full bg-white text-surface font-bold text-xs shadow-sm transition-all" data-cat="tracks">Tracks</button>
-              <button type="button" class="cat-tab-btn px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-semibold text-xs transition-all" data-cat="playlists">Playlists</button>
-              <button type="button" class="cat-tab-btn px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-semibold text-xs transition-all" data-cat="artists">Artists</button>
-              <button type="button" class="cat-tab-btn px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-semibold text-xs transition-all" data-cat="albums">Albums</button>
-            </div>
-
-            <!-- Search, Sort & FLAC Only Filter -->
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex items-center gap-2 bg-surface-container-lowest px-3.5 py-2 rounded-xl w-60 border border-white/5 focus-within:border-primary/50 transition-colors">
-                <span class="material-symbols-outlined text-on-surface-variant text-[17px]">search</span>
-                <input id="librarySearchInput" type="text" class="bg-transparent w-full text-xs text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none" placeholder="Filter title, artist..."/>
-              </div>
-              <div class="relative">
-                <select id="librarySortSelect" class="appearance-none bg-surface-container-high text-on-surface text-xs font-semibold pl-3.5 pr-8 py-2 rounded-xl border border-white/5 focus:outline-none cursor-pointer">
-                  <option value="newest">Date: Newest</option>
-                  <option value="title">Title: A – Z</option>
-                  <option value="duration">Duration</option>
-                  <option value="bitrate">Bitrate: Highest</option>
-                </select>
-                <span class="material-symbols-outlined text-on-surface-variant text-[16px] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
-              </div>
-              <button id="btnFlacOnlyFilter" type="button" class="px-3.5 py-2 rounded-xl bg-surface-container-high text-on-surface-variant hover:text-on-surface text-xs font-semibold flex items-center gap-1.5 transition-all border border-white/5" data-active="false">
-                <span class="material-symbols-outlined text-[16px]">high_quality</span>
-                <span>FLAC Only</span>
-              </button>
-            </div>
+        <!-- Library Empty State -->
+        <div id="libraryEmptyState" class="py-20 px-6 flex flex-col items-center justify-center text-center bg-surface-container-low rounded-2xl border border-white/5 shadow-md gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-surface-container-high border border-white/5 flex items-center justify-center text-primary shadow-inner">
+            <span class="material-symbols-outlined text-[36px]">album</span>
           </div>
+          <div class="flex flex-col gap-1 max-w-md">
+            <h3 class="text-xl font-bold text-on-surface">Your Offline Vault is Empty</h3>
+            <p class="text-xs text-on-surface-variant leading-relaxed">Downloaded audiophile tracks and lossless albums will appear here for local playback.</p>
+          </div>
+          <button type="button" onclick="App.nav.goTo('ingest')" class="mt-2 flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-container text-on-primary-container text-xs font-bold shadow-glow-primary hover:bg-primary hover:text-on-primary transition-all">
+            <span class="material-symbols-outlined text-[18px]">download</span>
+            <span>Archive Music Now</span>
+          </button>
         </div>
 
-        <!-- Wide Offline Track Table -->
-        <div class="bg-surface-container-low rounded-2xl p-4 shadow-md border border-white/5">
-          <div class="grid grid-cols-12 items-center px-4 py-3 text-on-surface-variant text-[11px] font-bold uppercase tracking-wider border-b border-white/5">
-            <div class="col-span-1">#</div>
-            <div class="col-span-5">Title &amp; Artist</div>
-            <div class="col-span-3 hidden md:block">Album</div>
-            <div class="col-span-2 hidden sm:block">Quality &amp; Sync</div>
-            <div class="col-span-1 text-right">Time</div>
+        <!-- Library Content (Toolbar & Table) -->
+        <div id="libraryContent" class="hidden flex flex-col gap-6">
+          <!-- Filter & Category Toolbar -->
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <!-- Category Chips -->
+              <div class="flex items-center gap-2 overflow-x-auto pb-1" id="categoryTabs">
+                <button type="button" class="cat-tab-btn px-4 py-1.5 rounded-full bg-white text-surface font-bold text-xs shadow-sm transition-all" data-cat="all">All</button>
+                <button type="button" class="cat-tab-btn px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-semibold text-xs transition-all" data-cat="playlists">Playlists</button>
+                <button type="button" class="cat-tab-btn px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-semibold text-xs transition-all" data-cat="flac">Lossless FLAC</button>
+                <button type="button" class="cat-tab-btn px-4 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface font-semibold text-xs transition-all" data-cat="artists">Artists</button>
+              </div>
+
+              <!-- Search, Sort & FLAC Only Filter -->
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-2 bg-surface-container-lowest px-3.5 py-2 rounded-xl w-60 border border-white/5 focus-within:border-primary/50 transition-colors">
+                  <span class="material-symbols-outlined text-on-surface-variant text-[17px]">search</span>
+                  <input id="librarySearchInput" type="text" class="bg-transparent w-full text-xs text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none" placeholder="Filter title, artist, album..."/>
+                </div>
+                <div class="relative">
+                  <select id="librarySortSelect" class="appearance-none bg-surface-container-high text-on-surface text-xs font-semibold pl-3.5 pr-8 py-2 rounded-xl border border-white/5 focus:outline-none cursor-pointer">
+                    <option value="newest">Date: Newest</option>
+                    <option value="title">Title: A – Z</option>
+                    <option value="artist">Artist: A – Z</option>
+                    <option value="duration">Duration</option>
+                    <option value="bitrate">Bitrate: Highest</option>
+                  </select>
+                  <span class="material-symbols-outlined text-on-surface-variant text-[16px] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+                </div>
+                <button id="btnFlacOnlyFilter" type="button" class="px-3.5 py-2 rounded-xl bg-surface-container-high text-on-surface-variant hover:text-on-surface text-xs font-semibold flex items-center gap-1.5 transition-all border border-white/5" data-active="false">
+                  <span class="material-symbols-outlined text-[16px]">high_quality</span>
+                  <span>FLAC Only</span>
+                </button>
+              </div>
+            </div>
           </div>
-          <div id="libraryTrackList" class="flex flex-col gap-1.5 mt-2">
-            <!-- Dynamic offline track rows injected via JS -->
+
+          <!-- Wide Offline Track Table -->
+          <div class="bg-surface-container-low rounded-2xl p-4 shadow-md border border-white/5">
+            <div class="grid grid-cols-12 items-center px-4 py-3 text-on-surface-variant text-[11px] font-bold uppercase tracking-wider border-b border-white/5">
+              <div class="col-span-1">#</div>
+              <div class="col-span-5">Title &amp; Artist</div>
+              <div class="col-span-3 hidden md:block">Album</div>
+              <div class="col-span-2 hidden sm:block">Quality &amp; Sync</div>
+              <div class="col-span-1 text-right">Time</div>
+            </div>
+            <div id="libraryTrackList" class="flex flex-col gap-1.5 mt-2">
+              <!-- Dynamic offline track rows injected via JS -->
+            </div>
           </div>
         </div>
       </section>
@@ -1090,6 +1171,42 @@
               </div>
             </div>
 
+            <!-- Studio Theme Accent Swatches -->
+            <div class="bg-surface-container rounded-2xl p-6 shadow-md border border-white/5 flex flex-col gap-3.5">
+              <div class="flex items-center gap-3 mb-1">
+                <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary">
+                  <span class="material-symbols-outlined text-[22px]">palette</span>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-on-surface">Studio Theme Accent</h3>
+                  <p class="text-[11px] text-on-surface-variant">Signature studio neon glow and highlights</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                <!-- Sonic Emerald (Default) -->
+                <button type="button" class="theme-accent-btn group flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high border border-primary/60 transition-all cursor-pointer" data-theme-accent="green">
+                  <span class="w-6 h-6 rounded-full bg-[#53e076] shadow-[0_0_12px_rgba(83,224,118,0.5)] group-hover:scale-110 transition-transform"></span>
+                  <span class="text-[10px] font-bold text-on-surface">Sonic Green</span>
+                </button>
+                <!-- Cyber Cyan -->
+                <button type="button" class="theme-accent-btn group flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high border border-white/5 transition-all cursor-pointer" data-theme-accent="cyan">
+                  <span class="w-6 h-6 rounded-full bg-[#4cd7f6] shadow-[0_0_12px_rgba(76,215,246,0.5)] group-hover:scale-110 transition-transform"></span>
+                  <span class="text-[10px] font-medium text-on-surface-variant group-hover:text-on-surface">Cyber Cyan</span>
+                </button>
+                <!-- Neon Purple -->
+                <button type="button" class="theme-accent-btn group flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high border border-white/5 transition-all cursor-pointer" data-theme-accent="purple">
+                  <span class="w-6 h-6 rounded-full bg-[#af8eff] shadow-[0_0_12px_rgba(175,142,255,0.5)] group-hover:scale-110 transition-transform"></span>
+                  <span class="text-[10px] font-medium text-on-surface-variant group-hover:text-on-surface">Neon Purple</span>
+                </button>
+                <!-- Sunset Amber -->
+                <button type="button" class="theme-accent-btn group flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container-high border border-white/5 transition-all cursor-pointer" data-theme-accent="orange">
+                  <span class="w-6 h-6 rounded-full bg-[#fb923c] shadow-[0_0_12px_rgba(251,146,60,0.5)] group-hover:scale-110 transition-transform"></span>
+                  <span class="text-[10px] font-medium text-on-surface-variant group-hover:text-on-surface">Sunset Amber</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Storage Footprint & Cache Cleanup -->
             <div class="bg-surface-container rounded-2xl p-6 shadow-md border border-white/5 flex flex-col gap-4">
               <div class="flex items-center justify-between">
@@ -1159,17 +1276,17 @@
     <!-- Left: Track Metadata & Artwork -->
     <div class="flex items-center gap-3.5 w-1/4 min-w-[200px]">
       <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-surface-container-highest shrink-0 border border-white/10 group cursor-pointer" onclick="App.lyrics.open()">
-        <img id="playerCover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&auto=format&fit=crop&q=80" alt="Cover" class="w-full h-full object-cover transition-transform group-hover:scale-110"/>
+        <img id="playerCover" src="../assets/icon_transparent.png" alt="Cover" class="w-full h-full object-contain p-2 opacity-40 transition-transform group-hover:scale-110" onerror="App.ui.fallbackImage(this)"/>
         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
           <span class="material-symbols-outlined text-[20px] text-primary">lyrics</span>
         </div>
       </div>
       <div class="flex flex-col min-w-0 pr-2">
         <div class="flex items-center gap-2">
-          <span id="playerTitle" class="text-xs font-bold text-on-surface truncate cursor-pointer hover:underline" onclick="App.lyrics.open()">Birds of a Feather</span>
-          <span id="playerFormatBadge" class="px-1.5 py-0.2 rounded bg-surface-container-lowest text-secondary text-[10px] font-bold shrink-0">FLAC 24b</span>
+          <span id="playerTitle" class="text-xs font-bold text-on-surface truncate cursor-pointer hover:underline" onclick="App.lyrics.open()">No Track Selected</span>
+          <span id="playerFormatBadge" class="px-1.5 py-0.2 rounded bg-surface-container-lowest text-secondary text-[10px] font-bold shrink-0">Standby</span>
         </div>
-        <span id="playerArtist" class="text-[11px] text-on-surface-variant truncate">Billie Eilish</span>
+        <span id="playerArtist" class="text-[11px] text-on-surface-variant truncate">Select a track to play</span>
       </div>
       <button id="btnPlayerLike" type="button" class="text-on-surface-variant hover:text-primary transition-colors shrink-0" title="Favorite Track">
         <span class="material-symbols-outlined text-[18px]">favorite_border</span>
@@ -1203,7 +1320,7 @@
         <div class="relative flex-1 flex items-center group">
           <input id="playerSeek" type="range" min="0" max="100" value="0" step="0.1" class="w-full cursor-pointer h-1 rounded-full"/>
         </div>
-        <span id="playerDuration" class="text-[11px] font-mono text-on-surface-variant tabular-nums w-8">3:30</span>
+        <span id="playerDuration" class="text-[11px] font-mono text-on-surface-variant tabular-nums w-8">0:00</span>
       </div>
     </div>
 
@@ -1244,7 +1361,7 @@
         </button>
         <div class="flex flex-col min-w-0">
           <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">PLAYING FROM PLAYLIST</span>
-          <span id="nowPlayingPlaylistName" class="text-xs font-bold text-on-surface truncate">Midnight Audiophile • Lossless</span>
+          <span id="nowPlayingPlaylistName" class="text-xs font-bold text-on-surface truncate">Standby</span>
         </div>
         <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high border border-white/5 text-secondary text-[11px] font-bold">
           <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
@@ -1274,15 +1391,15 @@
       <div class="lg:col-span-5 flex flex-col gap-5">
         <!-- Big Artwork Card -->
         <div class="relative group rounded-2xl overflow-hidden bg-surface-container shadow-2xl border border-white/10 max-w-md mx-auto lg:mx-0 w-full">
-          <img id="nowPlayingCover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=600&auto=format&fit=crop&q=80" alt="Album Art" class="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105"/>
+          <img id="nowPlayingCover" src="../assets/icon_transparent.png" alt="Album Art" class="w-full aspect-square object-contain p-12 opacity-30 transition-transform duration-700 group-hover:scale-105" onerror="App.ui.fallbackImage(this)"/>
           <div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-transparent to-transparent"></div>
           <div class="absolute top-4 left-4 flex items-center gap-2">
             <span class="px-2.5 py-1 rounded bg-surface-container-lowest/85 backdrop-blur-md text-secondary text-[11px] font-bold border border-white/10">HI-RES</span>
           </div>
           <div class="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4">
             <div class="min-w-0">
-              <h1 id="nowPlayingTitle" class="text-2xl font-extrabold text-on-surface tracking-tight truncate">Birds of a Feather</h1>
-              <p id="nowPlayingArtist" class="text-sm text-on-surface-variant truncate">Billie Eilish • HIT ME HARD AND SOFT</p>
+              <h1 id="nowPlayingTitle" class="text-2xl font-extrabold text-on-surface tracking-tight truncate">No Track Selected</h1>
+              <p id="nowPlayingArtist" class="text-sm text-on-surface-variant truncate">None</p>
             </div>
             <button id="btnNowPlayingLike" type="button" class="w-10 h-10 rounded-full bg-surface-container-high/80 backdrop-blur-md flex items-center justify-center text-primary hover:scale-110 transition-transform border border-white/10 shrink-0">
               <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
@@ -1315,11 +1432,11 @@
         <!-- Up Next Card -->
         <div class="flex items-center justify-between p-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container border border-white/5 transition-colors cursor-pointer max-w-md mx-auto lg:mx-0 w-full" onclick="App.player.playNext()">
           <div class="flex items-center gap-3.5 min-w-0">
-            <img id="nowPlayingNextCover" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&auto=format&fit=crop&q=80" alt="Next Art" class="w-12 h-12 rounded-lg object-cover shrink-0"/>
+            <img id="nowPlayingNextCover" src="../assets/icon_transparent.png" alt="Next Art" class="w-12 h-12 rounded-lg object-contain p-2 opacity-30 shrink-0" onerror="App.ui.fallbackImage(this)"/>
             <div class="min-w-0">
               <span class="block text-[10px] font-bold text-primary uppercase">Up Next in Queue</span>
-              <span id="nowPlayingNextTitle" class="block text-xs font-bold text-on-surface truncate">Nightcall (2024 Remaster)</span>
-              <span id="nowPlayingNextArtist" class="block text-[11px] text-on-surface-variant truncate">Kavinsky</span>
+              <span id="nowPlayingNextTitle" class="block text-xs font-bold text-on-surface truncate">Queue Empty</span>
+              <span id="nowPlayingNextArtist" class="block text-[11px] text-on-surface-variant truncate"></span>
             </div>
           </div>
           <span class="material-symbols-outlined text-on-surface-variant">skip_next</span>
@@ -1361,7 +1478,10 @@
 
           <!-- Lyrics Scroll Container -->
           <div id="lyricsContainer" class="flex-1 overflow-y-auto pr-2 py-4 flex flex-col gap-2.5 scroll-smooth">
-            <!-- Dynamic lyric lines injected via JS -->
+            <div class="py-16 flex flex-col items-center justify-center text-center text-on-surface-variant gap-3">
+              <span class="material-symbols-outlined text-4xl text-on-surface-variant/40">lyrics</span>
+              <p class="text-sm font-medium">No synchronized lyrics available. Play a track to view lyrics.</p>
+            </div>
           </div>
 
           <!-- Bottom edge depth fade -->
@@ -1397,6 +1517,10 @@
           <span class="text-on-surface-variant font-medium">Artist:</span>
           <span id="modalDupArtist" class="text-on-surface truncate max-w-[240px]">Artist</span>
         </div>
+        <div class="flex items-center justify-between">
+          <span class="text-on-surface-variant font-medium">Format:</span>
+          <span id="modalDupFormat" class="text-primary font-bold text-xs truncate max-w-[240px]">FLAC 24/96</span>
+        </div>
         <div class="pt-2 border-t border-white/5 flex items-center justify-between">
           <span class="text-on-surface-variant font-medium">Existing File:</span>
           <span id="modalDupFilename" class="text-secondary font-mono truncate max-w-[240px]">track.mp3</span>
@@ -1408,17 +1532,21 @@
       </div>
 
       <p class="text-[12px] text-on-surface-variant leading-relaxed">
-        BeatVault safeguards your storage against duplicate bitrates and filenames. You may skip this track or download again with an incremental filename.
+        BeatVault safeguards your storage against duplicate bitrates and filenames. You may overwrite the existing file, skip this track, or download again with an incremental filename.
       </p>
 
       <!-- Decision Buttons -->
-      <div class="grid grid-cols-2 gap-3">
-        <button type="button" onclick="App.ui.resolveDuplicate('skip')" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface text-xs font-semibold transition-all border border-white/5">
-          <span class="material-symbols-outlined text-[17px]">skip_next</span>
-          <span>Skip Track</span>
+      <div class="grid grid-cols-3 gap-2.5">
+        <button id="btnDupOverwrite" type="button" onclick="App.ui.resolveDuplicate('overwrite')" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-error/20 hover:bg-error/30 text-error text-xs font-bold border border-error/30 transition-all">
+          <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+          <span>Overwrite</span>
         </button>
-        <button type="button" onclick="App.ui.resolveDuplicate('download_again')" class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container hover:bg-primary text-on-primary-container text-xs font-bold shadow-md transition-all">
-          <span class="material-symbols-outlined text-[17px]">download</span>
+        <button id="btnDupSkip" type="button" onclick="App.ui.resolveDuplicate('skip')" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface text-xs font-semibold transition-all border border-white/5">
+          <span class="material-symbols-outlined text-[16px]">skip_next</span>
+          <span>Skip</span>
+        </button>
+        <button id="btnDupDownloadAgain" type="button" onclick="App.ui.resolveDuplicate('download_again')" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-primary-container hover:bg-primary text-on-primary-container text-xs font-bold shadow-md transition-all">
+          <span class="material-symbols-outlined text-[16px]">download</span>
           <span>Download Again</span>
         </button>
       </div>
@@ -1633,45 +1761,6 @@
       ]
     };
 
-    const SAMPLE_RECENT_INGESTS = [
-      {
-        title: "HIT ME HARD AND SOFT",
-        artist: "Billie Eilish",
-        engine: "Spotify",
-        engineColor: "text-primary",
-        trackCount: "10 Tracks",
-        cover: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=200&auto=format&fit=crop&q=80",
-        url: "https://open.spotify.com/album/7aJuG4TFXa2hmE4z1yxc3n"
-      },
-      {
-        title: "After Hours (Deluxe)",
-        artist: "The Weeknd",
-        engine: "Apple",
-        engineColor: "text-secondary",
-        trackCount: "18 Tracks",
-        cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=200&auto=format&fit=crop&q=80",
-        url: "https://music.apple.com/us/album/after-hours-deluxe/1503516724"
-      },
-      {
-        title: "Boiler Room: Tokyo Lossless",
-        artist: "Various Artists",
-        engine: "YouTube",
-        engineColor: "text-error",
-        trackCount: "1 Track",
-        cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=200&auto=format&fit=crop&q=80",
-        url: "https://music.youtube.com/watch?v=dQw4w9WgXcQ"
-      },
-      {
-        title: "Midnight Demos (WAV)",
-        artist: "SoundSync Archive",
-        engine: "SoundCloud",
-        engineColor: "text-tertiary",
-        trackCount: "4 Tracks",
-        cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&auto=format&fit=crop&q=80",
-        url: "https://soundcloud.com/soundsync-audio/midnight-demos-wav"
-      }
-    ];
-
     const SAMPLE_LRC = `[00:00.00]Birds of a Feather — Billie Eilish
 [00:04.20]HIT ME HARD AND SOFT (Lossless Archival)
 [00:12.50]I want you to stay
@@ -1755,12 +1844,6 @@
         this.visualizer.init();
         this.updates.init();
         this.ui.init();
-
-        // Load Default Sample Playlist into Inspector
-        this.inspector.loadPlaylistData(SAMPLE_PLAYLIST);
-
-        // Load Offline Library
-        this.library.loadSampleLibrary();
 
         // Check for updates
         setTimeout(() => {
@@ -1890,33 +1973,74 @@
        MODULE: INGESTION & AUDIO GATEWAY
        ========================================================== */
     App.ingest = {
-      init() {
+      engineUrls: {
+        spotify: 'https://open.spotify.com/album/7aJuG4TFXa2hmE4z1yxc3n',
+        youtube: 'https://music.youtube.com/watch?v=dQw4w9WgXcQ',
+        apple: 'https://music.apple.com/us/album/after-hours-deluxe/1503516724',
+        soundcloud: 'https://soundcloud.com/soundsync-audio/midnight-demos-wav'
+      },
+
+      cleanUrl(input) {
+        if (!input || typeof input !== 'string') return '';
+        // Extract clean http/https URL from mobile share text or trailing spaces
+        const match = input.match(/https?:\/\/[^\s]+/i);
+        return match ? match[0].trim() : input.trim();
+      },
+
+      detectEngine(url) {
+        if (!url || typeof url !== 'string') return null;
+        const lower = url.toLowerCase();
+        if (lower.includes('spotify.com')) return 'spotify';
+        if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
+        if (lower.includes('apple.com')) return 'apple';
+        if (lower.includes('soundcloud.com')) return 'soundcloud';
+        return null;
+      },
+
+      selectEngine(engineName) {
+        if (!engineName) return;
+        const key = engineName.toLowerCase();
         const engineBtns = document.querySelectorAll('.engine-btn');
         const engineStatusText = document.getElementById('engineStatusText');
+        const urlInput = document.getElementById('mediaUrlInput');
+
+        let targetBtn = null;
+        engineBtns.forEach(btn => {
+          const btnEngine = (btn.getAttribute('data-engine') || '').toLowerCase();
+          if (btnEngine === key) {
+            targetBtn = btn;
+            btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+            btn.classList.add('bg-primary-container', 'text-on-primary-container', 'shadow-md');
+          } else {
+            btn.classList.remove('bg-primary-container', 'text-on-primary-container', 'shadow-md');
+            btn.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+          }
+        });
+
+        if (targetBtn) {
+          const desc = targetBtn.getAttribute('data-desc');
+          if (engineStatusText && desc) engineStatusText.textContent = desc;
+        }
+
+        if (urlInput && this.engineUrls[key]) {
+          urlInput.placeholder = this.engineUrls[key];
+        }
+
+        App.state.selectedEngine = key;
+      },
+
+      init() {
+        const engineBtns = document.querySelectorAll('.engine-btn');
         const urlInput = document.getElementById('mediaUrlInput');
         const pasteBtn = document.getElementById('btnPasteClip');
         const processBtn = document.getElementById('btnProcessUrl');
         const processText = document.getElementById('processBtnText');
 
-        const engineUrls = {
-          Spotify: 'https://open.spotify.com/album/7aJuG4TFXa2hmE4z1yxc3n',
-          YouTube: 'https://music.youtube.com/watch?v=dQw4w9WgXcQ',
-          Apple: 'https://music.apple.com/us/album/after-hours-deluxe/1503516724',
-          SoundCloud: 'https://soundcloud.com/soundsync-audio/midnight-demos-wav'
-        };
-
         engineBtns.forEach(btn => {
           btn.addEventListener('click', () => {
-            engineBtns.forEach(b => {
-              b.classList.remove('bg-primary-container', 'text-on-primary-container', 'shadow-md');
-              b.classList.add('bg-surface-container-high', 'text-on-surface-variant');
-            });
-            btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
-            btn.classList.add('bg-primary-container', 'text-on-primary-container', 'shadow-md');
-
             const engine = btn.getAttribute('data-engine');
-            const desc = btn.getAttribute('data-desc');
-            if (engineStatusText && desc) engineStatusText.textContent = desc;
+            this.selectEngine(engine);
+            const engineUrls = this.engineUrls;
             if (urlInput && engineUrls[engine]) {
               urlInput.placeholder = engineUrls[engine];
               if (!urlInput.value.trim()) {
@@ -1926,17 +2050,67 @@
           });
         });
 
+        if (urlInput) {
+          // Real-time input listener for URL and mobile share text
+          urlInput.addEventListener('input', (e) => {
+            const raw = e.target.value;
+            const cleaned = this.cleanUrl(raw);
+            if (cleaned && cleaned !== raw && (raw.includes(' ') || raw.includes('\n'))) {
+              e.target.value = cleaned;
+            }
+            const detected = this.detectEngine(cleaned || raw);
+            if (detected) {
+              this.selectEngine(detected);
+            }
+          });
+
+          urlInput.addEventListener('paste', () => {
+            setTimeout(() => {
+              const cleaned = this.cleanUrl(urlInput.value);
+              if (cleaned) {
+                urlInput.value = cleaned;
+                const detected = this.detectEngine(cleaned);
+                if (detected) {
+                  this.selectEngine(detected);
+                }
+              }
+            }, 10);
+          });
+        }
+
         if (pasteBtn && urlInput) {
           pasteBtn.addEventListener('click', async () => {
             try {
+              if (!navigator.clipboard || !navigator.clipboard.readText) {
+                throw new Error('Clipboard API unavailable');
+              }
               const clip = await navigator.clipboard.readText();
-              if (clip) {
-                urlInput.value = clip;
+              if (clip && clip.trim()) {
+                const cleaned = this.cleanUrl(clip);
+                urlInput.value = cleaned;
+                const detected = this.detectEngine(cleaned);
+                if (detected) {
+                  this.selectEngine(detected);
+                }
                 App.ui.showToast('Pasted URL from clipboard', 'info');
+              } else {
+                App.ui.showToast('Clipboard is empty', 'warning');
               }
             } catch (e) {
-              urlInput.value = 'https://open.spotify.com/track/6dOtVTDdiauQNBQEDOtlAB';
-              App.ui.showToast('Pasted target URL', 'info');
+              console.warn('Clipboard read error:', e);
+              let manual = null;
+              try {
+                manual = prompt('Paste playlist or track URL (Ctrl+V / Cmd+V):');
+              } catch (_) {}
+              if (manual && manual.trim()) {
+                const cleaned = this.cleanUrl(manual);
+                urlInput.value = cleaned;
+                const detected = this.detectEngine(cleaned);
+                if (detected) this.selectEngine(detected);
+                App.ui.showToast('Pasted URL from prompt', 'info');
+              } else {
+                App.ui.showToast('Clipboard permission was denied or unavailable. Please paste manually.', 'warning');
+              }
             }
             urlInput.focus();
           });
@@ -1951,10 +2125,19 @@
 
       async processUrl() {
         const input = document.getElementById('mediaUrlInput');
-        const url = (input ? input.value : '').trim();
+        const rawVal = input ? input.value : '';
+        const url = this.cleanUrl(rawVal);
+        if (input && url && url !== rawVal) {
+          input.value = url;
+        }
         if (!url) {
           App.ui.showToast('Please enter or paste a valid music link.', 'error');
           return;
+        }
+
+        const detected = this.detectEngine(url);
+        if (detected) {
+          this.selectEngine(detected);
         }
 
         const btn = document.getElementById('btnProcessUrl');
@@ -1973,6 +2156,46 @@
           }
 
           if (res && res.success && res.data) {
+            let engine = 'Stream';
+            let engineColor = 'text-primary';
+            if (url.includes('spotify.com')) {
+              engine = 'Spotify';
+              engineColor = 'text-primary';
+            } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+              engine = 'YouTube';
+              engineColor = 'text-error';
+            } else if (url.includes('apple.com')) {
+              engine = 'Apple';
+              engineColor = 'text-secondary';
+            } else if (url.includes('soundcloud.com')) {
+              engine = 'SoundCloud';
+              engineColor = 'text-[#ff5500]';
+            }
+
+            const trackCountStr = res.data.tracks ? `${res.data.tracks.length} Tracks` : '1 Track';
+            const recentItem = {
+              title: res.data.title || 'Resolved Media',
+              artist: res.data.author || (res.data.tracks && res.data.tracks[0] ? res.data.tracks[0].artist : 'Unknown Artist'),
+              engine: engine,
+              engineColor: engineColor,
+              trackCount: trackCountStr,
+              cover: res.data.cover_url || (res.data.tracks && res.data.tracks[0] ? res.data.tracks[0].cover_url : ''),
+              url: url
+            };
+
+            try {
+              let recents = [];
+              const saved = localStorage.getItem('beatvault_recent_ingests');
+              if (saved) recents = JSON.parse(saved) || [];
+              recents = recents.filter(r => r.url !== url);
+              recents.unshift(recentItem);
+              if (recents.length > 8) recents = recents.slice(0, 8);
+              localStorage.setItem('beatvault_recent_ingests', JSON.stringify(recents));
+            } catch (e) {
+              console.warn('Could not save recent ingest:', e);
+            }
+            this.renderRecentIngests();
+
             App.ui.showToast(`Resolved "${res.data.title || 'Playlist'}" with ${res.data.tracks ? res.data.tracks.length : 0} tracks`, 'success');
             App.inspector.loadPlaylistData(res.data);
             App.nav.goTo('inspector');
@@ -1991,15 +2214,37 @@
       renderRecentIngests() {
         const container = document.getElementById('recentIngestsContainer');
         if (!container) return;
-        container.innerHTML = SAMPLE_RECENT_INGESTS.map(item => `
+
+        let items = [];
+        try {
+          const saved = localStorage.getItem('beatvault_recent_ingests');
+          if (saved) {
+            items = JSON.parse(saved);
+          }
+        } catch (e) {
+          items = [];
+        }
+
+        if (!Array.isArray(items) || items.length === 0) {
+          container.innerHTML = `
+            <div class="py-8 px-4 flex flex-col items-center justify-center text-center text-on-surface-variant gap-2 rounded-xl bg-surface-container-lowest/60 border border-white/5">
+              <span class="material-symbols-outlined text-3xl text-on-surface-variant/40">history_toggle_off</span>
+              <span class="text-xs font-bold text-on-surface">No recent ingests yet</span>
+              <p class="text-[11px] text-on-surface-variant max-w-xs leading-relaxed">URLs you analyze will be remembered here for quick access.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = items.map(item => `
           <div class="group flex items-center gap-3 p-2 rounded-xl hover:bg-surface-container-high transition-all border border-transparent hover:border-white/5 cursor-pointer" onclick="App.ingest.loadRecent('${item.url}')">
-            <img src="${item.cover}" alt="Cover" class="w-11 h-11 rounded-lg object-cover shrink-0 shadow-sm"/>
+            <img src="${item.cover || '../assets/icon_transparent.png'}" alt="Cover" class="w-11 h-11 rounded-lg object-cover shrink-0 shadow-sm bg-surface-container-highest"/>
             <div class="flex flex-col flex-1 min-w-0">
               <span class="text-xs font-bold text-on-surface truncate">${item.title}</span>
               <div class="flex items-center gap-2 text-[11px] text-on-surface-variant">
-                <span class="${item.engineColor} font-semibold">${item.engine}</span>
+                <span class="${item.engineColor || 'text-primary'} font-semibold">${item.engine || 'Web'}</span>
                 <span>•</span>
-                <span>${item.trackCount}</span>
+                <span>${item.trackCount || '1 Track'}</span>
               </div>
             </div>
             <button type="button" class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant group-hover:text-primary group-hover:bg-primary-container flex items-center justify-center transition-all shrink-0">
@@ -2020,6 +2265,9 @@
        MODULE: TRACK & PLAYLIST INSPECTOR
        ========================================================== */
     App.inspector = {
+      filterMode: 'all',
+      searchQuery: '',
+
       init() {
         // Quality Buttons
         const qualityBtns = document.querySelectorAll('.quality-btn');
@@ -2037,6 +2285,43 @@
           });
         });
 
+        // Filter Chips in Inspector
+        const chips = document.querySelectorAll('.inspector-filter-chip');
+        chips.forEach(chip => {
+          chip.addEventListener('click', () => {
+            chips.forEach(c => {
+              c.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-bold', 'shadow-sm');
+              c.classList.add('bg-surface-container-high', 'text-on-surface-variant', 'font-semibold');
+            });
+            chip.classList.add('bg-primary-container', 'text-on-primary-container', 'font-bold', 'shadow-sm');
+            chip.classList.remove('bg-surface-container-high', 'text-on-surface-variant', 'font-semibold');
+            this.filterMode = chip.getAttribute('data-filter') || 'all';
+            this.renderTrackRows();
+          });
+        });
+
+        // Quick Filter Search Input
+        const searchInput = document.getElementById('inspectorSearchInput');
+        const clearSearchBtn = document.getElementById('btnClearInspectorSearch');
+        if (searchInput) {
+          searchInput.addEventListener('input', (e) => {
+            this.searchQuery = (e.target.value || '').trim().toLowerCase();
+            if (clearSearchBtn) {
+              if (this.searchQuery) clearSearchBtn.classList.remove('hidden');
+              else clearSearchBtn.classList.add('hidden');
+            }
+            this.renderTrackRows();
+          });
+        }
+        if (clearSearchBtn) {
+          clearSearchBtn.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            this.searchQuery = '';
+            clearSearchBtn.classList.add('hidden');
+            this.renderTrackRows();
+          });
+        }
+
         // Select All Checkbox
         const selectAll = document.getElementById('selectAllCheckbox');
         if (selectAll) {
@@ -2053,10 +2338,32 @@
         if (dlBtn) {
           dlBtn.addEventListener('click', () => App.queue.startBatchDownload());
         }
+
+        // Initialize empty state if no tracks loaded
+        if (!App.state.currentPlaylist || App.state.loadedTracks.length === 0) {
+          const emptyState = document.getElementById('inspectorEmptyState');
+          const content = document.getElementById('inspectorContent');
+          if (emptyState) emptyState.classList.remove('hidden');
+          if (content) content.classList.add('hidden');
+        }
       },
 
       loadPlaylistData(playlist) {
-        if (!playlist) return;
+        if (!playlist || !playlist.tracks || playlist.tracks.length === 0) {
+          App.state.currentPlaylist = null;
+          App.state.loadedTracks = [];
+          const emptyState = document.getElementById('inspectorEmptyState');
+          const content = document.getElementById('inspectorContent');
+          if (emptyState) emptyState.classList.remove('hidden');
+          if (content) content.classList.add('hidden');
+          return;
+        }
+
+        const emptyState = document.getElementById('inspectorEmptyState');
+        const content = document.getElementById('inspectorContent');
+        if (emptyState) emptyState.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
         App.state.currentPlaylist = playlist;
         App.state.loadedTracks = (playlist.tracks || []).map((t, idx) => ({
           ...t,
@@ -2083,29 +2390,119 @@
         if (countBadge) countBadge.textContent = `${App.state.loadedTracks.length} Tracks`;
         if (platformBadge) platformBadge.textContent = (playlist.platform_name || 'STUDIO MASTER').toUpperCase();
 
-        // Calculate total duration
+        // Calculate total album duration across duration_sec, duration_ms, and formatted strings
         let totalSec = 0;
         App.state.loadedTracks.forEach(t => {
-          totalSec += t.duration_sec || 210;
+          if (typeof t.duration_sec === 'number' && t.duration_sec > 0) {
+            totalSec += Math.round(t.duration_sec);
+          } else if (typeof t.duration_ms === 'number' && t.duration_ms > 0) {
+            totalSec += Math.round(t.duration_ms / 1000);
+          } else if (typeof t.duration === 'string' && t.duration.includes(':')) {
+            const parts = t.duration.split(':').map(Number);
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+              totalSec += parts[0] * 60 + parts[1];
+            } else if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+              totalSec += parts[0] * 3600 + parts[1] * 60 + parts[2];
+            }
+          } else if (typeof t.duration_formatted === 'string' && t.duration_formatted.includes(':')) {
+            const parts = t.duration_formatted.split(':').map(Number);
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+              totalSec += parts[0] * 60 + parts[1];
+            }
+          } else {
+            totalSec += 210;
+          }
         });
-        const mins = Math.floor(totalSec / 60);
-        const secs = totalSec % 60;
-        if (durationBadge) durationBadge.textContent = `${mins}m ${secs}s`;
+
+        if (durationBadge) {
+          if (totalSec >= 3600) {
+            const hrs = Math.floor(totalSec / 3600);
+            const remMins = Math.floor((totalSec % 3600) / 60);
+            durationBadge.textContent = remMins > 0 ? `${hrs} hr ${remMins} min` : `${hrs} hr`;
+          } else {
+            const mins = Math.floor(totalSec / 60);
+            const secs = totalSec % 60;
+            durationBadge.textContent = mins > 0 ? (secs > 0 ? `${mins}m ${secs}s` : `${mins} min`) : `${secs}s`;
+          }
+        }
 
         this.renderTrackRows();
         this.updateSelectionSummary();
         this.updateQualityDisplay();
+
+        // Automatically pre-scan destination folder for existing vault tracks
+        this.scanFolderDuplicates();
+      },
+
+      async scanFolderDuplicates() {
+        const folder = (App.state.settings && App.state.settings.destinationFolder) || 'C:/Users/Music/BeatVault';
+        if (!folder || !App.state.loadedTracks || App.state.loadedTracks.length === 0) return;
+
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.scan_duplicates) {
+          try {
+            const res = await window.pywebview.api.scan_duplicates(App.state.loadedTracks, folder);
+            if (res && res.success && Array.isArray(res.tracks)) {
+              let dupCount = 0;
+              res.tracks.forEach((scannedTrack, idx) => {
+                if (App.state.loadedTracks[idx]) {
+                  if (scannedTrack.duplicate_info) {
+                    App.state.loadedTracks[idx].duplicate_info = scannedTrack.duplicate_info;
+                    App.state.loadedTracks[idx].is_duplicate = true;
+                    // Auto-uncheck duplicate to protect bandwidth
+                    App.state.loadedTracks[idx].selected = false;
+                    dupCount++;
+                  } else {
+                    App.state.loadedTracks[idx].duplicate_info = null;
+                    App.state.loadedTracks[idx].is_duplicate = false;
+                  }
+                }
+              });
+
+              this.renderTrackRows();
+              this.updateSelectionSummary();
+
+              const dupChip = document.getElementById('chipFilterDuplicates');
+              const dupCountEl = document.getElementById('chipCountDuplicates');
+              if (dupChip && dupCountEl) {
+                if (dupCount > 0) {
+                  dupCountEl.textContent = dupCount;
+                  dupChip.classList.remove('hidden');
+                } else {
+                  dupChip.classList.add('hidden');
+                }
+              }
+
+              const deselectDupBtn = document.getElementById('btnDeselectDuplicates');
+              if (deselectDupBtn) {
+                if (dupCount > 0) deselectDupBtn.classList.remove('hidden');
+                else deselectDupBtn.classList.add('hidden');
+              }
+
+              if (dupCount > 0) {
+                App.ui.showToast(`Pre-scanned vault: found ${dupCount} existing track(s). Auto-unchecked.`, 'info');
+              }
+            }
+          } catch (e) {
+            console.warn('scanFolderDuplicates error:', e);
+          }
+        }
+      },
+
+      deselectDuplicates() {
+        let count = 0;
+        App.state.loadedTracks.forEach(t => {
+          if (t.is_duplicate || t.duplicate_info) {
+            t.selected = false;
+            count++;
+          }
+        });
+        this.renderTrackRows();
+        this.updateSelectionSummary();
+        App.ui.showToast(`Unchecked ${count} duplicate track(s)`, 'info');
       },
 
       updateQualityDisplay() {
         const isFlac = App.state.targetQuality === 'flac';
-        let totalSize = 0;
-        App.state.loadedTracks.forEach(t => {
-          totalSize += isFlac ? (t.size_flac || 8.5) : (t.size_mp3 || 4.0);
-        });
-
-        const sizeBadge = document.getElementById('inspectorSizeBadge');
-        if (sizeBadge) sizeBadge.textContent = `${totalSize.toFixed(1)} MB`;
 
         // Update badges in rows
         const formatBadges = document.querySelectorAll('.track-format-tag');
@@ -2124,9 +2521,46 @@
         if (!list) return;
 
         const isFlac = App.state.targetQuality === 'flac';
-        list.innerHTML = App.state.loadedTracks.map((t, idx) => {
+        const q = (this.searchQuery || '').trim().toLowerCase();
+        const mode = this.filterMode || 'all';
+
+        const filteredTracks = App.state.loadedTracks.filter(t => {
+          if (mode === 'selected' && t.selected === false) return false;
+          if (mode === 'unselected' && t.selected !== false) return false;
+          if (mode === 'duplicates' && !t.is_duplicate && !t.duplicate_info) return false;
+
+          if (q) {
+            const title = (t.title || '').toLowerCase();
+            const artist = (t.artist || '').toLowerCase();
+            const album = (t.album || '').toLowerCase();
+            if (!title.includes(q) && !artist.includes(q) && !album.includes(q)) {
+              return false;
+            }
+          }
+          return true;
+        });
+
+        if (filteredTracks.length === 0) {
+          list.innerHTML = `
+            <div class="py-12 px-4 flex flex-col items-center justify-center text-center text-on-surface-variant gap-2">
+              <span class="material-symbols-outlined text-3xl opacity-40">filter_list_off</span>
+              <span class="text-xs font-semibold">No tracks match current filter</span>
+            </div>
+          `;
+          return;
+        }
+
+        list.innerHTML = filteredTracks.map((t) => {
+          const idx = t.index !== undefined ? t.index : App.state.loadedTracks.indexOf(t);
           const numStr = String(idx + 1).padStart(2, '0');
           const isSelected = t.selected !== false;
+          const isDup = t.is_duplicate || t.duplicate_info;
+          const dupBadge = isDup 
+            ? `<span class="inline-flex items-center gap-1 rounded bg-secondary/15 px-2 py-0.5 text-[10px] font-bold text-secondary border border-secondary/25" title="Already exists in destination vault">
+                 <span class="material-symbols-outlined text-[12px]">verified</span>Already in Vault
+               </span>`
+            : '';
+
           return `
             <div class="track-row grid grid-cols-12 items-center gap-4 rounded-xl bg-surface-container-low px-4 py-2.5 hover:bg-surface-container-high transition-all border border-transparent hover:border-white/5" data-index="${idx}">
               <div class="col-span-1 flex items-center gap-3">
@@ -2136,7 +2570,10 @@
               <div class="col-span-5 flex min-w-0 items-center gap-3">
                 <img src="${t.cover_url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100'}" alt="Cover" class="h-10 w-10 shrink-0 rounded-lg object-cover bg-surface-container-highest shadow-sm"/>
                 <div class="flex min-w-0 flex-col">
-                  <span class="text-xs font-bold text-on-surface truncate hover:text-primary cursor-pointer" onclick="App.player.playTrack(${idx})">${t.title}</span>
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-xs font-bold text-on-surface truncate hover:text-primary cursor-pointer" onclick="App.player.playTrack(${idx})">${t.title}</span>
+                    ${dupBadge}
+                  </div>
                   <span class="text-[11px] text-on-surface-variant truncate">${t.artist}</span>
                 </div>
               </div>
@@ -2180,22 +2617,64 @@
 
       updateSelectionSummary() {
         const total = App.state.loadedTracks.length;
-        const selected = App.state.loadedTracks.filter(t => t.selected !== false).length;
+        const selectedTracks = App.state.loadedTracks.filter(t => t.selected !== false);
+        const selected = selectedTracks.length;
         const isFlac = App.state.targetQuality === 'flac';
 
-        let selectedBytes = 0;
-        App.state.loadedTracks.forEach(t => {
-          if (t.selected !== false) {
-            selectedBytes += isFlac ? (t.size_flac || 8.5) : (t.size_mp3 || 4.0);
+        let totalMb = 0;
+        selectedTracks.forEach(t => {
+          if (isFlac) {
+            totalMb += (typeof t.size_flac === 'number' && t.size_flac > 0) ? t.size_flac : 35;
+          } else {
+            totalMb += (typeof t.size_mp3 === 'number' && t.size_mp3 > 0) ? t.size_mp3 : 9;
           }
         });
+
+        const formattedSize = totalMb >= 1024
+          ? `${(totalMb / 1024).toFixed(2)} GB`
+          : `${totalMb.toFixed(1)} MB`;
 
         const summary = document.getElementById('selectionSummary');
         if (summary) summary.textContent = `${selected} of ${total} tracks selected`;
 
         const btnText = document.getElementById('downloadBtnText');
         if (btnText) {
-          btnText.textContent = `Download Selected (${selected} Tracks • ${selectedBytes.toFixed(1)} MB)`;
+          btnText.textContent = `Download Selected (${selected} Tracks • ${formattedSize})`;
+        }
+
+        const totalSizeBadge = document.getElementById('inspectorTotalSizeBadge');
+        if (totalSizeBadge) totalSizeBadge.textContent = formattedSize;
+
+        const totalSizeText = document.getElementById('inspectorTotalSizeText');
+        if (totalSizeText) totalSizeText.textContent = `Total Size: ${formattedSize}`;
+
+        const legacySizeBadge = document.getElementById('inspectorSizeBadge');
+        if (legacySizeBadge) legacySizeBadge.textContent = formattedSize;
+
+        // Update Filter Chip counts
+        const chipAll = document.getElementById('chipCountAll');
+        if (chipAll) chipAll.textContent = total;
+        const chipSel = document.getElementById('chipCountSelected');
+        if (chipSel) chipSel.textContent = selected;
+        const chipUnsel = document.getElementById('chipCountUnselected');
+        if (chipUnsel) chipUnsel.textContent = total - selected;
+
+        const dupTracks = App.state.loadedTracks.filter(t => t.is_duplicate || t.duplicate_info);
+        const dupCount = dupTracks.length;
+        const dupChip = document.getElementById('chipFilterDuplicates');
+        const dupCountEl = document.getElementById('chipCountDuplicates');
+        if (dupChip && dupCountEl) {
+          if (dupCount > 0) {
+            dupCountEl.textContent = dupCount;
+            dupChip.classList.remove('hidden');
+          } else {
+            dupChip.classList.add('hidden');
+          }
+        }
+        const deselectDupBtn = document.getElementById('btnDeselectDuplicates');
+        if (deselectDupBtn) {
+          if (dupCount > 0) deselectDupBtn.classList.remove('hidden');
+          else deselectDupBtn.classList.add('hidden');
         }
 
         const selectAllChk = document.getElementById('selectAllCheckbox');
@@ -2257,7 +2736,11 @@
         if (btnPause) {
           btnPause.addEventListener('click', async () => {
             if (window.pywebview && window.pywebview.api && window.pywebview.api.pause_download) {
-              await window.pywebview.api.pause_download();
+              try {
+                await window.pywebview.api.pause_download();
+              } catch (e) {
+                console.warn('pause_download error:', e);
+              }
             }
             App.state.isPaused = true;
             App.ui.showToast('Download queue paused', 'info');
@@ -2268,7 +2751,11 @@
         if (btnResume) {
           btnResume.addEventListener('click', async () => {
             if (window.pywebview && window.pywebview.api && window.pywebview.api.resume_download) {
-              await window.pywebview.api.resume_download();
+              try {
+                await window.pywebview.api.resume_download();
+              } catch (e) {
+                console.warn('resume_download error:', e);
+              }
             }
             App.state.isPaused = false;
             App.ui.showToast('Download queue resumed', 'info');
@@ -2407,9 +2894,14 @@
         if (App.state.activeTasks.length === 0) {
           panel.innerHTML = `
             <div class="col-span-full py-16 flex flex-col items-center justify-center text-center text-on-surface-variant gap-3 bg-surface-container rounded-2xl border border-white/5">
-              <span class="material-symbols-outlined text-4xl text-on-surface-variant/40">download_done</span>
-              <p class="text-sm font-semibold">No active download tasks</p>
-              <button type="button" onclick="App.nav.goTo('ingest')" class="px-4 py-2 rounded-xl bg-primary-container text-on-primary-container text-xs font-bold shadow-md hover:bg-primary transition-all">
+              <div class="w-14 h-14 rounded-2xl bg-surface-container-high border border-white/5 flex items-center justify-center text-on-surface-variant/60 shadow-inner">
+                <span class="material-symbols-outlined text-3xl">hourglass_empty</span>
+              </div>
+              <div class="flex flex-col gap-1 max-w-sm">
+                <p class="text-base font-bold text-on-surface">Queue Idle</p>
+                <p class="text-xs text-on-surface-variant/80">No active downloads in progress. Select tracks from Inspector to begin.</p>
+              </div>
+              <button type="button" onclick="App.nav.goTo('ingest')" class="mt-2 px-5 py-2.5 rounded-xl bg-primary-container text-on-primary-container text-xs font-bold shadow-md hover:bg-primary hover:text-on-primary transition-all">
                 Ingest New Media
               </button>
             </div>
@@ -2528,6 +3020,22 @@
         if (bw) {
           bw.textContent = activeCount > 0 && !App.state.isPaused ? (activeCount * 2.4).toFixed(1) : '0.0';
         }
+
+        // Active threads
+        const threadsEl = document.getElementById('queueActiveThreadsText');
+        if (threadsEl) {
+          threadsEl.textContent = activeCount > 0 ? `${App.state.settings.concurrency || 2} Threads Running` : '0 Threads Running';
+        }
+
+        // Telemetry breakdown
+        const countActiveEl = document.getElementById('queueCountActive');
+        if (countActiveEl) countActiveEl.textContent = `${activeCount} Downloading`;
+
+        const countQueuedEl = document.getElementById('queueCountQueued');
+        if (countQueuedEl) countQueuedEl.textContent = '0 Queued';
+
+        const countFailedEl = document.getElementById('queueCountFailed');
+        if (countFailedEl) countFailedEl.textContent = '0 Failed';
 
         // Ingest radial gauge
         const radialText = document.getElementById('ingestRadialText');
@@ -2682,23 +3190,23 @@
           });
         }
 
-        // Initialize library from localStorage if available, or load sample library
+        // Initialize library from localStorage (do NOT auto-load sample library)
         const savedTracks = localStorage.getItem('beatvault_offline_library');
         if (savedTracks) {
           try {
             const parsed = JSON.parse(savedTracks);
             if (Array.isArray(parsed) && parsed.length > 0) {
               App.state.libraryTracks = parsed;
-              this.render();
             } else {
-              this.loadSampleLibrary();
+              App.state.libraryTracks = [];
             }
           } catch (e) {
-            this.loadSampleLibrary();
+            App.state.libraryTracks = [];
           }
         } else {
-          this.loadSampleLibrary();
+          App.state.libraryTracks = [];
         }
+        this.render();
       },
 
       loadSampleLibrary() {
@@ -2724,7 +3232,8 @@
             quality: "FLAC 24/96",
             cover_url: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&auto=format&fit=crop&q=80",
             preview_url: "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg",
-            isFlac: true
+            isFlac: true,
+            addedAt: Date.now() - 60000
           },
           {
             id: "lib-02",
@@ -2736,7 +3245,8 @@
             quality: "FLAC 24/48",
             cover_url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&auto=format&fit=crop&q=80",
             preview_url: "",
-            isFlac: true
+            isFlac: true,
+            addedAt: Date.now() - 120000
           },
           {
             id: "lib-03",
@@ -2748,7 +3258,8 @@
             quality: "FLAC 24/96",
             cover_url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80",
             preview_url: "",
-            isFlac: true
+            isFlac: true,
+            addedAt: Date.now() - 180000
           },
           {
             id: "lib-04",
@@ -2760,7 +3271,8 @@
             quality: "OPUS 320k",
             cover_url: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&auto=format&fit=crop&q=80",
             preview_url: "",
-            isFlac: false
+            isFlac: false,
+            addedAt: Date.now() - 240000
           },
           {
             id: "lib-05",
@@ -2772,7 +3284,8 @@
             quality: "FLAC 24/96",
             cover_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
             preview_url: "",
-            isFlac: true
+            isFlac: true,
+            addedAt: Date.now() - 300000
           },
           {
             id: "lib-06",
@@ -2784,7 +3297,8 @@
             quality: "FLAC 24/96",
             cover_url: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&auto=format&fit=crop&q=80",
             preview_url: "",
-            isFlac: true
+            isFlac: true,
+            addedAt: Date.now() - 360000
           }
         ];
         this.render();
@@ -2802,7 +3316,8 @@
           cover_url: task.cover_url || '',
           preview_url: task.preview_url || '',
           file_path: task.file_path || task.filePath || '',
-          isFlac: (task.quality || '').includes('FLAC')
+          isFlac: (task.quality || '').includes('FLAC'),
+          addedAt: Date.now()
         });
         try {
           localStorage.setItem('beatvault_offline_library', JSON.stringify(App.state.libraryTracks));
@@ -2812,40 +3327,131 @@
         this.render();
       },
 
+      clearSearch() {
+        App.state.filterQuery = '';
+        const search = document.getElementById('librarySearchInput');
+        if (search) search.value = '';
+        this.render();
+      },
+
       render() {
         const list = document.getElementById('libraryTrackList');
         if (!list) return;
 
+        const emptyState = document.getElementById('libraryEmptyState');
+        const content = document.getElementById('libraryContent');
+        const countBadge = document.getElementById('libraryTrackCountBadge');
+        const flacBadge = document.getElementById('libraryFlacPercent');
+        const storageText = document.getElementById('libraryStorageText');
+
+        if (App.state.libraryTracks.length === 0) {
+          if (countBadge) countBadge.textContent = '0 Tracks • 0 MB Cached';
+          if (flacBadge) {
+            flacBadge.innerHTML = `<span class="material-symbols-outlined text-[15px]">graphic_eq</span> 0% Lossless FLAC`;
+          }
+          if (storageText) storageText.textContent = '0 MB Cached';
+          if (emptyState) emptyState.classList.remove('hidden');
+          if (content) content.classList.add('hidden');
+          return;
+        }
+
+        if (emptyState) emptyState.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+
+        // Dynamic badges for populated state
+        const totalTracks = App.state.libraryTracks.length;
+        const flacTracks = App.state.libraryTracks.filter(t => t.isFlac).length;
+        const flacPct = totalTracks > 0 ? Math.round((flacTracks / totalTracks) * 100) : 0;
+        let totalMB = 0;
+        App.state.libraryTracks.forEach(t => {
+          totalMB += t.isFlac ? (t.size_flac || 32.5) : (t.size_mp3 || 8.0);
+        });
+
+        if (countBadge) {
+          countBadge.textContent = `${totalTracks} Tracks • ${totalMB > 1024 ? (totalMB / 1024).toFixed(1) + ' GB' : totalMB.toFixed(1) + ' MB'} Cached`;
+        }
+        if (flacBadge) {
+          flacBadge.innerHTML = `<span class="material-symbols-outlined text-[15px]">graphic_eq</span> ${flacPct}% Lossless FLAC`;
+        }
+        if (storageText) {
+          storageText.textContent = `${totalMB > 1024 ? (totalMB / 1024).toFixed(1) + ' GB' : totalMB.toFixed(1) + ' MB'} Cached`;
+        }
+
         let tracks = [...App.state.libraryTracks];
 
-        // Filter by Query
+        // 1. Filter by Search Query (title, artist, or album)
         if (App.state.filterQuery) {
+          const q = App.state.filterQuery.toLowerCase();
           tracks = tracks.filter(t => 
-            t.title.toLowerCase().includes(App.state.filterQuery) ||
-            t.artist.toLowerCase().includes(App.state.filterQuery) ||
-            (t.album && t.album.toLowerCase().includes(App.state.filterQuery))
+            (t.title && t.title.toLowerCase().includes(q)) ||
+            (t.artist && t.artist.toLowerCase().includes(q)) ||
+            (t.album && t.album.toLowerCase().includes(q))
           );
         }
 
-        // Filter by FLAC only
-        if (App.state.libraryFlacOnly) {
-          tracks = tracks.filter(t => t.isFlac);
+        // 2. Filter by Category Pills
+        const cat = (App.state.libraryCategory || 'all').toLowerCase();
+        if (cat === 'playlists') {
+          tracks = tracks.filter(t => t.album && t.album.trim().length > 0 && t.album.toLowerCase() !== 'single');
+        } else if (cat === 'flac' || cat === 'lossless flac' || cat === 'lossless') {
+          tracks = tracks.filter(t => 
+            t.isFlac ||
+            (t.quality && t.quality.toLowerCase().includes('flac')) ||
+            (t.format && t.format.toLowerCase().includes('flac')) ||
+            (t.file_path && t.file_path.toLowerCase().endsWith('.flac'))
+          );
+        } else if (cat === 'artists') {
+          tracks = tracks.filter(t => t.artist && t.artist.trim().length > 0);
         }
 
-        // Sort
-        if (App.state.librarySort === 'title') {
-          tracks.sort((a, b) => a.title.localeCompare(b.title));
-        } else if (App.state.librarySort === 'duration') {
+        // 3. Filter by FLAC only button
+        if (App.state.libraryFlacOnly) {
+          tracks = tracks.filter(t => 
+            t.isFlac ||
+            (t.quality && t.quality.toLowerCase().includes('flac')) ||
+            (t.format && t.format.toLowerCase().includes('flac')) ||
+            (t.file_path && t.file_path.toLowerCase().endsWith('.flac'))
+          );
+        }
+
+        // 4. Sort dropdown ('newest', 'title', 'artist', 'duration')
+        const sortMode = App.state.librarySort || 'newest';
+        if (sortMode === 'title') {
+          tracks.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        } else if (sortMode === 'artist') {
+          tracks.sort((a, b) => (a.artist || '').localeCompare(b.artist || ''));
+        } else if (sortMode === 'duration') {
           tracks.sort((a, b) => (b.duration_sec || 0) - (a.duration_sec || 0));
+        } else if (sortMode === 'newest') {
+          tracks.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
         }
 
         if (tracks.length === 0) {
-          list.innerHTML = `
-            <div class="py-12 flex flex-col items-center justify-center text-center text-on-surface-variant gap-2">
-              <span class="material-symbols-outlined text-3xl text-on-surface-variant/40">search_off</span>
-              <p class="text-xs font-medium">No matching offline tracks found</p>
-            </div>
-          `;
+          if (App.state.filterQuery) {
+            const safeQuery = (App.state.filterQuery || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            list.innerHTML = `
+              <div class="py-14 flex flex-col items-center justify-center text-center text-on-surface-variant gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center text-on-surface-variant/60">
+                  <span class="material-symbols-outlined text-[28px]">search_off</span>
+                </div>
+                <div class="flex flex-col gap-1 max-w-sm">
+                  <p class="text-sm font-bold text-on-surface">No offline tracks found matching &lsquo;<span class="text-primary font-mono">${safeQuery}</span>&rsquo;</p>
+                  <p class="text-xs text-on-surface-variant">Check your spelling or search by artist name or album.</p>
+                </div>
+                <button type="button" onclick="App.library.clearSearch()" class="mt-2 px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-bright text-xs font-semibold text-on-surface transition-all border border-white/5 flex items-center gap-2 cursor-pointer">
+                  <span class="material-symbols-outlined text-[16px]">close</span>
+                  <span>Clear Search Filter</span>
+                </button>
+              </div>
+            `;
+          } else {
+            list.innerHTML = `
+              <div class="py-12 flex flex-col items-center justify-center text-center text-on-surface-variant gap-2">
+                <span class="material-symbols-outlined text-3xl text-on-surface-variant/40">search_off</span>
+                <p class="text-xs font-medium">No offline tracks found in this filter</p>
+              </div>
+            `;
+          }
           return;
         }
 
@@ -2986,10 +3592,25 @@
           resetBtn.addEventListener('click', () => this.resetDefaults());
         }
 
+        // Theme Accent Buttons
+        document.querySelectorAll('.theme-accent-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const accent = btn.getAttribute('data-theme-accent') || 'green';
+            this.setThemeAccent(accent);
+            App.ui.showToast(`Studio theme accent updated to ${accent.charAt(0).toUpperCase() + accent.slice(1)}`, 'info');
+          });
+        });
+
         await this.load();
       },
 
       async load() {
+        let themeAccent = 'green';
+        try {
+          themeAccent = localStorage.getItem('beatvault_theme_accent') || 'green';
+        } catch (e) {}
+        this.setThemeAccent(themeAccent, false);
+
         let saved = null;
         if (window.pywebview && window.pywebview.api && window.pywebview.api.get_settings) {
           try {
@@ -3086,6 +3707,9 @@
               const headerFolder = document.getElementById('headerFolderLabel');
               if (headerFolder) headerFolder.textContent = folder.split('/').pop() || 'BeatVault';
               this.save();
+              if (App.state.loadedTracks && App.state.loadedTracks.length > 0) {
+                App.inspector.scanFolderDuplicates();
+              }
             }
           } catch (e) {
             console.error('select_folder error:', e);
@@ -3097,6 +3721,29 @@
           if (input) input.value = dummy;
           App.state.settings.destinationFolder = dummy;
           App.ui.showToast('Selected download folder: Lossless', 'info');
+          if (App.state.loadedTracks && App.state.loadedTracks.length > 0) {
+            App.inspector.scanFolderDuplicates();
+          }
+        }
+      },
+
+      setThemeAccent(accent, save = true) {
+        document.documentElement.setAttribute('data-accent', accent);
+        document.querySelectorAll('.theme-accent-btn').forEach(btn => {
+          const isCurrent = btn.getAttribute('data-theme-accent') === accent;
+          if (isCurrent) {
+            btn.classList.add('border-primary/60', 'bg-surface-container-high', 'shadow-sm');
+            btn.classList.remove('border-white/5');
+          } else {
+            btn.classList.remove('border-primary/60', 'bg-surface-container-high', 'shadow-sm');
+            btn.classList.add('border-white/5');
+          }
+        });
+        App.state.settings.themeAccent = accent;
+        if (save) {
+          try {
+            localStorage.setItem('beatvault_theme_accent', accent);
+          } catch (e) {}
         }
       },
 
@@ -3136,6 +3783,10 @@
       audio: null,
       isPlaying: false,
       isMuted: false,
+      isShuffled: false,
+      repeatMode: 'off', // 'off' | 'all' | 'one'
+      lastVolume: 0.8,
+      unplayedIndices: [],
 
       init() {
         this.audio = document.getElementById('audioPlayer');
@@ -3161,18 +3812,33 @@
           this.isPlaying = true;
           this.updatePlayIcon(true);
           App.visualizer.start();
+          if ('mediaSession' in navigator) {
+            try { navigator.mediaSession.playbackState = 'playing'; } catch (e) {}
+          }
         });
 
         this.audio.addEventListener('pause', () => {
           this.isPlaying = false;
           this.updatePlayIcon(false);
           App.visualizer.stop();
+          if ('mediaSession' in navigator) {
+            try { navigator.mediaSession.playbackState = 'paused'; } catch (e) {}
+          }
         });
 
         this.audio.addEventListener('ended', () => {
           this.isPlaying = false;
           this.updatePlayIcon(false);
           App.visualizer.stop();
+          if ('mediaSession' in navigator) {
+            try { navigator.mediaSession.playbackState = 'none'; } catch (e) {}
+          }
+          // Repeat One Logic: restarts the same track
+          if (this.repeatMode === 'one') {
+            this.audio.currentTime = 0;
+            this.audio.play().catch(() => {});
+            return;
+          }
           this.playNext();
         });
 
@@ -3186,6 +3852,12 @@
         const btnNext = document.getElementById('btnPlayerNext');
         if (btnNext) btnNext.addEventListener('click', () => this.playNext());
 
+        const btnShuffle = document.getElementById('btnPlayerShuffle');
+        if (btnShuffle) btnShuffle.addEventListener('click', () => this.toggleShuffle());
+
+        const btnRepeat = document.getElementById('btnPlayerRepeat');
+        if (btnRepeat) btnRepeat.addEventListener('click', () => this.cycleRepeatMode());
+
         const seek = document.getElementById('playerSeek');
         if (seek) {
           seek.addEventListener('input', (e) => {
@@ -3195,12 +3867,20 @@
           });
         }
 
-        // Volume
+        // Volume & Mute Sync
         const vol = document.getElementById('playerVolume');
         if (vol) {
           vol.addEventListener('input', (e) => {
-            this.audio.volume = parseFloat(e.target.value);
-            this.isMuted = this.audio.volume === 0;
+            const val = parseFloat(e.target.value);
+            this.audio.volume = val;
+            if (val > 0) {
+              this.lastVolume = val;
+              this.isMuted = false;
+              this.audio.muted = false;
+            } else {
+              this.isMuted = true;
+              this.audio.muted = true;
+            }
             this.updateVolumeIcon();
           });
         }
@@ -3208,9 +3888,7 @@
         const volIcon = document.getElementById('btnVolumeIcon');
         if (volIcon) {
           volIcon.addEventListener('click', () => {
-            this.isMuted = !this.isMuted;
-            this.audio.muted = this.isMuted;
-            this.updateVolumeIcon();
+            this.toggleMute();
           });
         }
 
@@ -3245,7 +3923,11 @@
 
         if (title) title.textContent = track.title;
         if (artist) artist.textContent = track.artist;
-        if (cover && track.cover_url) cover.src = track.cover_url;
+        if (cover && track.cover_url) {
+          cover.src = track.cover_url;
+          cover.classList.remove('opacity-40', 'p-2', 'object-contain');
+          cover.classList.add('object-cover');
+        }
         if (format) format.textContent = (track.quality || 'FLAC 24b').slice(0, 10);
 
         // Update Now Playing Modal left pane
@@ -3254,7 +3936,11 @@
         const npCover = document.getElementById('nowPlayingCover');
         if (npTitle) npTitle.textContent = track.title;
         if (npArtist) npArtist.textContent = `${track.artist} • ${track.album || 'Lossless'}`;
-        if (npCover && track.cover_url) npCover.src = track.cover_url;
+        if (npCover && track.cover_url) {
+          npCover.src = track.cover_url;
+          npCover.classList.remove('opacity-30', 'p-12', 'object-contain');
+          npCover.classList.add('object-cover');
+        }
 
         // Set source
         const filePath = track.file_path || track.filePath;
@@ -3283,6 +3969,33 @@
 
         this.audio.play().catch(() => {});
         App.lyrics.loadForTrack(track);
+
+        // OS Media Session API Integration (System Media Transport Controls)
+        if ('mediaSession' in navigator) {
+          try {
+            const coverUrl = track.cover_url || track.cover || '../assets/icon_transparent.png';
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: track.title || 'Unknown Title',
+              artist: track.artist || 'Unknown Artist',
+              album: track.album || 'BeatVault Lossless',
+              artwork: [
+                { src: coverUrl, sizes: '512x512', type: 'image/jpeg' }
+              ]
+            });
+
+            navigator.mediaSession.setActionHandler('play', () => App.player.togglePlay());
+            navigator.mediaSession.setActionHandler('pause', () => App.player.togglePlay());
+            navigator.mediaSession.setActionHandler('previoustrack', () => App.player.playPrev());
+            navigator.mediaSession.setActionHandler('nexttrack', () => App.player.playNext());
+            navigator.mediaSession.setActionHandler('seekto', (details) => {
+              if (details && details.seekTime !== undefined && details.seekTime !== null) {
+                App.player.seekTo(details.seekTime);
+              }
+            });
+          } catch (e) {
+            console.warn('MediaSession initialization warning:', e);
+          }
+        }
       },
 
       playTrack(idx) {
@@ -3307,17 +4020,113 @@
         }
       },
 
-      playNext() {
-        if (!App.state.currentPlayback) return;
+      toggleShuffle() {
+        this.isShuffled = !this.isShuffled;
+        const btn = document.getElementById('btnPlayerShuffle');
+        if (btn) {
+          if (this.isShuffled) {
+            btn.classList.add('text-primary');
+            btn.classList.remove('text-on-surface-variant');
+            App.ui.showToast('Shuffle Mode: ON', 'info');
+          } else {
+            btn.classList.remove('text-primary');
+            btn.classList.add('text-on-surface-variant');
+            App.ui.showToast('Shuffle Mode: OFF', 'info');
+          }
+        }
+        this.resetUnplayedTracks();
+      },
+
+      resetUnplayedTracks() {
         const tracks = App.state.libraryTracks;
+        if (!tracks || tracks.length === 0) {
+          this.unplayedIndices = [];
+          return;
+        }
+        const curIdx = App.state.currentPlayback ? tracks.findIndex(t => t.title === App.state.currentPlayback.title) : -1;
+        this.unplayedIndices = tracks.map((_, i) => i).filter(i => i !== curIdx);
+      },
+
+      cycleRepeatMode() {
+        const btn = document.getElementById('btnPlayerRepeat');
+        const icon = btn ? btn.querySelector('.material-symbols-outlined') : null;
+
+        if (this.repeatMode === 'off') {
+          this.repeatMode = 'all';
+          if (btn) {
+            btn.classList.add('text-primary');
+            btn.classList.remove('text-on-surface-variant');
+            btn.title = 'Repeat All';
+          }
+          if (icon) icon.textContent = 'repeat';
+          App.ui.showToast('Repeat Mode: Repeat All', 'info');
+        } else if (this.repeatMode === 'all') {
+          this.repeatMode = 'one';
+          if (btn) {
+            btn.classList.add('text-primary');
+            btn.classList.remove('text-on-surface-variant');
+            btn.title = 'Repeat One Track';
+          }
+          if (icon) icon.textContent = 'repeat_one';
+          App.ui.showToast('Repeat Mode: Repeat One', 'info');
+        } else {
+          this.repeatMode = 'off';
+          if (btn) {
+            btn.classList.remove('text-primary');
+            btn.classList.add('text-on-surface-variant');
+            btn.title = 'Repeat Off';
+          }
+          if (icon) icon.textContent = 'repeat';
+          App.ui.showToast('Repeat Mode: Off', 'info');
+        }
+      },
+
+      playNext() {
+        const tracks = App.state.libraryTracks;
+        if (!tracks || tracks.length === 0) return;
+        if (!App.state.currentPlayback) {
+          this.loadAndPlay(tracks[0]);
+          return;
+        }
+
+        // Shuffle logic: pick random unplayed track
+        if (this.isShuffled) {
+          if (!this.unplayedIndices || this.unplayedIndices.length === 0) {
+            this.resetUnplayedTracks();
+          }
+          if (this.unplayedIndices.length > 0) {
+            const randPos = Math.floor(Math.random() * this.unplayedIndices.length);
+            const nextIdx = this.unplayedIndices.splice(randPos, 1)[0];
+            this.loadAndPlay(tracks[nextIdx]);
+            return;
+          }
+        }
+
         const curIdx = tracks.findIndex(t => t.title === App.state.currentPlayback.title);
+        // Repeat off check at playlist boundary
+        if (curIdx === tracks.length - 1 && this.repeatMode === 'off') {
+          this.audio.pause();
+          this.audio.currentTime = 0;
+          this.isPlaying = false;
+          this.updatePlayIcon(false);
+          return;
+        }
+
         const nextIdx = (curIdx + 1) % tracks.length;
         this.loadAndPlay(tracks[nextIdx]);
       },
 
       playPrev() {
-        if (!App.state.currentPlayback) return;
         const tracks = App.state.libraryTracks;
+        if (!tracks || tracks.length === 0) return;
+        if (!App.state.currentPlayback) {
+          this.loadAndPlay(tracks[0]);
+          return;
+        }
+        if (this.audio && this.audio.currentTime > 3) {
+          this.audio.currentTime = 0;
+          return;
+        }
         const curIdx = tracks.findIndex(t => t.title === App.state.currentPlayback.title);
         const prevIdx = (curIdx - 1 + tracks.length) % tracks.length;
         this.loadAndPlay(tracks[prevIdx]);
@@ -3336,10 +4145,33 @@
         }
       },
 
+      toggleMute() {
+        if (!this.audio) return;
+        const volSlider = document.getElementById('playerVolume');
+        if (this.isMuted || this.audio.muted || this.audio.volume === 0) {
+          // Unmute: restore previous level
+          const restore = (this.lastVolume && this.lastVolume > 0) ? this.lastVolume : 0.8;
+          this.isMuted = false;
+          this.audio.muted = false;
+          this.audio.volume = restore;
+          if (volSlider) volSlider.value = restore;
+        } else {
+          // Mute: store current volume and set volume to 0
+          if (this.audio.volume > 0) {
+            this.lastVolume = this.audio.volume;
+          }
+          this.isMuted = true;
+          this.audio.muted = true;
+          this.audio.volume = 0;
+          if (volSlider) volSlider.value = 0;
+        }
+        this.updateVolumeIcon();
+      },
+
       updateVolumeIcon() {
         const span = document.getElementById('volumeIconSpan');
         if (!span) return;
-        if (this.isMuted || this.audio.volume === 0) {
+        if (this.isMuted || this.audio.muted || this.audio.volume === 0) {
           span.textContent = 'volume_off';
         } else if (this.audio.volume < 0.5) {
           span.textContent = 'volume_down';
@@ -3349,10 +4181,28 @@
       },
 
       formatTime(sec) {
-        if (isNaN(sec)) return '0:00';
-        const m = Math.floor(sec / 60);
-        const s = Math.floor(sec % 60);
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
+        if (isNaN(sec) || sec === null || sec === undefined || sec < 0) return '0:00';
+        const totalSeconds = Math.floor(sec);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+
+        if (hours > 0) {
+          const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+          return `${hours}:${formattedMinutes}:${formattedSeconds}`;
+        }
+        return `${minutes}:${formattedSeconds}`;
+      },
+
+      formatBytes(bytes, decimals = 1) {
+        if (!bytes || isNaN(bytes) || bytes <= 0) return '0 B';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        const index = Math.min(i, sizes.length - 1);
+        return `${parseFloat((bytes / Math.pow(k, index)).toFixed(dm))} ${sizes[index]}`;
       }
     };
 
@@ -3413,12 +4263,20 @@
         if (modal) {
           modal.classList.remove('opacity-0', 'pointer-events-none');
           App.state.lyrics.isOpen = true;
-          // Ensure current song lyrics loaded
+          // Ensure current song lyrics loaded if a track is playing
           if (App.state.currentPlayback) {
             const p = App.state.currentPlayback;
             this.loadForTrack(p.title, p.artist, p.duration_sec);
-          } else if (App.state.libraryTracks.length > 0) {
-            this.loadForTrack(App.state.libraryTracks[0].title, App.state.libraryTracks[0].artist);
+          } else {
+            const container = document.getElementById('lyricsContainer');
+            if (container) {
+              container.innerHTML = `
+                <div class="py-16 flex flex-col items-center justify-center text-center text-on-surface-variant gap-3">
+                  <span class="material-symbols-outlined text-4xl text-on-surface-variant/40">lyrics</span>
+                  <p class="text-sm font-medium">No synchronized lyrics available. Play a track to view lyrics.</p>
+                </div>
+              `;
+            }
           }
         }
       },
@@ -3622,9 +4480,17 @@
         if (this.canvas) {
           this.ctx = this.canvas.getContext('2d');
         }
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            App.visualizer.stop();
+          } else if (App.player && App.player.isPlaying) {
+            App.visualizer.start();
+          }
+        });
       },
 
       start() {
+        if (document.hidden) return;
         if (this.animId) cancelAnimationFrame(this.animId);
         const draw = () => {
           if (!this.ctx || !this.canvas) return;
@@ -3757,34 +4623,92 @@
     App.ui = {
       activeDuplicateCallback: null,
 
+      fallbackImage(imgElement) {
+        if (!imgElement || imgElement.dataset.fallbackApplied) return;
+        imgElement.dataset.fallbackApplied = 'true';
+        imgElement.onerror = null;
+        imgElement.src = '../assets/icon_transparent.png';
+        imgElement.classList.add('bg-surface-container-highest', 'p-1');
+      },
+
+      formatBytes(bytes, decimals = 1) {
+        if (!bytes || isNaN(bytes) || bytes <= 0) return '0 B';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        const index = Math.min(i, sizes.length - 1);
+        return `${parseFloat((bytes / Math.pow(k, index)).toFixed(dm))} ${sizes[index]}`;
+      },
+
+      formatTime(sec) {
+        return App.player.formatTime(sec);
+      },
+
       init() {
-        // Global Keyboard Shortcuts
-        window.addEventListener('keydown', (e) => {
-          // If in an input, don't trigger media shortcuts
-          if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-            if (e.key === 'Escape') document.activeElement.blur();
+        // Global Image Error Capture: Intercept all broken images across the app
+        window.addEventListener('error', (e) => {
+          if (e.target && e.target.tagName === 'IMG') {
+            this.fallbackImage(e.target);
+          }
+        }, true);
+
+        // Global Keyboard Shortcuts for Desktop Audiophile UX
+        document.addEventListener('keydown', (e) => {
+          const target = e.target;
+          const isEditable = target && (target.isContentEditable || ['INPUT', 'TEXTAREA'].includes(target.tagName));
+
+          // Guard: Ignore shortcuts if target is INPUT, TEXTAREA, or contenteditable (except Escape which blurs/closes)
+          if (isEditable) {
+            if (e.key === 'Escape') {
+              target.blur();
+              App.lyrics.close();
+              if (App.updates && App.updates.closeModal) App.updates.closeModal();
+              const dup = document.getElementById('duplicateModal');
+              if (dup) dup.classList.remove('active');
+            }
             return;
           }
 
           if (e.code === 'Space') {
             e.preventDefault();
             App.player.togglePlay();
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            App.player.seekTo((App.player.audio ? App.player.audio.currentTime : 0) + 5);
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            App.player.seekTo(Math.max(0, (App.player.audio ? App.player.audio.currentTime : 0) - 5));
+          } else if (e.code === 'KeyM' || e.key === 'm' || e.key === 'M') {
+            e.preventDefault();
+            App.player.toggleMute();
+          } else if (e.key === 'Escape') {
+            App.lyrics.close();
+            if (App.updates && App.updates.closeModal) App.updates.closeModal();
+            const dup = document.getElementById('duplicateModal');
+            if (dup) dup.classList.remove('active');
+          } else if (((e.ctrlKey || e.metaKey) && (e.code === 'KeyF' || e.key === 'f' || e.key === 'F')) || e.key === '/') {
+            e.preventDefault();
+            if (App.state.activeView === 'library') {
+              const libSearch = document.getElementById('librarySearchInput') || document.getElementById('globalSearchInput');
+              if (libSearch) {
+                libSearch.focus();
+                if (typeof libSearch.select === 'function') libSearch.select();
+              }
+            } else {
+              const urlInput = document.getElementById('mediaUrlInput') || document.getElementById('globalSearchInput');
+              if (urlInput) {
+                urlInput.focus();
+                if (typeof urlInput.select === 'function') urlInput.select();
+              }
+            }
           } else if (e.key === 'l' || e.key === 'L') {
             e.preventDefault();
             App.lyrics.toggle();
-          } else if (e.key === 'Escape') {
-            App.lyrics.close();
-            App.updates.closeModal();
-            const dup = document.getElementById('duplicateModal');
-            if (dup) dup.classList.remove('active');
-          } else if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          } else if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
             e.preventDefault();
             const s = document.getElementById('globalSearchInput');
             if (s) s.focus();
-          } else if (e.key === 'ArrowRight') {
-            App.player.seekTo((App.player.audio.currentTime || 0) + 5);
-          } else if (e.key === 'ArrowLeft') {
-            App.player.seekTo(Math.max(0, (App.player.audio.currentTime || 0) - 5));
           }
         });
 
@@ -3835,33 +4759,46 @@
         const modal = document.getElementById('duplicateModal');
         const title = document.getElementById('modalDupTitle');
         const artist = document.getElementById('modalDupArtist');
+        const format = document.getElementById('modalDupFormat');
         const file = document.getElementById('modalDupFilename');
         const size = document.getElementById('modalDupFilesize');
 
+        App.state.currentDuplicateTrack = track;
+        App.state.currentDuplicateTrackId = (track && (track.id || track.trackId)) || '';
+
         if (title) title.textContent = track ? track.title : 'Track';
         if (artist) artist.textContent = track ? track.artist : 'Artist';
-        if (file) file.textContent = dupInfo ? dupInfo.existing_file : 'file.mp3';
-        if (size) size.textContent = dupInfo ? `${dupInfo.existing_size_formatted || '7.4 MB'}` : '7.4 MB';
+        if (format) format.textContent = (track && (track.format || track.quality)) ? (track.format || track.quality) : 'FLAC Lossless';
+        if (file) file.textContent = dupInfo ? (dupInfo.existing_file || dupInfo.filename || 'file.mp3') : 'file.mp3';
+        if (size) size.textContent = dupInfo ? `${dupInfo.existing_size_formatted || dupInfo.size || '7.4 MB'}` : '7.4 MB';
 
         if (modal) modal.classList.add('active');
       },
 
-      async resolveDuplicate(decision) {
+      async resolveDuplicate(action) {
         const modal = document.getElementById('duplicateModal');
         const applyAllChk = document.getElementById('modalApplyAllDup');
         const applyAll = applyAllChk ? applyAllChk.checked : false;
+        const trackId = App.state.currentDuplicateTrackId || (App.state.currentDuplicateTrack && App.state.currentDuplicateTrack.id) || '';
 
         if (modal) modal.classList.remove('active');
 
+        const decision = (action === 'overwrite' || action === 'replace') ? 'replace' : action;
+
         if (window.pywebview && window.pywebview.api && window.pywebview.api.respond_duplicate) {
           try {
-            await window.pywebview.api.respond_duplicate(decision, applyAll);
+            await window.pywebview.api.respond_duplicate(trackId, decision, applyAll);
           } catch (e) {
-            console.error('respond_duplicate error:', e);
+            try {
+              await window.pywebview.api.respond_duplicate(decision, applyAll);
+            } catch (err) {
+              console.error('respond_duplicate error:', err);
+            }
           }
         }
 
-        App.ui.showToast(`Duplicate resolved: ${decision === 'skip' ? 'Skipped' : 'Downloading again'}`, 'info');
+        const label = action === 'skip' ? 'Skipped' : (action === 'overwrite' || action === 'replace') ? 'Overwriting existing track' : 'Downloading again with copy suffix';
+        App.ui.showToast(`Duplicate resolved: ${label}`, 'info');
       }
     };
 
@@ -4001,6 +4938,7 @@
           async check_for_updates() { return { success: true, update_available: false, current_version: '2.4.8' }; },
           async open_release_page() { return { success: true }; },
           async get_version_info() { return { success: true, info: { version: '2.4.8' } }; },
+          async scan_duplicates(tracks, folder) { return { success: true, duplicate_count: 0, tracks: tracks }; },
           // Aliases for comprehensive API bridge compatibility
           async get_playlist(url) { return this.load_playlist(url); },
           async download_playlist(tracks, folder) { return this.start_download(tracks, folder); },
@@ -4013,6 +4951,7 @@
 
     // Bridge alias injector for real pywebview runtime
     window.addEventListener('pywebviewready', () => {
+      console.log('PyWebView native bridge connected');
       if (window.pywebview && window.pywebview.api) {
         const api = window.pywebview.api;
         if (!api.get_playlist && api.load_playlist) api.get_playlist = api.load_playlist.bind(api);
@@ -4022,6 +4961,16 @@
         if (!api.get_downloads) api.get_downloads = api.get_status ? api.get_status.bind(api) : async () => ({ success: true, downloads: (window.App && window.App.state) ? window.App.state.downloads : [] });
       }
     });
+
+    // Unhandled promise rejection guard to protect against backend restarts or dropped IPC
+    window.addEventListener('unhandledrejection', (event) => {
+      console.warn('[BeatVault SafeIPC] Unhandled promise rejection intercepted:', event.reason);
+      event.preventDefault();
+    });
+
+    // Global utility formatters
+    window.formatTime = (sec) => App.player.formatTime(sec);
+    window.formatBytes = (bytes, dm) => App.ui.formatBytes(bytes, dm);
 
     // Start App on DOM Ready
     document.addEventListener('DOMContentLoaded', () => App.init());

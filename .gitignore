@@ -78,6 +78,9 @@ Downloads/
 *.tmp
 *.temp
 *.bak
+*.backup
+*.backup.*
+legacy_gui.html
 *~
 *.orig
 *.rej
