@@ -655,5 +655,90 @@ class TestLegacyFeaturesAdapted(unittest.TestCase):
         self.assertIn("beatvault_theme_accent", self.html)
 
 
+class TestAudioWorkstationAndGUILogicEnhancements(unittest.TestCase):
+    """Test suite verifying user-requested audio workstation and GUI logic enhancements."""
+
+    @classmethod
+    def setUpClass(cls):
+        assert os.path.isfile(GUI_HTML_PATH), "gui/index.html must exist"
+        with open(GUI_HTML_PATH, "r", encoding="utf-8") as f:
+            cls.gui_html = f.read()
+
+        assert os.path.isfile(MOBILE_HTML_PATH), "mobile/index.html must exist"
+        with open(MOBILE_HTML_PATH, "r", encoding="utf-8") as f:
+            cls.mobile_html = f.read()
+
+    def test_settings_recommended_badge_on_standard_quality(self):
+        """1. Verify RECOMMENDED badge is associated with Standard (192 kbps) and removed from 320 kbps in GUI & Mobile."""
+        match_320 = re.search(r'data-quality="320"[\s\S]*?Ultra Quality \(320 kbps\)[\s\S]*?</div>', self.gui_html)
+        self.assertTrue(match_320, "Ultra Quality (320 kbps) section should exist in GUI")
+        self.assertNotIn("RECOMMENDED", match_320.group(0), "Ultra Quality must not have RECOMMENDED badge in GUI")
+
+        match_192 = re.search(r'data-quality="192"[\s\S]*?Standard \(192 kbps\)[\s\S]*?RECOMMENDED', self.gui_html)
+        self.assertTrue(match_192, "Standard (192 kbps) section must feature RECOMMENDED badge in GUI")
+
+        mobile_192 = re.search(r'value="192"[\s\S]*?Standard Quality — 192 kbps MP3[\s\S]*?RECOMMENDED', self.mobile_html)
+        self.assertTrue(mobile_192, "Standard Quality 192 kbps must feature RECOMMENDED badge in mobile/index.html")
+
+    def test_inspector_target_quality_defaults_to_mp3(self):
+        """2. Verify target quality in Inspector defaults to MP3 (active) and FLAC is inactive by default."""
+        self.assertIn("targetQuality: 'mp3'", self.gui_html, "App.state.targetQuality must default to 'mp3'")
+        
+        mp3_btn_match = re.search(r'<button[^>]*data-quality="mp3"[^>]*>', self.gui_html)
+        self.assertTrue(mp3_btn_match, "MP3 quality button must exist in HTML")
+        self.assertIn("bg-primary-container", mp3_btn_match.group(0), "MP3 button must be styled as active (bg-primary-container)")
+
+        flac_btn_match = re.search(r'<button[^>]*data-quality="flac"[^>]*>', self.gui_html)
+        self.assertTrue(flac_btn_match, "FLAC quality button must exist in HTML")
+        self.assertNotIn("bg-primary-container", flac_btn_match.group(0), "FLAC button must not be styled active by default")
+
+    def test_converting_to_mp3_status_in_downloader_and_queue(self):
+        """3. Verify downloader emits converting status and GUI queue renders dynamic 'Converting to MP3...' text."""
+        from downloader import DownloadWorker
+        worker = DownloadWorker([], "/fake/dest")
+        track = {"title": "Test", "artist": "Artist", "id": "t1"}
+        emitted = []
+        worker.on_progress = lambda d: emitted.append(d)
+
+        track["status"] = "converting"
+        track["status_message"] = "Converting audio to MP3..."
+        worker._emit_progress(track, 85.0)
+
+        self.assertEqual(len(emitted), 1)
+        self.assertEqual(emitted[0]["status"], "converting")
+        self.assertEqual(emitted[0]["status_message"], "Converting audio to MP3...")
+        self.assertEqual(emitted[0]["percent"], 85.0)
+
+        self.assertIn("Converting to MP3...", self.gui_html)
+        self.assertIn("t.status === 'converting'", self.gui_html)
+        self.assertIn("animate-pulse", self.gui_html)
+
+    def test_real_bandwidth_display_without_fake_multipliers(self):
+        """4. Verify real bandwidth is tracked from download_progress and fake (activeCount * 2.4) is removed."""
+        self.assertNotIn("(activeCount * 2.4)", self.gui_html, "Fake bandwidth multiplier (activeCount * 2.4) must be removed")
+        self.assertIn("queueBandwidthVal", self.gui_html)
+        self.assertIn("totalMBs", self.gui_html)
+
+    def test_playback_controls_volume_and_context_navigation(self):
+        """5. Verify volume controls (setVolume, mute toggle) and next/prev across multiple contexts (library, inspector, completed)."""
+        self.assertIn("setVolume(val)", self.gui_html)
+        self.assertIn("btnPlayerMute", self.gui_html)
+        self.assertIn("getActiveTrackList()", self.gui_html)
+        self.assertIn("playbackContext", self.gui_html)
+
+    def test_lyrics_song_thumbnail_display(self):
+        """6. Verify lyrics modal displays song thumbnail instead of app logo when track is playing."""
+        self.assertIn("const songCover = p.cover_url || p.cover || p.thumbnail;", self.gui_html)
+        self.assertIn("npCover.classList.remove('opacity-30', 'p-12', 'object-contain');", self.gui_html)
+        self.assertIn("npCover.classList.add('object-cover', 'opacity-100');", self.gui_html)
+
+    def test_pause_resume_buttons_and_api(self):
+        """7. Verify download pause and resume buttons dispatch API calls and update UI state."""
+        self.assertIn("btnPauseAll", self.gui_html)
+        self.assertIn("btnResumeAll", self.gui_html)
+        self.assertIn("pause_download", self.gui_html)
+        self.assertIn("resume_download", self.gui_html)
+
+
 if __name__ == "__main__":
     unittest.main()

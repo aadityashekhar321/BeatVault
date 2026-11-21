@@ -267,9 +267,11 @@ class DownloadWorker:
             self.on_progress({
                 "track": track,
                 "stats": self.stats,
-                "percent": percent,
+                "percent": track["progress"],
                 "speed": speed_str,
-                "eta": eta_str
+                "eta": eta_str,
+                "status": track.get("status", "downloading"),
+                "status_message": track.get("status_message", "")
             })
 
     def _emit_track_complete(self, track: Dict[str, Any]):
@@ -425,7 +427,9 @@ class DownloadWorker:
                 return False
 
             # Embed ID3 Tags (Title, Artist, Album, Song's Original Cover Art)
+            track["status"] = "converting"
             track["status_message"] = "Writing MP3 ID3 metadata & original cover..."
+            self._emit_progress(track, 92.0)
             self._embed_id3_tags(generated_mp3, track, yt_thumbnail=yt_thumbnail)
 
             # Move to final destination
@@ -439,7 +443,9 @@ class DownloadWorker:
 
             # Embed Lyrics & save .lrc file if enabled
             if self.embed_lyrics:
+                track["status"] = "converting"
                 track["status_message"] = "Fetching & embedding lyrics..."
+                self._emit_progress(track, 96.0)
                 try:
                     LyricsService.embed_lyrics_to_mp3(
                         final_output_path,
