@@ -1461,6 +1461,17 @@
         </div>
       </div>
 
+      <!-- In-App Auto-Updater Progress Section -->
+      <div id="updateProgressSection" class="hidden flex flex-col gap-2 p-3.5 rounded-xl bg-surface-container-lowest border border-white/5">
+        <div class="flex items-center justify-between text-xs">
+          <span id="updateStatus" class="text-on-surface-variant font-medium">Downloading update...</span>
+          <span id="updateProgressText" class="font-mono font-bold text-primary tabular-nums">0%</span>
+        </div>
+        <div class="w-full bg-surface-container-high rounded-full h-2 overflow-hidden border border-white/5">
+          <div id="updateProgressBar" class="bg-primary h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+        </div>
+      </div>
+
       <div class="flex items-center justify-end gap-3">
         <button type="button" onclick="App.updates.closeModal()" class="px-4 py-2 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface text-xs font-semibold transition-all border border-white/5">
           Later
@@ -1468,6 +1479,10 @@
         <button id="btnDownloadUpdateAsset" type="button" onclick="App.updates.downloadLatest()" class="px-5 py-2 rounded-xl bg-primary-container hover:bg-primary text-on-primary-container text-xs font-bold shadow-glow-primary transition-all flex items-center gap-2">
           <span class="material-symbols-outlined text-[17px]">download</span>
           <span>Download Update</span>
+        </button>
+        <button id="btnRestartUpdate" type="button" onclick="App.updates.installUpdate()" class="hidden px-5 py-2 rounded-xl bg-primary-container hover:bg-primary text-on-primary-container text-xs font-bold shadow-glow-primary transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-[17px]">restart_alt</span>
+          <span>Restart &amp; Install</span>
         </button>
       </div>
     </div>
@@ -1845,12 +1860,15 @@
         const navLinks = document.querySelectorAll('#sidebarNav a');
         navLinks.forEach(link => {
           const path = link.getAttribute('data-nav');
+          const icon = link.querySelector('.material-symbols-outlined');
           if (path === viewId) {
-            link.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high');
+            link.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high', 'font-medium');
             link.classList.add('bg-primary-container', 'text-on-primary-container', 'font-bold', 'shadow-md');
+            if (icon) icon.style.fontVariationSettings = "'FILL' 1";
           } else {
-            link.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-bold', 'shadow-md');
-            link.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high');
+            link.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-bold', 'font-semibold', 'shadow-md');
+            link.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high', 'font-medium');
+            if (icon) icon.style.fontVariationSettings = "'FILL' 0";
           }
         });
 
@@ -1899,7 +1917,12 @@
             const engine = btn.getAttribute('data-engine');
             const desc = btn.getAttribute('data-desc');
             if (engineStatusText && desc) engineStatusText.textContent = desc;
-            if (urlInput && engineUrls[engine]) urlInput.value = engineUrls[engine];
+            if (urlInput && engineUrls[engine]) {
+              urlInput.placeholder = engineUrls[engine];
+              if (!urlInput.value.trim()) {
+                urlInput.value = engineUrls[engine];
+              }
+            }
           });
         });
 
@@ -2179,6 +2202,17 @@
         if (selectAllChk) {
           selectAllChk.checked = selected === total && total > 0;
         }
+
+        const btnDownloadSelected = document.getElementById('btnDownloadSelected');
+        if (btnDownloadSelected) {
+          if (selected === 0) {
+            btnDownloadSelected.disabled = true;
+            btnDownloadSelected.classList.add('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
+          } else {
+            btnDownloadSelected.disabled = false;
+            btnDownloadSelected.classList.remove('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
+          }
+        }
       }
     };
 
@@ -2249,6 +2283,11 @@
             App.ui.showToast('Cleared completed download history', 'info');
           });
         }
+
+        // Render initial task lists and telemetry
+        this.renderActiveTasks();
+        this.renderCompletedTasks();
+        this.updateTelemetry();
       },
 
       async startBatchDownload() {
@@ -2305,10 +2344,60 @@
       },
 
       async downloadSingleTrack(idx) {
-        const track = App.state.loadedTracks[idx];
-        if (!track) return;
-        track.selected = true;
-        await this.startBatchDownload();
+        const targetTrack = App.state.loadedTracks[idx];
+        if (!targetTrack) return;
+        const isolatedList = [{ ...targetTrack, selected: true }];
+
+        const folder = App.state.settings.destinationFolder || 'C:/Users/Music/BeatVault';
+        const playlistTitle = App.state.currentPlaylist ? App.state.currentPlaylist.title : 'BeatVault Archival';
+        const quality = App.state.settings.audioQuality || '320';
+        const template = App.state.settings.filenameTemplate || 'title_artist';
+        const embedLyrics = App.state.settings.embedLyrics !== false;
+        const concurrency = 1;
+
+        App.state.isDownloading = true;
+        App.state.isPaused = false;
+
+        const singleTask = {
+          ...targetTrack,
+          progress: 0,
+          speed: '3.4 MB/s',
+          eta: '00:04s',
+          status: 'downloading'
+        };
+
+        const existingIdx = App.state.activeTasks.findIndex(t => (t.id && t.id === targetTrack.id) || (t.title === targetTrack.title && t.artist === targetTrack.artist));
+        if (existingIdx >= 0) {
+          App.state.activeTasks[existingIdx] = singleTask;
+        } else {
+          App.state.activeTasks.push(singleTask);
+        }
+
+        this.renderActiveTasks();
+        this.updateTelemetry();
+        App.nav.goTo('queue');
+        App.ui.showToast(`Starting lossless download for "${targetTrack.title}"`, 'success');
+
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.start_download) {
+          try {
+            await window.pywebview.api.start_download(
+              isolatedList,
+              folder,
+              playlistTitle,
+              quality,
+              template,
+              embedLyrics,
+              true,
+              concurrency
+            );
+          } catch (e) {
+            console.error('Download start error:', e);
+            App.ui.showToast(e.message || 'Error launching downloader', 'error');
+          }
+        } else {
+          // Browser mock simulation
+          this.simulateDownloadQueue();
+        }
       },
 
       renderActiveTasks() {
@@ -2401,11 +2490,19 @@
         `).join('');
       },
 
-      cancelTask(idx) {
+      async cancelTask(idx) {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.cancel_download) {
+          try {
+            await window.pywebview.api.cancel_download();
+          } catch (e) {
+            console.error('Cancel download error:', e);
+          }
+        }
         if (App.state.activeTasks[idx]) {
           App.state.activeTasks.splice(idx, 1);
           this.renderActiveTasks();
           this.updateTelemetry();
+          App.ui.showToast('Download cancelled', 'info');
         }
       },
 
@@ -2452,6 +2549,28 @@
           if (radialCircle) radialCircle.style.strokeDashoffset = '163.36';
           if (queueHeading) queueHeading.textContent = 'Telemetry Monitor';
           if (queueSpeed) queueSpeed.textContent = '0.0 MB/s • Idle';
+        }
+
+        // Master Control Buttons dynamic state
+        const btnPauseAll = document.getElementById('btnPauseAll');
+        const btnResumeAll = document.getElementById('btnResumeAll');
+        if (btnPauseAll && btnResumeAll) {
+          if (activeCount === 0) {
+            btnPauseAll.classList.add('opacity-40', 'pointer-events-none');
+            btnResumeAll.classList.add('opacity-40', 'pointer-events-none');
+            btnResumeAll.classList.remove('bg-primary-container', 'text-on-primary-container', 'bg-primary', 'text-on-primary', 'shadow-md');
+            btnResumeAll.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+          } else {
+            btnPauseAll.classList.remove('opacity-40', 'pointer-events-none');
+            btnResumeAll.classList.remove('opacity-40', 'pointer-events-none');
+            if (App.state.isPaused) {
+              btnResumeAll.classList.remove('bg-surface-container-high', 'text-on-surface-variant', 'bg-primary-container', 'text-on-primary-container');
+              btnResumeAll.classList.add('bg-primary', 'text-on-primary', 'shadow-md');
+            } else {
+              btnResumeAll.classList.remove('bg-primary', 'text-on-primary', 'shadow-md');
+              btnResumeAll.classList.add('bg-primary-container', 'text-on-primary-container');
+            }
+          }
         }
       },
 
@@ -2562,9 +2681,38 @@
             }
           });
         }
+
+        // Initialize library from localStorage if available, or load sample library
+        const savedTracks = localStorage.getItem('beatvault_offline_library');
+        if (savedTracks) {
+          try {
+            const parsed = JSON.parse(savedTracks);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              App.state.libraryTracks = parsed;
+              this.render();
+            } else {
+              this.loadSampleLibrary();
+            }
+          } catch (e) {
+            this.loadSampleLibrary();
+          }
+        } else {
+          this.loadSampleLibrary();
+        }
       },
 
       loadSampleLibrary() {
+        const savedTracks = localStorage.getItem('beatvault_offline_library');
+        if (savedTracks) {
+          try {
+            const parsed = JSON.parse(savedTracks);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              App.state.libraryTracks = parsed;
+              this.render();
+              return;
+            }
+          } catch (e) {}
+        }
         App.state.libraryTracks = [
           {
             id: "lib-01",
@@ -2653,8 +2801,14 @@
           quality: task.quality || 'FLAC 24/96',
           cover_url: task.cover_url || '',
           preview_url: task.preview_url || '',
+          file_path: task.file_path || task.filePath || '',
           isFlac: (task.quality || '').includes('FLAC')
         });
+        try {
+          localStorage.setItem('beatvault_offline_library', JSON.stringify(App.state.libraryTracks));
+        } catch (e) {
+          console.warn('Error saving offline library to localStorage:', e);
+        }
         this.render();
       },
 
@@ -3079,7 +3233,7 @@
         }
       },
 
-      loadAndPlay(track) {
+      async loadAndPlay(track) {
         if (!track) return;
         App.state.currentPlayback = track;
 
@@ -3103,15 +3257,32 @@
         if (npCover && track.cover_url) npCover.src = track.cover_url;
 
         // Set source
-        if (track.preview_url) {
-          this.audio.src = track.preview_url;
-        } else {
-          // Fallback tone / simulated audio
-          this.audio.src = "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg";
+        const filePath = track.file_path || track.filePath;
+        let audioSrcSet = false;
+
+        if (filePath && window.pywebview?.api?.get_audio_data) {
+          try {
+            const res = await window.pywebview.api.get_audio_data(filePath);
+            if (res && res.success && res.data_url) {
+              this.audio.src = res.data_url;
+              audioSrcSet = true;
+            }
+          } catch (e) {
+            console.error('get_audio_data error:', e);
+          }
+        }
+
+        if (!audioSrcSet) {
+          if (track.preview_url || track.audio_preview) {
+            this.audio.src = track.preview_url || track.audio_preview;
+          } else {
+            // Fallback tone / simulated audio
+            this.audio.src = "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg";
+          }
         }
 
         this.audio.play().catch(() => {});
-        App.lyrics.loadForTrack(track.title, track.artist, track.duration_sec);
+        App.lyrics.loadForTrack(track);
       },
 
       playTrack(idx) {
@@ -3265,7 +3436,16 @@
         else this.open();
       },
 
-      async loadForTrack(title, artist, durationSec) {
+      async loadForTrack(trackOrTitle, artist, durationSec) {
+        let title = '';
+        if (typeof trackOrTitle === 'object' && trackOrTitle !== null) {
+          title = trackOrTitle.title || '';
+          artist = trackOrTitle.artist || '';
+          durationSec = trackOrTitle.duration_sec || trackOrTitle.duration;
+        } else {
+          title = trackOrTitle || '';
+        }
+
         if (!title) return;
         const key = `${title.toLowerCase()}___${(artist || '').toLowerCase()}`;
         if (App.state.lyrics.currentKey === key && App.state.lyrics.lines.length > 0) return;
@@ -3277,6 +3457,10 @@
             const res = await window.pywebview.api.get_lyrics(title, artist, durationSec);
             if (res && res.success && res.synced_lyrics) {
               lrcText = res.synced_lyrics;
+            } else if (res && res.lyrics && res.lyrics.synced) {
+              lrcText = res.lyrics.synced;
+            } else if (res && res.lyrics && res.lyrics.plain) {
+              lrcText = res.lyrics.plain;
             } else if (res && res.plain_lyrics) {
               lrcText = res.plain_lyrics;
             }
@@ -3285,8 +3469,15 @@
           }
         }
 
-        if (!lrcText) {
-          lrcText = SAMPLE_LRC;
+        if (!lrcText || !lrcText.trim()) {
+          this.lines = [];
+          App.state.lyrics.lines = [];
+          App.state.lyrics.activeIndex = -1;
+          const container = document.getElementById('lyricsContainer');
+          if (container) {
+            container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-sm"><i class="fa-solid fa-microphone-slash text-2xl mb-2 block opacity-40"></i>No synchronized lyrics available for this track.</div>`;
+          }
+          return;
         }
 
         this.parseAndRender(lrcText);
@@ -3318,14 +3509,15 @@
         });
 
         lines.sort((a, b) => a.time - b.time);
+        this.lines = lines;
         App.state.lyrics.lines = lines;
         App.state.lyrics.activeIndex = -1;
 
         if (lines.length === 0) {
           container.innerHTML = `
-            <div class="py-16 flex flex-col items-center justify-center text-on-surface-variant gap-2 text-center">
-              <span class="material-symbols-outlined text-3xl">lyrics</span>
-              <p class="text-xs">No synchronized lyrics available for this track.</p>
+            <div class="text-center py-12 text-zinc-500 text-sm">
+              <i class="fa-solid fa-microphone-slash text-2xl mb-2 block opacity-40"></i>
+              No synchronized lyrics available for this track.
             </div>
           `;
           return;
@@ -3507,6 +3699,7 @@
       },
 
       openModal(data) {
+        this.latestRelease = data;
         const modal = document.getElementById('updateModal');
         if (modal) {
           modal.classList.add('active');
@@ -3523,11 +3716,37 @@
       },
 
       async downloadLatest() {
-        this.closeModal();
+        const progressSection = document.getElementById('updateProgressSection');
+        if (progressSection) progressSection.classList.remove('hidden');
+        const dlBtn = document.getElementById('btnDownloadUpdateAsset');
+        if (dlBtn) {
+          dlBtn.disabled = true;
+          dlBtn.classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.download_update_asset && this.latestRelease && this.latestRelease.download_url) {
+          try {
+            await window.pywebview.api.download_update_asset(this.latestRelease.download_url);
+            return;
+          } catch (e) {
+            console.error('Download update asset error:', e);
+          }
+        }
+
         if (window.pywebview && window.pywebview.api && window.pywebview.api.open_release_page) {
+          this.closeModal();
           await window.pywebview.api.open_release_page();
         } else {
+          this.closeModal();
           window.open('https://github.com/aadityashekhar321/BeatVault/releases', '_blank');
+        }
+      },
+
+      installUpdate() {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.open_release_page) {
+          window.pywebview.api.open_release_page();
+        } else {
+          location.reload();
         }
       }
     };
@@ -3650,51 +3869,94 @@
        PYWEBVIEW EVENT DISPATCHER (From Python Backend)
        ========================================================== */
     window.handleBackendEvent = function(eventName, data) {
-      if (eventName === 'media_key_action') {
-        if (data.action === 'play_pause') App.player.togglePlay();
-        else if (data.action === 'next') App.player.playNext();
-        else if (data.action === 'prev') App.player.playPrev();
+      if (typeof eventName === 'object' && eventName !== null && !data) {
+        data = eventName;
+        eventName = data.event || data.type || data.eventName;
       }
-      else if (eventName === 'download_progress') {
-        const track = data.track;
-        const stats = data.stats;
-        const bw = document.getElementById('queueBandwidthVal');
-        if (bw && data.speed) bw.textContent = data.speed.replace(/[^0-9.]/g, '') || '3.2';
+      switch (eventName) {
+        case 'media_key_action': {
+          if (data && data.action === 'play_pause') App.player.togglePlay();
+          else if (data && data.action === 'next') App.player.playNext();
+          else if (data && data.action === 'prev') App.player.playPrev();
+          break;
+        }
+        case 'download_progress': {
+          const track = data ? data.track : null;
+          const bw = document.getElementById('queueBandwidthVal');
+          if (bw && data && data.speed) bw.textContent = data.speed.replace(/[^0-9.]/g, '') || '3.2';
 
-        const target = App.state.activeTasks.find(t => t.id === track.id || (t.title === track.title && t.artist === track.artist));
-        if (target) {
-          target.progress = track.progress || data.progress || 0;
-          target.speed = data.speed || '2.8 MB/s';
-          target.eta = data.eta || '00:02s';
-          App.queue.renderActiveTasks();
+          if (track) {
+            const target = App.state.activeTasks.find(t => (track.id && t.id === track.id) || (t.title === track.title && t.artist === track.artist));
+            if (target) {
+              target.progress = track.progress || (data ? data.progress : 0) || 0;
+              target.speed = (data && data.speed) || '2.8 MB/s';
+              target.eta = (data && data.eta) || '00:02s';
+              App.queue.renderActiveTasks();
+              App.queue.updateTelemetry();
+            }
+          }
+          break;
+        }
+        case 'track_complete': {
+          const track = data ? data.track : null;
+          if (track) {
+            // Move from active to completed
+            App.state.activeTasks = App.state.activeTasks.filter(t => (track.id && t.id !== track.id) || (!track.id && t.title !== track.title));
+            App.state.completedTasks.unshift(track);
+            App.library.addTrackFromDownload(track);
+            App.queue.renderActiveTasks();
+            App.queue.renderCompletedTasks();
+            App.queue.updateTelemetry();
+            App.ui.showToast(`Completed: ${track.title}`, 'success');
+          }
+          break;
+        }
+        case 'duplicate_detected': {
+          if (App.state.settings.autoSkipDupes) {
+            App.ui.resolveDuplicate('skip');
+          } else if (data) {
+            App.ui.showDuplicateModal(data.track, data.duplicate_info);
+          }
+          break;
+        }
+        case 'download_finished': {
+          App.state.isDownloading = false;
           App.queue.updateTelemetry();
+          App.ui.showToast('Download batch finished successfully!', 'success');
+          break;
         }
-      }
-      else if (eventName === 'track_complete') {
-        const track = data.track;
-        // Move from active to completed
-        App.state.activeTasks = App.state.activeTasks.filter(t => t.id !== track.id && t.title !== track.title);
-        App.state.completedTasks.unshift(track);
-        App.library.addTrackFromDownload(track);
-        App.queue.renderActiveTasks();
-        App.queue.renderCompletedTasks();
-        App.queue.updateTelemetry();
-        App.ui.showToast(`Completed: ${track.title}`, 'success');
-      }
-      else if (eventName === 'duplicate_detected') {
-        if (App.state.settings.autoSkipDupes) {
-          App.ui.resolveDuplicate('skip');
-        } else {
-          App.ui.showDuplicateModal(data.track, data.duplicate_info);
+        case 'update_available': {
+          App.updates.openModal(data);
+          break;
         }
-      }
-      else if (eventName === 'download_finished') {
-        App.state.isDownloading = false;
-        App.queue.updateTelemetry();
-        App.ui.showToast('Download batch finished successfully!', 'success');
-      }
-      else if (eventName === 'update_available') {
-        App.updates.openModal(data);
+        case 'update_download_progress': {
+          const pct = Math.round(data && data.percent !== undefined ? data.percent : (data && data.progress !== undefined ? data.progress : 0));
+          const progressSection = document.getElementById('updateProgressSection');
+          if (progressSection) progressSection.classList.remove('hidden');
+          const pBar = document.getElementById('updateProgressBar');
+          if (pBar) pBar.style.width = `${pct}%`;
+          const pText = document.getElementById('updateProgressText');
+          if (pText) pText.textContent = `${pct}%`;
+          const status = document.getElementById('updateStatus');
+          if (status) status.textContent = `Downloading update (${pct}%)...`;
+          break;
+        }
+        case 'update_download_complete': {
+          const progressSection = document.getElementById('updateProgressSection');
+          if (progressSection) progressSection.classList.remove('hidden');
+          const pBar = document.getElementById('updateProgressBar');
+          if (pBar) pBar.style.width = '100%';
+          const pText = document.getElementById('updateProgressText');
+          if (pText) pText.textContent = '100%';
+          const status = document.getElementById('updateStatus');
+          if (status) status.textContent = 'Update download ready. Restart to install.';
+          const restartBtn = document.getElementById('btnRestartUpdate');
+          if (restartBtn) restartBtn.classList.remove('hidden');
+          const dlBtn = document.getElementById('btnDownloadUpdateAsset');
+          if (dlBtn) dlBtn.classList.add('hidden');
+          App.ui.showToast('Update download complete! Ready to install.', 'success');
+          break;
+        }
       }
     };
 
@@ -3734,7 +3996,7 @@
           async select_folder() { return 'C:/Users/Music/BeatVault/Lossless'; },
           async open_folder() { return { success: true }; },
           async get_default_folder() { return 'C:/Users/Music/BeatVault'; },
-          async get_audio_data() { return { success: true, audio_data: null }; },
+          async get_audio_data(file_path) { return { success: true, data_url: null }; },
           async get_lyrics() { return { success: true, synced_lyrics: SAMPLE_LRC }; },
           async check_for_updates() { return { success: true, update_available: false, current_version: '2.4.8' }; },
           async open_release_page() { return { success: true }; },

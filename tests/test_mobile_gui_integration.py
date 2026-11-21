@@ -351,5 +351,74 @@ class TestPythonBackendApiParity(unittest.TestCase):
             )
 
 
+class TestDesktopGUIFixesAndParity(unittest.TestCase):
+    """Test suite ensuring all 8 critical GUI fixes are implemented in gui/index.html."""
+
+    @classmethod
+    def setUpClass(cls):
+        assert os.path.isfile(GUI_HTML_PATH), "gui/index.html must exist"
+        with open(GUI_HTML_PATH, "r", encoding="utf-8") as f:
+            cls.html = f.read()
+
+    def test_audio_player_load_and_play_get_audio_data(self):
+        """1. Verify App.player.loadAndPlay is async and requests get_audio_data for local files."""
+        self.assertIn("async loadAndPlay(track)", self.html)
+        self.assertIn("get_audio_data", self.html)
+        self.assertIn("track.file_path", self.html)
+        self.assertIn("res.data_url", self.html)
+
+    def test_single_track_download_isolated(self):
+        """2. Verify downloadSingleTrack isolates the single track without starting batch playlist download."""
+        self.assertIn("downloadSingleTrack", self.html)
+        self.assertIn("isolatedList", self.html)
+        # Ensure it does not call startBatchDownload()
+        match = re.search(r"async downloadSingleTrack\(idx\) \{([\s\S]*?)\n\s{6}\},", self.html)
+        self.assertTrue(match, "downloadSingleTrack implementation should be found")
+        body = match.group(1)
+        self.assertNotIn("startBatchDownload", body, "Single track download must NOT trigger entire playlist startBatchDownload")
+        self.assertIn("start_download", body)
+
+    def test_cancel_active_download_stops_backend(self):
+        """3. Verify cancelTask dispatches cancel_download to backend."""
+        self.assertIn("cancelTask", self.html)
+        self.assertIn("cancel_download", self.html)
+
+    def test_offline_library_persistence_and_file_path(self):
+        """4. Verify library tracks preserve file_path and persist to localStorage under beatvault_offline_library."""
+        self.assertIn("beatvault_offline_library", self.html)
+        self.assertIn("file_path:", self.html)
+        self.assertIn("localStorage.setItem('beatvault_offline_library'", self.html)
+        self.assertIn("localStorage.getItem('beatvault_offline_library')", self.html)
+
+    def test_platform_buttons_preserve_custom_url_input(self):
+        """5. Verify platform buttons do not overwrite user input if mediaUrlInput has value."""
+        self.assertIn("urlInput.placeholder = engineUrls[engine]", self.html)
+        self.assertIn("!urlInput.value.trim()", self.html)
+
+    def test_lyrics_fallback_polite_empty_state(self):
+        """6. Verify lyrics engine displays clean empty state without falling back to SAMPLE_LRC."""
+        self.assertIn("No synchronized lyrics available for this track.", self.html)
+        self.assertIn("microphone-slash", self.html)
+        # Ensure SAMPLE_LRC is not assigned as fallback inside loadForTrack
+        match = re.search(r"async loadForTrack\([\s\S]*?\{([\s\S]*?)\n\s{6}\},", self.html)
+        self.assertTrue(match, "loadForTrack implementation should be found")
+        body = match.group(1)
+        self.assertNotIn("lrcText = SAMPLE_LRC", body, "SAMPLE_LRC must not be used as fallback for unknown tracks")
+
+    def test_auto_updater_progress_events_and_dom_elements(self):
+        """7. Verify handleBackendEvent handles update_download_progress and update_download_complete and DOM elements exist."""
+        self.assertIn('id="updateProgressBar"', self.html)
+        self.assertIn('id="updateProgressText"', self.html)
+        self.assertIn('id="updateStatus"', self.html)
+        self.assertIn("update_download_progress", self.html)
+        self.assertIn("update_download_complete", self.html)
+
+    def test_zero_tracks_selected_disables_download_button(self):
+        """8. Verify updateSelectionSummary disables download button when 0 tracks are selected."""
+        self.assertIn("btnDownloadSelected", self.html)
+        self.assertIn("cursor-not-allowed", self.html)
+        self.assertIn("pointer-events-none", self.html)
+
+
 if __name__ == "__main__":
     unittest.main()
