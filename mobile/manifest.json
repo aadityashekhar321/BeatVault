@@ -1,0 +1,60 @@
+{
+  "name": "BeatVault Mobile — Studio Audio Workstation",
+  "short_name": "BeatVault",
+  "description": "High-performance studio-grade mobile music workstation, lossless audio downloader, and synced karaoke lyrics player.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f131c",
+  "theme_color": "#0f131c",
+  "orientation": "portrait-primary",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon_transparent.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "music",
+    "audio",
+    "multimedia",
+    "utilities"
+  ],
+  "shortcuts": [
+    {
+      "name": "Ingest Link",
+      "short_name": "Ingest",
+      "description": "Paste and extract audio from streaming links",
+      "url": "./index.html#home-ingest",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Now Playing",
+      "short_name": "Player",
+      "description": "View Now Playing and Synced Karaoke Lyrics",
+      "url": "./index.html#now-playing",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Offline Library",
+      "short_name": "Library",
+      "description": "Listen to cached lossless tracks",
+      "url": "./index.html#offline-music-library",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

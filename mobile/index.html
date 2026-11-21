@@ -1,0 +1,2654 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+  <meta name="theme-color" content="#0f131c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="BeatVault Mobile — Studio Audio Workstation, Lossless Downloader & Synced Karaoke Lyrics">
+  <title>BeatVault Mobile — Studio Workstation</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#0f131c",
+            "surface-dim": "#0f131c",
+            "surface-bright": "#353942",
+            "surface-container-lowest": "#0a0e16",
+            "surface-container-low": "#181c24",
+            "surface-container": "#1c2028",
+            "surface-container-high": "#262a33",
+            "surface-container-highest": "#31353e",
+            "on-surface": "#dfe2ee",
+            "on-surface-variant": "#bccbb9",
+            "inverse-surface": "#dfe2ee",
+            "inverse-on-surface": "#2c3039",
+            "outline": "#869585",
+            "outline-variant": "#3d4a3d",
+            "surface-tint": "#53e076",
+            "primary": "#53e076",
+            "on-primary": "#003914",
+            "primary-container": "#1db954",
+            "on-primary-container": "#004118",
+            "secondary": "#4cd7f6",
+            "on-secondary": "#003640",
+            "secondary-container": "#03b5d3",
+            "on-secondary-container": "#00424e",
+            "tertiary": "#d0bcff",
+            "on-tertiary": "#3c0091",
+            "tertiary-container": "#af8eff",
+            "on-tertiary-container": "#4400a4",
+            "error": "#ffb4ab",
+            "on-error": "#690005",
+            "error-container": "#93000a",
+            "on-error-container": "#ffdad6"
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    @layer base {
+      html, body {
+        width: 100vw;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #0f131c;
+        color: #dfe2ee;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px); }
+      .pt-safe { padding-top: max(env(safe-area-inset-top, 0px), 12px); }
+    }
+
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Performance & GPU 60 FPS transforms */
+    .gpu-accel {
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      will-change: transform, opacity;
+    }
+
+    /* Tabular numeric alignment */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Disc rotation animation for Now Playing Cover Art */
+    @keyframes spin-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 22s linear infinite;
+    }
+    .animate-spin-paused {
+      animation-play-state: paused;
+    }
+
+    /* Micro Equalizer Animation */
+    @keyframes eq-bounce-1 { 0%, 100% { height: 6px; } 50% { height: 16px; } }
+    @keyframes eq-bounce-2 { 0%, 100% { height: 16px; } 50% { height: 8px; } }
+    @keyframes eq-bounce-3 { 0%, 100% { height: 8px; } 50% { height: 18px; } }
+    @keyframes eq-bounce-4 { 0%, 100% { height: 14px; } 50% { height: 6px; } }
+    .eq-bar-1 { animation: eq-bounce-1 0.8s ease-in-out infinite; }
+    .eq-bar-2 { animation: eq-bounce-2 0.7s ease-in-out infinite; }
+    .eq-bar-3 { animation: eq-bounce-3 0.9s ease-in-out infinite; }
+    .eq-bar-4 { animation: eq-bounce-4 0.75s ease-in-out infinite; }
+
+    /* Screen transition states */
+    .screen-view {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    }
+    .screen-view.active {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Modal slide up */
+    #now-playing-overlay {
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out;
+      transform: translate3d(0, 100%, 0);
+    }
+    #now-playing-overlay.open {
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Synced lyric highlight halo */
+    .lyric-active {
+      background: rgba(38, 42, 51, 0.85);
+      border: 1px solid rgba(83, 224, 118, 0.3);
+      box-shadow: 0 0 24px rgba(29, 185, 84, 0.2);
+    }
+  </style>
+</head>
+
+<body class="bg-surface text-on-surface min-h-screen flex flex-col select-none overflow-x-hidden">
+
+  <!-- ============================================================== -->
+  <!-- TOP APP HEADER (Persistent across main views)                  -->
+  <!-- ============================================================== -->
+  <header class="fixed top-0 left-0 right-0 z-40 pt-safe bg-surface/85 backdrop-blur-xl border-b border-white/5 shadow-[0_2px_16px_rgba(0,0,0,0.5)]">
+    <div class="h-16 px-4 flex items-center justify-between gap-3">
+      <!-- App Brand & Concept 2 Dial Logo -->
+      <div class="flex items-center gap-2.5 min-w-0 cursor-pointer" onclick="navigateTo('home-ingest')">
+        <div class="relative w-10 h-10 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center p-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
+          <img src="assets/icon_transparent.png" alt="BeatVault" class="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(83,224,118,0.5)]">
+        </div>
+        <div class="flex flex-col min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="font-extrabold text-[17px] tracking-tight text-on-surface">BeatVault</span>
+            <span class="px-1.5 py-0.2 rounded bg-primary/20 text-primary text-[9px] font-mono font-bold tracking-wider uppercase">Pro</span>
+          </div>
+          <span class="text-[11px] text-secondary font-mono tracking-wider truncate">Obsidian Sonic Studio</span>
+        </div>
+      </div>
+
+      <!-- Header Actions: Active Downloads Pill & Settings -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button onclick="navigateTo('active-downloads')" class="h-8 px-2.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest border border-white/5 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+          </span>
+          <span class="text-[11px] font-mono text-secondary font-semibold" id="header-active-count">3 Active</span>
+        </button>
+
+        <button onclick="navigateTo('app-settings')" class="w-9 h-9 rounded-full bg-surface-container-high hover:bg-surface-container-highest border border-white/5 flex items-center justify-center text-on-surface-variant hover:text-primary cursor-pointer active:scale-95 transition-all" title="Settings">
+          <span class="material-symbols-outlined text-[20px]">tune</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- MAIN ROUTED SCREENS CONTAINER                                  -->
+  <!-- ============================================================== -->
+  <main class="flex-1 w-full pt-20 pb-40 px-4 max-w-lg mx-auto">
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 1: HOME LINK INGESTION & SEARCH (#home-ingest)        -->
+    <!-- ============================================================ -->
+    <section id="screen-home-ingest" class="screen-view active flex flex-col gap-4">
+      
+      <!-- Live Downloads Progress Telemetry Card -->
+      <div onclick="navigateTo('active-downloads')" class="bg-surface-container-high border border-white/5 rounded-2xl p-3.5 flex items-center justify-between shadow-xl cursor-pointer hover:border-primary/30 transition-all active:scale-[0.99]">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary flex-shrink-0 shadow-inner">
+            <span class="material-symbols-outlined text-[22px] animate-spin text-primary" style="animation-duration: 4s;">sync</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-on-surface truncate">3 Downloads In-Flight</span>
+              <span class="px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">72%</span>
+            </div>
+            <div class="w-36 h-1.5 bg-surface-container-lowest rounded-full mt-1.5 overflow-hidden">
+              <div class="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(83,224,118,0.7)] transition-all duration-300" style="width: 72%;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 text-secondary text-xs font-mono font-medium flex-shrink-0">
+          <span>Queue</span>
+          <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+        </div>
+      </div>
+
+      <!-- Ingest Gateway Visual Header -->
+      <div class="flex flex-col gap-1 pt-1">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-[10px] font-mono font-bold uppercase tracking-wider">Audio Gateway</span>
+          <span class="flex h-1.5 w-1.5 rounded-full bg-primary animate-ping"></span>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-on-surface">Ingest Music & Audio</h1>
+        <p class="text-xs text-on-surface-variant leading-relaxed">Paste track, album, or playlist link to fetch metadata & extract lossless master audio.</p>
+      </div>
+
+      <!-- Platform Source Selector Tabs -->
+      <div class="flex flex-col gap-2">
+        <span class="text-[11px] font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Select Source Platform</span>
+        <div class="grid grid-cols-4 gap-1.5 bg-surface-container-lowest p-1.5 rounded-2xl border border-white/5" id="platform-tabs">
+          <button onclick="setPlatform('spotify')" class="platform-btn flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 bg-surface-container-high text-primary border border-primary/30 shadow-[0_0_12px_rgba(83,224,118,0.25)]" data-platform="spotify">
+            <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+            <span class="text-[11px] mt-1 font-bold">Spotify</span>
+          </button>
+          <button onclick="setPlatform('youtube')" class="platform-btn flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high" data-platform="youtube">
+            <span class="material-symbols-outlined text-[22px]">smart_display</span>
+            <span class="text-[11px] mt-1 font-medium">YouTube</span>
+          </button>
+          <button onclick="setPlatform('applemusic')" class="platform-btn flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high" data-platform="applemusic">
+            <span class="material-symbols-outlined text-[22px]">album</span>
+            <span class="text-[11px] mt-1 font-medium">Apple</span>
+          </button>
+          <button onclick="setPlatform('soundcloud')" class="platform-btn flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high" data-platform="soundcloud">
+            <span class="material-symbols-outlined text-[22px]">cloud</span>
+            <span class="text-[11px] mt-1 font-medium">SoundCloud</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- URL Input Container & Utilities -->
+      <div class="bg-surface-container border border-white/5 rounded-2xl p-4 space-y-3.5 shadow-xl">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-on-surface flex items-center gap-1.5" for="url-input">
+            <span class="material-symbols-outlined text-secondary text-[18px]">link</span>
+            Target Media URL
+          </label>
+          <button id="paste-btn" onclick="handleSmartPaste()" class="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-highest hover:bg-surface-bright text-on-surface text-xs font-mono font-medium transition-all active:scale-95 cursor-pointer">
+            <span class="material-symbols-outlined text-[14px]">content_paste</span>
+            <span>Paste Clip</span>
+          </button>
+        </div>
+
+        <!-- Input Field Wrapper -->
+        <div class="relative flex items-center">
+          <div class="absolute left-3.5 flex items-center pointer-events-none text-primary" id="input-platform-icon">
+            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+          </div>
+          <input id="url-input" type="text" spellcheck="false" value="https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+            placeholder="Paste Spotify URL (open.spotify.com/playlist/...)"
+            class="w-full bg-surface-container-lowest text-on-surface placeholder-outline text-xs font-mono pl-10 pr-9 py-3 rounded-xl border border-white/10 focus:outline-none focus:border-primary transition-all">
+          <button id="clear-btn" onclick="clearUrlInput()" class="absolute right-2.5 w-6 h-6 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container-highest transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">close</span>
+          </button>
+        </div>
+
+        <!-- Match & Telemetry Pill -->
+        <div id="url-status-banner" class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-high border border-white/5">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="material-symbols-outlined text-primary text-[18px] flex-shrink-0">verified</span>
+            <span id="url-status-text" class="text-xs text-on-surface truncate">Spotify Playlist (Today's Top Hits • 48 tracks)</span>
+          </div>
+          <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-secondary-container/20 text-secondary uppercase tracking-wider flex-shrink-0">FLAC Ready</span>
+        </div>
+
+        <!-- Private Stream Token Info -->
+        <div id="auth-alert" class="flex items-start gap-2.5 p-3 rounded-xl bg-surface-container-highest text-on-surface-variant relative text-xs">
+          <span class="material-symbols-outlined text-tertiary text-[18px] flex-shrink-0 mt-0.5">info</span>
+          <div class="flex flex-col min-w-0 pr-6">
+            <span class="text-on-surface font-semibold">Private & region-locked streams</span>
+            <span class="text-[11px] text-on-surface-variant mt-0.5">BeatVault uses cached session tokens. Lossless bitstream extraction will automatically fallback to FLAC 24-bit.</span>
+          </div>
+          <button onclick="document.getElementById('auth-alert').style.display='none'" class="absolute top-2.5 right-2.5 text-outline hover:text-on-surface cursor-pointer p-0.5">
+            <span class="material-symbols-outlined text-[16px]">close</span>
+          </button>
+        </div>
+
+        <!-- Main Ingestion Trigger CTA -->
+        <button id="process-btn" onclick="startExtractionSimulator()" class="w-full py-3.5 px-4 rounded-xl bg-primary text-on-primary font-bold text-sm flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_24px_rgba(83,224,118,0.35)] hover:bg-primary-fixed-dim active:scale-[0.98] transition-all">
+          <span class="material-symbols-outlined text-[20px]" id="process-icon">bolt</span>
+          <span id="process-text">Process Link & Fetch Metadata</span>
+        </button>
+      </div>
+
+      <!-- Loading / Extraction State Simulator Card -->
+      <div id="extraction-status-card" class="hidden bg-surface-container-high border border-secondary/30 rounded-2xl p-4 flex-col gap-3 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-ping"></span>
+            <span class="text-xs font-semibold text-on-surface">Connecting to Gateway Engine...</span>
+          </div>
+          <span id="extraction-pct" class="text-xs font-mono font-bold text-secondary">15%</span>
+        </div>
+        <div class="w-full h-2 bg-surface-container-lowest rounded-full overflow-hidden">
+          <div id="extraction-bar" class="h-full bg-secondary rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(76,215,246,0.6)]" style="width: 15%;"></div>
+        </div>
+        <div class="flex items-center justify-between text-xs text-on-surface-variant font-mono">
+          <span id="extraction-step">Resolving Spotify Track ID Manifest...</span>
+          <span class="text-[10px] text-primary font-bold">24-Bit Studio</span>
+        </div>
+      </div>
+
+      <!-- Auto-Tagger Feature Banner -->
+      <div class="bg-surface-container-low border border-white/5 rounded-2xl p-3 flex items-center gap-3">
+        <div class="w-14 h-14 rounded-xl bg-surface-container-high overflow-hidden flex-shrink-0 flex items-center justify-center relative shadow-inner">
+          <img class="w-full h-full object-cover" src="assets/icon_transparent.png" alt="Auto Tagger">
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-[10px] font-mono text-primary uppercase font-bold tracking-wider">Auto-Tagger Active</span>
+          <span class="text-xs text-on-surface font-semibold truncate">Cover Art & ID3 v2.4 Synthesis</span>
+          <span class="text-[11px] text-on-surface-variant truncate">Embedded 1400x1400 artwork & synced lyrics</span>
+        </div>
+      </div>
+
+      <!-- Recent Ingestion History -->
+      <div class="flex flex-col space-y-2 pt-1">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-bold text-on-surface">Recent Ingests</h2>
+            <span id="history-count" class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-mono text-[10px]">4</span>
+          </div>
+          <button id="clear-all-history" onclick="clearIngestHistory()" class="text-xs font-mono text-secondary hover:text-on-surface cursor-pointer p-1">Clear All</button>
+        </div>
+
+        <div id="history-list" class="flex flex-col gap-2">
+          <!-- Item 1: Spotify -->
+          <div class="history-item bg-surface-container hover:bg-surface-container-high border border-white/5 p-2.5 rounded-xl flex items-center justify-between gap-2.5 transition-colors cursor-pointer" onclick="loadHistoryItem('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M', 'spotify')">
+            <div class="w-10 h-10 rounded-lg bg-surface-container-highest overflow-hidden flex items-center justify-center flex-shrink-0 text-primary">
+              <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+            </div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="text-xs font-semibold text-on-surface truncate">Today's Top Hits 2024</span>
+              <span class="text-[11px] text-on-surface-variant truncate font-mono">open.spotify.com/playlist/37i... • 48 tracks</span>
+            </div>
+            <div class="flex items-center gap-1 flex-shrink-0">
+              <button onclick="event.stopPropagation(); loadHistoryItem('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M', 'spotify')" class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors">
+                <span class="material-symbols-outlined text-[16px]">replay</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Item 2: YouTube -->
+          <div class="history-item bg-surface-container hover:bg-surface-container-high border border-white/5 p-2.5 rounded-xl flex items-center justify-between gap-2.5 transition-colors cursor-pointer" onclick="loadHistoryItem('https://youtube.com/watch?v=dQw4w9WgXcQ', 'youtube')">
+            <div class="w-10 h-10 rounded-lg bg-surface-container-highest overflow-hidden flex items-center justify-center flex-shrink-0 text-secondary">
+              <span class="material-symbols-outlined text-[20px]">smart_display</span>
+            </div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="text-xs font-semibold text-on-surface truncate">Synthwave Night Drive Mix 4K</span>
+              <span class="text-[11px] text-on-surface-variant truncate font-mono">youtube.com/watch?v=... • Opus 160k</span>
+            </div>
+            <div class="flex items-center gap-1 flex-shrink-0">
+              <button onclick="event.stopPropagation(); loadHistoryItem('https://youtube.com/watch?v=dQw4w9WgXcQ', 'youtube')" class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors">
+                <span class="material-symbols-outlined text-[16px]">replay</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 2: PLAYLIST & TRACK INSPECTOR (#playlist-inspector)   -->
+    <!-- ============================================================ -->
+    <section id="screen-playlist-inspector" class="screen-view flex flex-col gap-4">
+      
+      <!-- Source Summary Header Card -->
+      <div class="relative overflow-hidden rounded-2xl bg-surface-container border border-white/5 p-4 shadow-xl">
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 pointer-events-none"></div>
+        <div class="relative flex items-center gap-3.5">
+          <div class="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-lg bg-surface-container-high border border-white/10">
+            <img id="inspector-art" alt="Playlist Cover" class="w-full h-full object-cover" src="assets/icon_transparent.png">
+            <div class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-surface-container-lowest/90 backdrop-blur-md flex items-center">
+              <span class="material-symbols-outlined text-primary text-[12px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+            </div>
+          </div>
+          <div class="flex flex-col min-w-0 flex-1 gap-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary text-[10px] font-mono font-bold uppercase tracking-wider">FLAC 24/96</span>
+              <span class="text-xs text-on-surface-variant truncate">Spotify Playlist</span>
+            </div>
+            <h2 id="inspector-title" class="text-base font-bold text-on-surface truncate">Today's Top Hits 2024</h2>
+            <p id="inspector-subtitle" class="text-xs text-on-surface-variant truncate">Spotify Editorial • Curated Mix</p>
+            <div class="flex items-center gap-1.5 mt-0.5 text-xs text-on-surface-variant font-mono">
+              <span class="material-symbols-outlined text-primary text-[14px]">album</span>
+              <span id="inspector-meta-count">48 Tracks • ~380 MB (320kbps)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Batch Selection Controls -->
+      <div class="flex items-center gap-2 overflow-x-auto py-0.5">
+        <button onclick="selectAllTracks()" class="flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-mono font-medium whitespace-nowrap active:scale-95 transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-[15px] text-primary">done_all</span>
+          <span>Select All</span>
+        </button>
+        <button onclick="deselectAllTracks()" class="flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface text-xs font-mono font-medium whitespace-nowrap active:scale-95 transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-[15px]">remove_done</span>
+          <span>Deselect All</span>
+        </button>
+        <button onclick="deselectExistingTracks()" class="flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-full bg-secondary/15 hover:bg-secondary/25 text-secondary text-xs font-mono font-medium whitespace-nowrap active:scale-95 transition-all cursor-pointer shadow-sm">
+          <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+          <span>Deselect Existing</span>
+        </button>
+      </div>
+
+      <!-- In-Playlist Search & Filter -->
+      <div class="relative flex items-center w-full">
+        <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[18px] pointer-events-none">search</span>
+        <input id="inspector-search" oninput="filterInspectorTracks()" type="text" placeholder="Filter tracks by title or artist..."
+          class="w-full h-10 pl-10 pr-9 rounded-xl bg-surface-container-low border border-white/5 text-on-surface placeholder:text-on-surface-variant/60 text-xs font-sans focus:outline-none focus:border-primary transition-colors">
+        <button id="inspector-clear-search" onclick="clearInspectorSearch()" class="hidden absolute right-2.5 w-6 h-6 rounded-full bg-surface-container-high hover:bg-surface-container-highest items-center justify-center text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-[14px]">close</span>
+        </button>
+      </div>
+
+      <!-- Track List Items -->
+      <div class="flex flex-col gap-2" id="inspector-tracklist">
+        <!-- Dynamic tracks injected via JS -->
+      </div>
+
+      <!-- Dynamic Sticky Bottom Bar for Downloading Selected Tracks -->
+      <div class="sticky bottom-20 z-30 pt-2 pb-1">
+        <button id="inspector-download-cta" onclick="downloadSelectedTracks()" class="w-full py-3.5 px-4 rounded-xl bg-primary text-on-primary font-bold text-sm flex items-center justify-between shadow-[0_0_24px_rgba(83,224,118,0.4)] hover:bg-primary-fixed active:scale-[0.98] transition-all cursor-pointer">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px]">download_for_offline</span>
+            <span id="inspector-cta-label">Download 3 Tracks</span>
+          </div>
+          <span id="inspector-cta-size" class="text-xs font-mono bg-on-primary/20 px-2 py-0.5 rounded-full font-bold">24.1 MB</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 3: DOWNLOAD TASK MANAGER (#active-downloads)          -->
+    <!-- ============================================================ -->
+    <section id="screen-active-downloads" class="screen-view flex flex-col gap-4">
+      
+      <!-- Bandwidth & Queue Stats Ticker -->
+      <div class="flex items-center justify-between px-1">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+          </span>
+          <span class="text-[11px] font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Speed:</span>
+          <span class="font-mono text-xs font-bold text-primary" id="download-speed-ticker">4.8 MB/s</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high border border-white/5 text-secondary">
+          <span class="material-symbols-outlined text-[14px]">stream</span>
+          <span class="font-mono text-xs font-medium">3 Threads Active</span>
+        </div>
+      </div>
+
+      <!-- Global Queue Action Shelf -->
+      <div class="bg-surface-container-low border border-white/5 rounded-2xl p-3 shadow-md flex flex-col gap-2.5">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-on-surface-variant font-mono">Queue Telemetry</span>
+          <span class="text-on-surface font-mono font-semibold" id="queue-telemetry-text">3 Downloading • 2 Queued • 1 Error</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="pauseAllDownloads()" class="h-8 px-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-95 transition-all flex items-center justify-center gap-1 text-on-surface text-xs font-mono cursor-pointer">
+            <span class="material-symbols-outlined text-[15px] text-secondary">pause_circle</span>
+            <span>Pause All</span>
+          </button>
+          <button onclick="resumeAllDownloads()" class="h-8 px-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-95 transition-all flex items-center justify-center gap-1 text-on-surface text-xs font-mono cursor-pointer">
+            <span class="material-symbols-outlined text-[15px] text-primary">play_circle</span>
+            <span>Resume</span>
+          </button>
+          <button onclick="clearCompletedDownloads()" class="h-8 px-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-95 transition-all flex items-center justify-center gap-1 text-on-surface-variant hover:text-on-surface text-xs font-mono cursor-pointer">
+            <span class="material-symbols-outlined text-[15px]">cleaning_services</span>
+            <span>Clear Done</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Segmented Tab Switcher (Active vs Completed) -->
+      <div class="flex p-1 rounded-xl bg-surface-container-lowest border border-white/5 gap-1">
+        <button id="dl-tab-active" onclick="switchDownloadTab('active')" class="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary font-bold text-xs font-mono flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer">
+          <span>Active Tasks</span>
+          <span id="active-tasks-badge" class="px-1.5 py-0.2 rounded-full bg-on-primary/20 text-on-primary text-[10px] font-bold">5</span>
+        </button>
+        <button id="dl-tab-completed" onclick="switchDownloadTab('completed')" class="flex-1 py-2 px-3 rounded-lg bg-transparent text-on-surface-variant hover:text-on-surface font-medium text-xs font-mono flex items-center justify-center gap-2 transition-all cursor-pointer">
+          <span>Completed</span>
+          <span id="completed-tasks-badge" class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface-variant text-[10px]">18</span>
+        </button>
+      </div>
+
+      <!-- Active Tasks Container -->
+      <div id="downloads-active-list" class="flex flex-col gap-3">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Completed Tasks Container (hidden by default) -->
+      <div id="downloads-completed-list" class="hidden flex flex-col gap-2.5">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 4: OFFLINE MUSIC LIBRARY (#offline-music-library)     -->
+    <!-- ============================================================ -->
+    <section id="screen-offline-music-library" class="screen-view flex flex-col gap-3.5">
+      
+      <!-- Top Metric Banner -->
+      <div class="flex items-center justify-between pt-1">
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-bold tracking-tight text-on-surface">Offline Library</h1>
+          <span class="flex h-2 w-2 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-80"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          </span>
+        </div>
+        <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high border border-white/5 text-primary shadow-sm text-xs font-mono">
+          <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+          <span class="uppercase tracking-wider">Synced</span>
+        </div>
+      </div>
+
+      <!-- Subtitle Stats -->
+      <div class="flex items-center justify-between text-xs text-on-surface-variant font-mono">
+        <div class="flex items-center gap-2">
+          <span class="text-on-surface font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-primary text-[14px]">audiotrack</span>
+            <span id="library-track-count">142 Tracks</span>
+          </span>
+          <span>•</span>
+          <span>1.2 GB Cached</span>
+        </div>
+        <div class="flex items-center gap-1 text-secondary">
+          <span class="material-symbols-outlined text-[14px]">sd_card</span>
+          <span>Internal Hi-Fi</span>
+        </div>
+      </div>
+
+      <!-- Category Filter Carousel (Horizontal Scroll) -->
+      <div class="flex items-center gap-2 overflow-x-auto py-1 -mx-4 px-4 no-scrollbar">
+        <button onclick="setLibraryCategory('tracks', this)" class="lib-cat-btn px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_16px_rgba(29,185,84,0.3)] transition-transform active:scale-95 flex-shrink-0 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">music_note</span>
+          Tracks
+        </button>
+        <button onclick="setLibraryCategory('playlists', this)" class="lib-cat-btn px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface text-xs font-mono font-medium flex items-center gap-1.5 transition-colors flex-shrink-0 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">queue_music</span>
+          Playlists
+        </button>
+        <button onclick="setLibraryCategory('artists', this)" class="lib-cat-btn px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface text-xs font-mono font-medium flex items-center gap-1.5 transition-colors flex-shrink-0 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">artist</span>
+          Artists
+        </button>
+        <button onclick="setLibraryCategory('albums', this)" class="lib-cat-btn px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface text-xs font-mono font-medium flex items-center gap-1.5 transition-colors flex-shrink-0 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">album</span>
+          Albums
+        </button>
+        <button onclick="setLibraryCategory('folders', this)" class="lib-cat-btn px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface text-xs font-mono font-medium flex items-center gap-1.5 transition-colors flex-shrink-0 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">folder</span>
+          Folders
+        </button>
+      </div>
+
+      <!-- Search & Sort Row -->
+      <div class="flex flex-col gap-2.5">
+        <div class="relative flex items-center w-full">
+          <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[18px] pointer-events-none">search</span>
+          <input id="library-search" oninput="filterLibraryTracks()" type="text" placeholder="Search local tracks or artists..."
+            class="w-full h-10 pl-10 pr-9 rounded-xl bg-surface-container-low border border-white/5 text-on-surface placeholder:text-on-surface-variant/60 text-xs focus:outline-none focus:border-primary transition-colors">
+        </div>
+
+        <div class="flex items-center justify-between gap-2">
+          <!-- Sort Trigger Button -->
+          <div class="relative">
+            <button onclick="toggleSortDropdown()" class="h-8 px-3 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-white/5 flex items-center gap-1.5 text-on-surface text-xs font-mono cursor-pointer transition-colors">
+              <span class="material-symbols-outlined text-secondary text-[15px]">swap_vert</span>
+              <span id="current-sort-label">Date Added (Newest)</span>
+              <span class="material-symbols-outlined text-[14px] text-on-surface-variant">expand_more</span>
+            </button>
+            <div id="sort-dropdown-menu" class="hidden absolute top-10 left-0 z-30 bg-surface-container-high border border-white/10 rounded-xl p-1.5 shadow-2xl flex flex-col w-48 text-xs font-mono">
+              <button onclick="applySort('date-desc', 'Date Added (Newest)')" class="p-2 text-left hover:bg-surface-bright rounded-lg text-on-surface">Date Added (Newest)</button>
+              <button onclick="applySort('title-asc', 'Title (A-Z)')" class="p-2 text-left hover:bg-surface-bright rounded-lg text-on-surface">Title (A-Z)</button>
+              <button onclick="applySort('artist-asc', 'Artist (A-Z)')" class="p-2 text-left hover:bg-surface-bright rounded-lg text-on-surface">Artist (A-Z)</button>
+              <button onclick="applySort('size-desc', 'File Size (Largest)')" class="p-2 text-left hover:bg-surface-bright rounded-lg text-on-surface">File Size (Largest)</button>
+            </div>
+          </div>
+
+          <!-- FLAC Only Quick Toggle -->
+          <button id="flac-only-chip" onclick="toggleFlacOnlyFilter()" class="h-8 px-3 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-white/5 text-secondary text-xs font-mono flex items-center gap-1 cursor-pointer transition-colors">
+            <span class="material-symbols-outlined text-[15px]">high_quality</span>
+            <span>FLAC only</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Shuffle Hero Button -->
+      <div class="flex items-center justify-between p-3 rounded-2xl bg-surface-container-low border border-white/5 shadow-md">
+        <div class="flex items-center gap-3">
+          <button onclick="shuffleAllLibrary()" class="h-10 w-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_0_20px_rgba(29,185,84,0.35)] transition-transform active:scale-95 cursor-pointer">
+            <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">shuffle</span>
+          </button>
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-on-surface">Shuffle All Tracks</span>
+            <span class="text-[11px] text-on-surface-variant font-mono">Uncompressed local playback</span>
+          </div>
+        </div>
+        <span class="text-[11px] text-secondary font-mono">Direct Master</span>
+      </div>
+
+      <!-- Local Track List -->
+      <div class="flex flex-col gap-1.5" id="library-track-list">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 6: APP SETTINGS & STORAGE CONFIG (#app-settings)      -->
+    <!-- ============================================================ -->
+    <section id="screen-app-settings" class="screen-view flex flex-col gap-5">
+      
+      <!-- System Telemetry Header -->
+      <div class="flex flex-col gap-1.5 pt-1">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-mono uppercase tracking-widest text-primary font-bold">System Telemetry</span>
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-mono text-[10px]">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            SAF Ready
+          </span>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-on-surface">Settings & Storage</h1>
+        <p class="text-xs text-on-surface-variant">Audio fidelity, storage partitions, thread limits & cache management.</p>
+
+        <!-- Quick Status Diagnostic Strip -->
+        <div class="mt-1 p-3 rounded-2xl bg-surface-container-low border border-white/5 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-surface-container-high flex items-center justify-center text-primary">
+              <span class="material-symbols-outlined text-[18px]">verified_user</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-semibold text-on-surface">Storage Health: Optimal</span>
+              <span class="text-[11px] text-on-surface-variant font-mono">Internal Partition (92.4 GB Free)</span>
+            </div>
+          </div>
+          <span class="text-xs font-mono text-secondary bg-surface-container-high px-2 py-1 rounded-lg">NVMe v4</span>
+        </div>
+      </div>
+
+      <!-- Audio Quality & Format Settings -->
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Audio Quality & Format</h2>
+          <span class="text-[11px] font-mono text-primary font-bold">ID3v2.4 Ready</span>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <!-- 320 kbps -->
+          <label class="relative flex items-start gap-3 p-3.5 rounded-2xl bg-surface-container-low border border-white/5 hover:bg-surface-container transition-all cursor-pointer">
+            <input type="radio" name="audio_quality" value="320" checked class="mt-0.5 w-4 h-4 text-primary accent-primary bg-surface-container-highest cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-semibold text-on-surface truncate">Ultra Quality — 320 kbps MP3</span>
+                <span class="px-2 py-0.5 rounded bg-primary/10 text-primary font-mono text-[9px] uppercase font-bold tracking-wider">HQ AUDIO</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant mt-0.5">Best dynamic headroom, ~8MB/track</p>
+            </div>
+          </label>
+
+          <!-- 192 kbps -->
+          <label class="relative flex items-start gap-3 p-3.5 rounded-2xl bg-surface-container-low border border-white/5 hover:bg-surface-container transition-all cursor-pointer">
+            <input type="radio" name="audio_quality" value="192" class="mt-0.5 w-4 h-4 text-primary accent-primary bg-surface-container-highest cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-on-surface truncate">Standard Quality — 192 kbps MP3</span>
+                <span class="text-xs font-mono text-on-surface-variant">VBR</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant mt-0.5">Balanced fidelity, ~5MB/track</p>
+            </div>
+          </label>
+
+          <!-- 128 kbps Opus -->
+          <label class="relative flex items-start gap-3 p-3.5 rounded-2xl bg-surface-container-low border border-white/5 hover:bg-surface-container transition-all cursor-pointer">
+            <input type="radio" name="audio_quality" value="128" class="mt-0.5 w-4 h-4 text-primary accent-primary bg-surface-container-highest cursor-pointer">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-on-surface truncate">Storage Saver — 128 kbps Opus</span>
+                <span class="text-xs font-mono text-on-surface-variant">Compact</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant mt-0.5">Low cellular data footprint, ~3MB/track</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- FLAC Callout Card -->
+        <div class="p-3 rounded-2xl bg-surface-container border border-white/5 flex items-start gap-2.5">
+          <span class="material-symbols-outlined text-secondary text-[20px] shrink-0 mt-0.5">graphic_eq</span>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            <strong class="text-on-surface font-semibold">Lossless Bitstream:</strong> Automatic FLAC extraction activates when source platforms deliver 24-bit uncompressed master streams.
+          </p>
+        </div>
+      </div>
+
+      <!-- Storage & File System Settings -->
+      <div class="flex flex-col gap-2.5">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Storage & File System</h2>
+
+        <!-- Scoped Storage Banner -->
+        <div class="p-3.5 rounded-2xl bg-surface-container-low border border-white/5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[18px]">lock_open</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-semibold text-on-surface">SAF Scoped Storage Active</span>
+              <span class="text-[11px] text-on-surface-variant font-mono">Direct write permissions granted</span>
+            </div>
+          </div>
+          <span class="text-xs font-mono text-primary flex items-center gap-1 font-semibold">
+            <span class="material-symbols-outlined text-[16px]">check_circle</span> OK
+          </span>
+        </div>
+
+        <!-- Storage Path Card -->
+        <div class="p-4 rounded-2xl bg-surface-container-low border border-white/5 flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider">Destination Mount</span>
+            <button class="px-2.5 py-1 rounded-lg bg-surface-container-high text-primary hover:bg-surface-container-highest transition-colors text-xs font-mono flex items-center gap-1.5 cursor-pointer">
+              <span class="material-symbols-outlined text-[15px]">folder_open</span>
+              Change Folder
+            </button>
+          </div>
+          <div class="p-2.5 rounded-xl bg-surface-container-lowest border border-white/5 font-mono text-xs text-secondary flex items-center justify-between overflow-hidden">
+            <span class="truncate">/storage/emulated/0/Music/BeatVault/</span>
+            <span class="material-symbols-outlined text-on-surface-variant text-[16px] shrink-0 ml-2">tune</span>
+          </div>
+        </div>
+
+        <!-- MicroSD Toggle Card -->
+        <div class="p-3.5 rounded-2xl bg-surface-container-low border border-white/5 flex items-center justify-between">
+          <div class="flex flex-col min-w-0 pr-3">
+            <span class="text-xs font-semibold text-on-surface">Store on MicroSD Card</span>
+            <span class="text-[11px] text-on-surface-variant font-mono truncate">SanDisk Ultra 128GB • 64.2 GB Free</span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <input type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Performance & Concurrency Tuning (Low RAM Android Phones) -->
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Performance & Concurrency</h2>
+          <span id="concurrency-val" class="text-xs font-mono text-primary bg-surface-container-high px-2 py-0.5 rounded-md font-bold">3 Threads</span>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-surface-container-low border border-white/5 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-on-surface">Parallel Download Workers</span>
+            <span class="text-[11px] text-on-surface-variant font-mono">Dynamic pool</span>
+          </div>
+          <!-- Slider -->
+          <div class="relative py-2">
+            <input id="thread-slider" type="range" min="1" max="4" step="1" value="3" oninput="updateConcurrency(this.value)"
+              class="w-full h-2 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary">
+            <div class="flex justify-between text-[11px] font-mono text-on-surface-variant mt-2 px-1">
+              <span>1 worker</span>
+              <span>2 workers</span>
+              <span class="text-primary font-bold">3 workers</span>
+              <span>4 workers</span>
+            </div>
+          </div>
+          <!-- Thermal Advisory Box -->
+          <div class="p-3 rounded-xl bg-surface-container border border-white/5 flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">memory</span>
+            <p class="text-xs text-on-surface-variant leading-relaxed">
+              1–2 threads recommended for hardware with ≤3GB RAM to safeguard audio decoder background tasks against OS thermal throttle.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network & Data Rules -->
+      <div class="flex flex-col gap-2.5">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Network & Data Rules</h2>
+        <div class="flex flex-col gap-2">
+          <!-- Wi-Fi Only -->
+          <div class="p-3.5 rounded-2xl bg-surface-container-low border border-white/5 flex items-center justify-between">
+            <div class="flex flex-col min-w-0 pr-3">
+              <span class="text-xs font-semibold text-on-surface">Download over Wi-Fi only</span>
+              <span class="text-[11px] text-on-surface-variant">Prevents mobile data billing leakage</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+
+          <!-- Metered Connection -->
+          <div class="p-3.5 rounded-2xl bg-surface-container-low border border-white/5 flex items-center justify-between">
+            <div class="flex flex-col min-w-0 pr-3">
+              <span class="text-xs font-semibold text-on-surface">Pause on metered hotspots</span>
+              <span class="text-[11px] text-on-surface-variant">Suspends ingestion queue automatically</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input type="checkbox" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Storage Footprint & Cache Management -->
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Storage Footprint & Cache</h2>
+          <span class="text-xs font-mono text-on-surface-variant">93.8 GB Allocation</span>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-surface-container-low border border-white/5 flex flex-col gap-3">
+          <!-- Segmented Gauge Bar -->
+          <div class="flex flex-col gap-1.5">
+            <div class="w-full h-3 rounded-full bg-surface-container-highest flex overflow-hidden">
+              <div class="bg-primary h-full transition-all" style="width: 18%" title="Audio: 1.4 GB"></div>
+              <div class="bg-secondary h-full transition-all" style="width: 6%" title="Cache: 48 MB"></div>
+              <div class="bg-surface-bright h-full flex-1" title="Free: 92.4 GB"></div>
+            </div>
+            <div class="flex items-center justify-between font-mono text-[10px] text-on-surface-variant pt-1">
+              <span class="flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+                Audio: 1.4 GB
+              </span>
+              <span class="flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-secondary inline-block"></span>
+                Cache: <span id="cache-size-display">48 MB</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-surface-bright inline-block"></span>
+                Free: 92.4 GB
+              </span>
+            </div>
+          </div>
+
+          <!-- Clear Cache Action Button -->
+          <button id="clear-cache-btn" onclick="clearAppCache()" class="w-full py-3 px-4 rounded-xl bg-surface-container-high hover:bg-surface-container-highest active:scale-[0.99] text-on-surface flex items-center justify-center gap-2 text-xs font-mono transition-all cursor-pointer shadow-sm border border-white/5">
+            <span class="material-symbols-outlined text-[18px] text-secondary">cleaning_services</span>
+            Clear Temporary Thumbnail & Waveform Cache
+          </button>
+
+          <!-- Feedback Notification Banner -->
+          <div id="cache-cleared-banner" class="hidden p-2.5 rounded-xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-between text-xs font-mono">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">done_all</span>
+              <span>48 MB Temporary Cache Successfully Purged</span>
+            </div>
+            <span class="text-[10px] text-on-surface font-bold">0 MB Used</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- About & Version -->
+      <div class="flex flex-col gap-2.5 pt-1">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">About BeatVault Mobile</h2>
+        <div class="p-4 rounded-2xl bg-surface-container-low border border-white/5 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center p-1.5 text-primary">
+                <img src="assets/icon_transparent.png" alt="BeatVault Concept 2" class="w-full h-full object-contain">
+              </div>
+              <div class="flex flex-col">
+                <span class="text-xs font-bold text-on-surface">BeatVault Mobile</span>
+                <span class="text-[11px] text-on-surface-variant font-mono">v1.0.0 (Build 2026.11)</span>
+              </div>
+            </div>
+            <button id="check-updates-btn" onclick="checkAppUpdates()" class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface flex items-center gap-1.5 text-xs font-mono transition-colors cursor-pointer border border-white/5">
+              <span class="material-symbols-outlined text-[16px] text-primary">verified</span>
+              Up to date
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- PERSISTENT BOTTOM MINI-PLAYER                                  -->
+  <!-- ============================================================== -->
+  <div id="persistent-mini-player" class="fixed bottom-20 left-0 right-0 z-30 px-3 pb-1.5">
+    <div onclick="openNowPlayingModal()" class="relative overflow-hidden rounded-2xl bg-[#131823]/95 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.7)] p-2 pl-3 flex items-center justify-between cursor-pointer hover:border-primary/40 transition-all duration-200 group active:scale-[0.99]">
+      <!-- 2px Top Micro Progress Bar -->
+      <div class="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
+        <div id="mini-progress-bar" class="h-full bg-primary shadow-[0_0_8px_rgba(83,224,118,0.8)] transition-all duration-200" style="width: 0%;"></div>
+      </div>
+
+      <!-- Left: Artwork & Metadata -->
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <div class="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container border border-white/10 shadow-md">
+          <img id="mini-cover-art" src="assets/icon_transparent.png" alt="Cover" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-primary/10 mix-blend-overlay"></div>
+        </div>
+        <div class="flex flex-col min-w-0 pr-1">
+          <div class="flex items-center gap-1.5">
+            <span id="mini-track-title" class="text-xs text-on-surface truncate font-semibold">Birds of a Feather</span>
+            <span id="mini-track-badge" class="px-1 py-0.2 rounded bg-primary/20 text-primary text-[9px] font-mono font-bold tracking-tight uppercase">24b</span>
+          </div>
+          <span id="mini-track-artist" class="text-[11px] text-on-surface-variant truncate mt-0.5">Billie Eilish</span>
+        </div>
+      </div>
+
+      <!-- Right: Playback Controls -->
+      <div class="flex items-center gap-1.5 flex-shrink-0" onclick="event.stopPropagation()">
+        <!-- Mic / Lyrics Button -->
+        <button onclick="openNowPlayingModal('lyrics')" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-secondary hover:bg-surface-container-highest transition-colors cursor-pointer" title="Synced Lyrics">
+          <span class="material-symbols-outlined text-[18px]">mic</span>
+        </button>
+
+        <!-- Play/Pause Button -->
+        <button id="mini-play-btn" onclick="togglePlayPause()" class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_0_12px_rgba(83,224,118,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer" title="Play / Pause">
+          <span id="mini-play-icon" class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+        </button>
+
+        <!-- Skip Next Button -->
+        <button onclick="skipNextTrack()" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors cursor-pointer" title="Skip Next">
+          <span class="material-symbols-outlined text-[20px]">skip_next</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PERSISTENT BOTTOM NAVIGATION BAR                               -->
+  <!-- ============================================================== -->
+  <nav class="fixed bottom-0 w-full z-40 pb-safe bg-surface-container-lowest/90 backdrop-blur-2xl border-t border-white/5 shadow-[0_-2px_16px_rgba(0,0,0,0.5)]">
+    <div class="h-20 px-2 flex items-center justify-around max-w-lg mx-auto">
+      <!-- Ingest -->
+      <a href="#home-ingest" onclick="navigateTo('home-ingest'); return false;" class="nav-tab flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-colors text-primary" data-screen="home-ingest">
+        <span class="material-symbols-outlined text-[22px]">link</span>
+        <span class="text-[11px] font-mono font-medium">Ingest</span>
+      </a>
+
+      <!-- Inspector -->
+      <a href="#playlist-inspector" onclick="navigateTo('playlist-inspector'); return false;" class="nav-tab flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-colors text-on-surface-variant hover:text-on-surface" data-screen="playlist-inspector">
+        <span class="material-symbols-outlined text-[22px]">queue_music</span>
+        <span class="text-[11px] font-mono font-medium">Inspector</span>
+      </a>
+
+      <!-- Downloads -->
+      <a href="#active-downloads" onclick="navigateTo('active-downloads'); return false;" class="nav-tab relative flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-colors text-on-surface-variant hover:text-on-surface" data-screen="active-downloads">
+        <div class="relative flex items-center justify-center">
+          <span class="material-symbols-outlined text-[22px]">download_for_offline</span>
+          <span id="nav-downloads-badge" class="absolute -top-1 -right-2 px-1.5 py-0.5 rounded-full bg-primary text-on-primary font-mono text-[9px] font-bold shadow-[0_0_8px_rgba(83,224,118,0.5)]">3</span>
+        </div>
+        <span class="text-[11px] font-mono font-medium">Downloads</span>
+      </a>
+
+      <!-- Library -->
+      <a href="#offline-music-library" onclick="navigateTo('offline-music-library'); return false;" class="nav-tab flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-colors text-on-surface-variant hover:text-on-surface" data-screen="offline-music-library">
+        <span class="material-symbols-outlined text-[22px]">library_music</span>
+        <span class="text-[11px] font-mono font-medium">Library</span>
+      </a>
+
+      <!-- Settings -->
+      <a href="#app-settings" onclick="navigateTo('app-settings'); return false;" class="nav-tab flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-colors text-on-surface-variant hover:text-on-surface" data-screen="app-settings">
+        <span class="material-symbols-outlined text-[22px]">tune</span>
+        <span class="text-[11px] font-mono font-medium">Settings</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ============================================================== -->
+  <!-- SCREEN 5: NOW PLAYING & SYNCED KARAOKE LYRICS MODAL OVERLAY   -->
+  <!-- ============================================================== -->
+  <div id="now-playing-overlay" data-screen="now-playing-player" class="fixed inset-0 z-50 bg-surface flex flex-col select-none overflow-y-auto">
+    <!-- Ambient Radial Gradient Background -->
+    <div class="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_30%,rgba(29,185,84,0.18),transparent_70%)] z-0"></div>
+
+    <!-- Modal Header -->
+    <header class="sticky top-0 inset-x-0 z-20 bg-surface/80 backdrop-blur-2xl pt-safe border-b border-white/5">
+      <div class="h-16 px-4 flex items-center justify-between">
+        <button onclick="closeNowPlayingModal()" class="w-10 h-10 flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer" aria-label="Collapse">
+          <span class="material-symbols-outlined text-[28px]">expand_more</span>
+        </button>
+
+        <div class="flex flex-col items-center justify-center gap-0.5">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant font-bold">Playing from Vault</span>
+          <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high/90 border border-white/5">
+            <span class="material-symbols-outlined text-secondary text-[13px]">graphic_eq</span>
+            <span class="text-[10px] font-mono text-secondary font-bold tracking-wider">FLAC 24-BIT / 96KHZ</span>
+          </div>
+        </div>
+
+        <button onclick="toggleTrackLike()" class="w-10 h-10 flex items-center justify-center text-primary transition-colors cursor-pointer" aria-label="Favorite">
+          <span id="player-like-icon" class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Modal Content Body -->
+    <div class="flex-1 w-full max-w-lg mx-auto px-4 pt-2 pb-safe flex flex-col relative z-10">
+      
+      <!-- Segment Mode Switcher: Cover Art vs Synced Lyrics -->
+      <div class="flex items-center justify-between mt-1 mb-3">
+        <div class="inline-flex p-[3px] rounded-full bg-surface-container-high/90 border border-white/5 shadow-md">
+          <button id="btn-mode-art" onclick="switchNowPlayingView('art')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono uppercase transition-all duration-200 text-on-surface-variant hover:text-on-surface">
+            <span class="material-symbols-outlined text-[16px]">album</span>
+            <span>Cover</span>
+          </button>
+          <button id="btn-mode-lyrics" onclick="switchNowPlayingView('lyrics')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono uppercase font-bold tracking-wide transition-all duration-200 bg-surface-bright text-primary shadow-sm">
+            <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">lyrics</span>
+            <span>Lyrics</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          </button>
+        </div>
+
+        <!-- Output Source Button -->
+        <button class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container hover:bg-surface-container-high border border-white/5 text-xs font-mono text-secondary">
+          <span class="material-symbols-outlined text-[15px]">devices</span>
+          <span class="truncate max-w-[120px]">WH-1000XM5</span>
+        </button>
+      </div>
+
+      <!-- Mini Track Context Strip -->
+      <div class="w-full bg-surface-container-low/95 border border-white/5 rounded-2xl p-3 mb-3 flex items-center justify-between shadow-xl">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 bg-surface-container-high border border-white/10">
+            <img id="overlay-thumb" src="assets/icon_transparent.png" alt="Track Art" class="w-full h-full object-cover">
+          </div>
+          <div class="flex flex-col min-w-0 pr-2">
+            <div class="flex items-center gap-1.5">
+              <span id="overlay-title" class="text-xs font-bold text-on-surface truncate">Birds of a Feather</span>
+              <span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-mono uppercase tracking-wider">Hi-Res</span>
+            </div>
+            <span id="overlay-artist" class="text-[11px] text-on-surface-variant truncate mt-0.5">Billie Eilish — HIT ME HARD AND SOFT</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <div class="flex items-end gap-[3px] h-3.5 pr-2">
+            <span class="w-[3px] bg-primary rounded-full eq-bar-1"></span>
+            <span class="w-[3px] bg-primary rounded-full eq-bar-2"></span>
+            <span class="w-[3px] bg-primary rounded-full eq-bar-3"></span>
+            <span class="w-[3px] bg-primary rounded-full eq-bar-4"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW A: COVER ART DISPLAY -->
+      <div id="view-cover-art" class="hidden flex-col items-center justify-center py-6 gap-6">
+        <div class="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full overflow-hidden shadow-[0_12px_48px_rgba(0,0,0,0.8)] border-4 border-surface-container-highest flex items-center justify-center group">
+          <!-- Spinning Vinyl Record -->
+          <div id="vinyl-disc" class="absolute inset-0 rounded-full animate-spin-slow bg-gradient-to-tr from-[#0b0e14] via-[#1a212e] to-[#0b0e14] flex items-center justify-center p-8">
+            <!-- Vinyl Grooves -->
+            <div class="w-full h-full rounded-full border border-white/10 flex items-center justify-center">
+              <div class="w-4/5 h-4/5 rounded-full border border-white/5 flex items-center justify-center">
+                <div class="w-3/5 h-3/5 rounded-full border border-white/10 flex items-center justify-center">
+                  <!-- Vinyl Center Label -->
+                  <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/50 relative shadow-inner">
+                    <img id="vinyl-art-image" src="assets/icon_transparent.png" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <div class="w-4 h-4 rounded-full bg-surface-container-lowest border-2 border-primary"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-center text-center gap-1">
+          <span class="text-[11px] font-mono text-secondary tracking-widest uppercase">Lossless Stream DSD 2.8MHz</span>
+          <span class="text-xs text-on-surface-variant font-mono">Master Audio Bitstream • 4,608 kbps</span>
+        </div>
+      </div>
+
+      <!-- VIEW B: SYNCHRONIZED KARAOKE LYRICS CANVAS -->
+      <div id="view-synced-lyrics" class="relative w-full bg-surface-container-lowest/85 border border-white/5 rounded-2xl p-4 flex flex-col gap-3 shadow-2xl overflow-hidden min-h-[300px] max-h-[360px]">
+        <!-- Top Scrim -->
+        <div class="absolute top-0 inset-x-0 h-8 bg-gradient-to-b from-surface-container-lowest to-transparent pointer-events-none z-10"></div>
+
+        <!-- Lyrics Viewport (Scrollable) -->
+        <div id="lyrics-viewport" class="flex flex-col gap-3 py-4 overflow-y-auto no-scrollbar">
+          <!-- Injected via JavaScript -->
+        </div>
+
+        <!-- Bottom Scrim -->
+        <div class="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-surface-container-lowest to-transparent pointer-events-none z-10"></div>
+
+        <!-- Floating Auto-Scroll Status Toggle Button -->
+        <div class="absolute bottom-3 right-3 z-20">
+          <button id="autoscroll-toggle-btn" onclick="toggleAutoScrollLock()" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high/90 border border-white/10 shadow-md hover:bg-surface-bright transition-colors text-xs font-mono">
+            <span id="autoscroll-dot" class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            <span id="autoscroll-label" class="text-on-surface font-medium">Auto-Scroll Locked</span>
+            <span id="autoscroll-icon" class="material-symbols-outlined text-[14px] text-on-surface-variant">lock</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Telemetry Timing Accuracy Chip -->
+      <div class="flex items-center justify-between px-1 py-1 mt-1 text-[11px] font-mono text-on-surface-variant">
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-secondary text-[15px]">verified</span>
+          <span>LRC Synced v2.4 • 99.4% timing precision</span>
+        </div>
+        <span class="text-primary font-semibold">Tap line to seek</span>
+      </div>
+
+      <!-- High Precision Audio Scrubbing Track -->
+      <div class="w-full flex flex-col gap-1.5 mt-2 mb-2 px-1">
+        <div id="player-scrubber-track" onclick="handleScrubClick(event)" class="relative w-full h-6 flex items-center group cursor-pointer">
+          <div class="w-full h-1.5 rounded-full bg-surface-container-high relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-[85%] bg-surface-variant"></div>
+            <div id="player-played-bar" class="absolute left-0 top-0 bottom-0 w-[0%] bg-primary rounded-full shadow-[0_0_8px_rgba(83,224,118,0.7)] transition-all duration-100"></div>
+          </div>
+          <div id="player-scrub-thumb" class="absolute left-[0%] -translate-x-1/2 w-4 h-4 rounded-full bg-on-surface shadow-lg shadow-primary/50 flex items-center justify-center transition-transform group-hover:scale-125">
+            <div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-on-surface-variant font-mono text-xs px-0.5">
+          <span id="player-elapsed-time" class="font-semibold text-on-surface">00:00</span>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-secondary bg-surface-container px-1.5 py-0.5 rounded font-mono">DSD Direct</span>
+            <span id="player-remaining-time">-00:35</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playback Control Deck -->
+      <div class="w-full flex items-center justify-between px-2 my-2">
+        <!-- Shuffle Toggle -->
+        <button id="deck-shuffle-btn" onclick="toggleShuffle()" class="w-11 h-11 flex items-center justify-center text-on-surface hover:text-primary transition-colors relative cursor-pointer" title="Shuffle">
+          <span class="material-symbols-outlined text-[24px]">shuffle</span>
+          <span id="deck-shuffle-dot" class="hidden w-1.5 h-1.5 rounded-full bg-primary absolute bottom-1.5"></span>
+        </button>
+
+        <!-- Skip Previous -->
+        <button onclick="skipPrevTrack()" class="w-11 h-11 flex items-center justify-center text-on-surface hover:text-primary active:scale-90 transition-all cursor-pointer" title="Previous Track">
+          <span class="material-symbols-outlined text-[32px]">skip_previous</span>
+        </button>
+
+        <!-- Hero Play/Pause Button -->
+        <button id="deck-play-btn" onclick="togglePlayPause()" class="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-[0_0_24px_rgba(83,224,118,0.4)] active:scale-90 hover:scale-105 transition-all cursor-pointer" title="Play / Pause">
+          <span id="deck-play-icon" class="material-symbols-outlined text-[36px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+        </button>
+
+        <!-- Skip Next -->
+        <button onclick="skipNextTrack()" class="w-11 h-11 flex items-center justify-center text-on-surface hover:text-primary active:scale-90 transition-all cursor-pointer" title="Next Track">
+          <span class="material-symbols-outlined text-[32px]">skip_next</span>
+        </button>
+
+        <!-- Repeat Mode Cycle -->
+        <button id="deck-repeat-btn" onclick="cycleRepeatMode()" class="w-11 h-11 flex items-center justify-center text-on-surface hover:text-primary transition-colors relative cursor-pointer" title="Repeat Mode">
+          <span id="deck-repeat-icon" class="material-symbols-outlined text-[24px]">repeat</span>
+          <span id="deck-repeat-dot" class="hidden w-1.5 h-1.5 rounded-full bg-primary absolute bottom-1.5"></span>
+        </button>
+      </div>
+
+      <!-- Bottom Audio EQ & Up Next Drawer -->
+      <div class="w-full flex flex-col gap-2 mt-2">
+        <div class="grid grid-cols-2 gap-2">
+          <button class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-high/80 hover:bg-surface-bright transition-colors border border-white/5">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="material-symbols-outlined text-secondary text-[20px]">equalizer</span>
+              <div class="flex flex-col text-left min-w-0">
+                <span class="text-[9px] font-mono text-on-surface-variant uppercase">Profile</span>
+                <span class="text-xs font-mono text-on-surface truncate">Warm Dynamic</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant text-[16px]">chevron_right</span>
+          </button>
+
+          <button class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-high/80 hover:bg-surface-bright transition-colors border border-white/5">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="material-symbols-outlined text-primary text-[20px]">bluetooth_audio</span>
+              <div class="flex flex-col text-left min-w-0">
+                <span class="text-[9px] font-mono text-on-surface-variant uppercase">Link</span>
+                <span class="text-xs font-mono text-on-surface truncate">LDAC 990k</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant text-[16px]">tune</span>
+          </button>
+        </div>
+
+        <!-- Up Next Drawer -->
+        <div onclick="skipNextTrack()" class="w-full p-2.5 rounded-2xl bg-surface-container border border-white/5 hover:bg-surface-container-high transition-colors flex items-center justify-between cursor-pointer shadow-md">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-surface-container-highest">
+              <img id="overlay-upnext-art" src="assets/icon_transparent.png" class="w-full h-full object-cover">
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-[9px] font-mono text-on-surface-variant uppercase font-bold tracking-wider">Up Next in Queue</span>
+              <span id="overlay-upnext-text" class="text-xs font-mono text-on-surface truncate">Sabrina Carpenter — Espresso</span>
+            </div>
+          </div>
+          <span class="material-symbols-outlined text-on-surface-variant text-[18px]">skip_next</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Pill -->
+  <div id="toast-pill" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2 px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-mono font-bold shadow-2xl flex items-center gap-2">
+    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+    <span id="toast-text">Action completed</span>
+  </div>
+
+  <!-- Context Action Bottom Sheet for Library Tracks -->
+  <div id="context-sheet-backdrop" onclick="closeContextMenu()" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity">
+    <div onclick="event.stopPropagation()" class="absolute bottom-0 inset-x-0 bg-surface-container border-t border-white/10 rounded-t-3xl p-5 flex flex-col gap-4 shadow-2xl pb-safe">
+      <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-1"></div>
+      <div class="flex items-center gap-3">
+        <img id="context-sheet-art" src="assets/icon_transparent.png" class="w-12 h-12 rounded-xl object-cover border border-white/10">
+        <div class="flex flex-col min-w-0 flex-1">
+          <span id="context-sheet-title" class="text-sm font-bold text-on-surface truncate">Track Title</span>
+          <span id="context-sheet-artist" class="text-xs text-on-surface-variant truncate">Artist Name</span>
+        </div>
+      </div>
+      <div class="flex flex-col divide-y divide-white/5 text-xs font-mono">
+        <button onclick="contextAction('play-next')" class="py-3 flex items-center gap-3 text-on-surface hover:text-primary transition-colors text-left">
+          <span class="material-symbols-outlined text-[18px] text-secondary">queue_play_next</span>
+          Play Next in Queue
+        </button>
+        <button onclick="contextAction('view-lyrics')" class="py-3 flex items-center gap-3 text-on-surface hover:text-primary transition-colors text-left">
+          <span class="material-symbols-outlined text-[18px] text-primary">lyrics</span>
+          Open Synced Karaoke Lyrics
+        </button>
+        <button onclick="contextAction('share')" class="py-3 flex items-center gap-3 text-on-surface hover:text-primary transition-colors text-left">
+          <span class="material-symbols-outlined text-[18px] text-tertiary">share</span>
+          Share Lossless FLAC File
+        </button>
+        <button onclick="contextAction('delete')" class="py-3 flex items-center gap-3 text-error hover:text-error/80 transition-colors text-left">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          Delete from Local Storage
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden HTML5 Audio Element -->
+  <audio id="audio-engine" preload="auto"></audio>
+
+  <!-- ============================================================== -->
+  <!-- APPLICATION LOGIC & AUDIO ENGINE SCRIPT                        -->
+  <!-- ============================================================== -->
+  <script>
+    /* ============================================================ */
+    /* 1. DATA MODELS & PLAYLIST REPOSITORY                         */
+    /* ============================================================ */
+    const TRACKS_REPO = [
+      {
+        id: "tr-birds",
+        title: "Birds of a Feather",
+        artist: "Billie Eilish",
+        album: "HIT ME HARD AND SOFT",
+        duration: "00:35",
+        durationSec: 35,
+        format: "FLAC 24/96",
+        badge: "24b",
+        size: "6.2 MB",
+        status: "downloaded",
+        cover: "assets/icon_transparent.png",
+        audioSrc: "assets/demo_birds.wav",
+        lyrics: [
+          { time: 0.0, text: "(Instrumental Ambient Intro)" },
+          { time: 4.5, text: "I want you to stay" },
+          { time: 8.8, text: "'Til I'm in the grave" },
+          { time: 13.2, text: "'Til I rot away, dead and buried" },
+          { time: 17.5, text: "'Til I'm in the casket you carry" },
+          { time: 21.8, text: "I'll love you 'til the day that I die" },
+          { time: 26.2, text: "'Til the day that I die" },
+          { time: 29.8, text: "Birds of a feather, we should stick together" },
+          { time: 33.0, text: "(Fade Out)" }
+        ]
+      },
+      {
+        id: "tr-espresso",
+        title: "Espresso",
+        artist: "Sabrina Carpenter",
+        album: "Short n' Sweet",
+        duration: "00:30",
+        durationSec: 30,
+        format: "FLAC 24/96",
+        badge: "24b",
+        size: "5.3 MB",
+        status: "downloaded",
+        cover: "assets/icon_transparent.png",
+        audioSrc: "assets/demo_espresso.wav",
+        lyrics: [
+          { time: 0.0, text: "(Upbeat Bass Groove)" },
+          { time: 4.2, text: "Now he's thinkin' 'bout me every night, oh" },
+          { time: 8.5, text: "Is it that sweet? I guess so" },
+          { time: 12.8, text: "Say you can't sleep, baby, I know" },
+          { time: 16.5, text: "That's that me espresso" },
+          { time: 20.2, text: "Move it up, down, left, right, oh" },
+          { time: 24.5, text: "Switch it up like Nintendo" },
+          { time: 28.0, text: "That's that me espresso" }
+        ]
+      },
+      {
+        id: "tr-goodluck",
+        title: "Good Luck, Babe!",
+        artist: "Chappell Roan",
+        album: "Good Luck, Babe! Single",
+        duration: "00:32",
+        durationSec: 32,
+        format: "OPUS 320k",
+        badge: "320k",
+        size: "5.6 MB",
+        status: "downloaded",
+        cover: "assets/icon_transparent.png",
+        audioSrc: "assets/demo_goodluck.wav",
+        lyrics: [
+          { time: 0.0, text: "(Dream Synth Arpeggio)" },
+          { time: 5.0, text: "It's fine, it's cool" },
+          { time: 9.2, text: "You can say that we are nothing, but you know the truth" },
+          { time: 16.0, text: "And I try to be the chill girl that holds your hand" },
+          { time: 22.5, text: "You'd have to stop the world just to stop the feeling" },
+          { time: 28.0, text: "Good luck, babe! Well, good luck!" }
+        ]
+      },
+      {
+        id: "tr-taste",
+        title: "Taste",
+        artist: "Sabrina Carpenter",
+        album: "Short n' Sweet",
+        duration: "00:30",
+        durationSec: 30,
+        format: "FLAC 24/96",
+        badge: "24b",
+        size: "7.8 MB",
+        status: "new",
+        cover: "assets/icon_transparent.png",
+        audioSrc: "assets/demo_espresso.wav",
+        lyrics: [
+          { time: 0.0, text: "(Guitar Riff Intro)" },
+          { time: 6.0, text: "Oh, I leave quite an impression" },
+          { time: 12.0, text: "Five feet to be exact" },
+          { time: 18.0, text: "You're wonderin' why you're obsessed with me" },
+          { time: 24.0, text: "He's gonna taste me when he's kissin' you" }
+        ]
+      },
+      {
+        id: "tr-notlikeus",
+        title: "Not Like Us",
+        artist: "Kendrick Lamar",
+        album: "Not Like Us",
+        duration: "00:35",
+        durationSec: 35,
+        format: "FLAC 24/96",
+        badge: "24b",
+        size: "8.1 MB",
+        status: "failed",
+        cover: "assets/icon_transparent.png",
+        audioSrc: "assets/demo_birds.wav",
+        lyrics: [
+          { time: 0.0, text: "(West Coast Beat Drop)" },
+          { time: 5.0, text: "Psst, I see dead people" },
+          { time: 11.0, text: "Mustard on the beat, ho" },
+          { time: 16.0, text: "They not like us, they not like us" }
+        ]
+      }
+    ];
+
+    /* Active Downloads Queue State */
+    let activeDownloads = [
+      {
+        id: "dl-1",
+        title: "Espresso",
+        artist: "Sabrina Carpenter",
+        progress: 72,
+        speed: "2.8 MB/s",
+        currentBytes: "6.2 MB",
+        totalBytes: "8.6 MB",
+        eta: "00:02s",
+        status: "downloading",
+        stageText: "Seg 18/24 • Direct Stream",
+        format: "FLAC 24/96",
+        color: "primary"
+      },
+      {
+        id: "dl-2",
+        title: "Good Luck, Babe!",
+        artist: "Chappell Roan",
+        progress: 88,
+        speed: "3.2 MB/s",
+        currentBytes: "9.4 MB",
+        totalBytes: "9.4 MB",
+        eta: "Syncing...",
+        status: "syncing_lrc",
+        stageText: "Embedding ID3 v2.4",
+        format: "FLAC 24/96",
+        color: "secondary"
+      },
+      {
+        id: "dl-3",
+        title: "Taste",
+        artist: "Sabrina Carpenter",
+        progress: 0,
+        speed: "Queued",
+        currentBytes: "0 MB",
+        totalBytes: "7.8 MB",
+        eta: "In Queue",
+        status: "queued",
+        stageText: "Waiting for concurrency slot",
+        format: "OPUS 320k",
+        color: "tertiary"
+      },
+      {
+        id: "dl-4",
+        title: "Not Like Us",
+        artist: "Kendrick Lamar",
+        progress: 12,
+        speed: "Failed",
+        currentBytes: "1.2 MB",
+        totalBytes: "8.1 MB",
+        eta: "--",
+        status: "failed",
+        stageText: "HTTP 429: Rate-limited by source endpoint",
+        format: "FLAC 24/96",
+        color: "error"
+      }
+    ];
+
+    let completedDownloads = [
+      {
+        id: "comp-1",
+        title: "Birds of a Feather",
+        artist: "Billie Eilish",
+        size: "6.2 MB",
+        format: "FLAC 24/96",
+        time: "Just now"
+      },
+      {
+        id: "comp-2",
+        title: "Please Please Please",
+        artist: "Sabrina Carpenter",
+        size: "7.4 MB",
+        format: "FLAC 24/96",
+        time: "12m ago"
+      },
+      {
+        id: "comp-3",
+        title: "HOT TO GO!",
+        artist: "Chappell Roan",
+        size: "6.8 MB",
+        format: "OPUS 320k",
+        time: "45m ago"
+      }
+    ];
+
+    /* ============================================================ */
+    /* 2. AUDIO PLAYBACK & LYRICS SYNCHRONIZATION ENGINE            */
+    /* ============================================================ */
+    const audio = document.getElementById('audio-engine');
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+    let isShuffle = false;
+    let repeatMode = 0; // 0: off, 1: all, 2: one
+    let autoScrollLocked = true;
+    let currentViewMode = 'lyrics'; // 'lyrics' or 'art'
+    let isLiked = true;
+
+    function initAudioEngine() {
+      loadTrack(0, false);
+
+      audio.addEventListener('timeupdate', () => {
+        if (!audio.duration) return;
+        const current = audio.currentTime;
+        const duration = audio.duration;
+        const pct = (current / duration) * 100;
+
+        // Update progress bars
+        document.getElementById('mini-progress-bar').style.width = pct + '%';
+        document.getElementById('player-played-bar').style.width = pct + '%';
+        document.getElementById('player-scrub-thumb').style.left = pct + '%';
+
+        // Update clocks
+        document.getElementById('player-elapsed-time').innerText = formatTime(current);
+        document.getElementById('player-remaining-time').innerText = '-' + formatTime(Math.max(0, duration - current));
+
+        // Sync Karaoke Lyrics
+        syncLyricsWithTime(current);
+      });
+
+      audio.addEventListener('ended', () => {
+        if (repeatMode === 2) {
+          audio.currentTime = 0;
+          audio.play();
+        } else {
+          skipNextTrack();
+        }
+      });
+    }
+
+    function loadTrack(index, autoPlay = true) {
+      if (index < 0 || index >= TRACKS_REPO.length) index = 0;
+      currentTrackIndex = index;
+      const track = TRACKS_REPO[index];
+
+      audio.src = track.audioSrc;
+      audio.load();
+
+      // Update Mini Player
+      document.getElementById('mini-track-title').innerText = track.title;
+      document.getElementById('mini-track-artist').innerText = track.artist;
+      document.getElementById('mini-track-badge').innerText = track.badge;
+      document.getElementById('mini-cover-art').src = track.cover;
+
+      // Update Now Playing Overlay
+      document.getElementById('overlay-title').innerText = track.title;
+      document.getElementById('overlay-artist').innerText = `${track.artist} — ${track.album}`;
+      document.getElementById('overlay-thumb').src = track.cover;
+      document.getElementById('vinyl-art-image').src = track.cover;
+
+      // Up next in queue
+      const nextIdx = (index + 1) % TRACKS_REPO.length;
+      document.getElementById('overlay-upnext-text').innerText = `${TRACKS_REPO[nextIdx].artist} — ${TRACKS_REPO[nextIdx].title}`;
+
+      // Render Lyrics
+      renderLyricsCanvas(track.lyrics);
+
+      if (autoPlay) {
+        audio.play().then(() => {
+          setPlayState(true);
+        }).catch(() => {
+          setPlayState(false);
+        });
+      } else {
+        setPlayState(false);
+      }
+
+      highlightActiveLibraryTrack();
+    }
+
+    function togglePlayPause() {
+      if (audio.paused) {
+        audio.play().then(() => {
+          setPlayState(true);
+        }).catch(err => {
+          console.warn("Audio play prevented:", err);
+        });
+      } else {
+        audio.pause();
+        setPlayState(false);
+      }
+    }
+
+    function setPlayState(playing) {
+      isPlaying = playing;
+      const miniIcon = document.getElementById('mini-play-icon');
+      const deckIcon = document.getElementById('deck-play-icon');
+      const vinylDisc = document.getElementById('vinyl-disc');
+
+      if (playing) {
+        miniIcon.innerText = 'pause';
+        deckIcon.innerText = 'pause';
+        if (vinylDisc) vinylDisc.classList.remove('animate-spin-paused');
+      } else {
+        miniIcon.innerText = 'play_arrow';
+        deckIcon.innerText = 'play_arrow';
+        if (vinylDisc) vinylDisc.classList.add('animate-spin-paused');
+      }
+    }
+
+    function skipNextTrack() {
+      let nextIndex;
+      if (isShuffle) {
+        nextIndex = Math.floor(Math.random() * TRACKS_REPO.length);
+      } else {
+        nextIndex = (currentTrackIndex + 1) % TRACKS_REPO.length;
+      }
+      loadTrack(nextIndex, true);
+      showToast(`Now Playing: ${TRACKS_REPO[nextIndex].title}`);
+    }
+
+    function skipPrevTrack() {
+      if (audio.currentTime > 3) {
+        audio.currentTime = 0;
+        return;
+      }
+      let prevIndex = (currentTrackIndex - 1 + TRACKS_REPO.length) % TRACKS_REPO.length;
+      loadTrack(prevIndex, true);
+      showToast(`Now Playing: ${TRACKS_REPO[prevIndex].title}`);
+    }
+
+    function toggleShuffle() {
+      isShuffle = !isShuffle;
+      const btn = document.getElementById('deck-shuffle-btn');
+      const dot = document.getElementById('deck-shuffle-dot');
+      if (isShuffle) {
+        btn.classList.add('text-primary');
+        dot.classList.remove('hidden');
+        showToast("Shuffle Mode: ON");
+      } else {
+        btn.classList.remove('text-primary');
+        dot.classList.add('hidden');
+        showToast("Shuffle Mode: OFF");
+      }
+    }
+
+    function cycleRepeatMode() {
+      repeatMode = (repeatMode + 1) % 3;
+      const btn = document.getElementById('deck-repeat-btn');
+      const icon = document.getElementById('deck-repeat-icon');
+      const dot = document.getElementById('deck-repeat-dot');
+
+      if (repeatMode === 0) {
+        btn.classList.remove('text-primary');
+        icon.innerText = 'repeat';
+        dot.classList.add('hidden');
+        showToast("Repeat: OFF");
+      } else if (repeatMode === 1) {
+        btn.classList.add('text-primary');
+        icon.innerText = 'repeat';
+        dot.classList.remove('hidden');
+        showToast("Repeat: ALL");
+      } else {
+        btn.classList.add('text-primary');
+        icon.innerText = 'repeat_one';
+        dot.classList.remove('hidden');
+        showToast("Repeat: ONE");
+      }
+    }
+
+    function toggleTrackLike() {
+      isLiked = !isLiked;
+      const icon = document.getElementById('player-like-icon');
+      if (isLiked) {
+        icon.style.color = '#53e076';
+        icon.style.fontVariationSettings = "'FILL' 1";
+        showToast("Added to Vault Favorites");
+      } else {
+        icon.style.color = '#bccbb9';
+        icon.style.fontVariationSettings = "'FILL' 0";
+        showToast("Removed from Favorites");
+      }
+    }
+
+    function handleScrubClick(e) {
+      const track = document.getElementById('player-scrubber-track');
+      const rect = track.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+      if (audio.duration) {
+        audio.currentTime = percentage * audio.duration;
+      }
+    }
+
+    function formatTime(seconds) {
+      const min = Math.floor(seconds / 60);
+      const sec = Math.floor(seconds % 60);
+      return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    /* ============================================================ */
+    /* 3. SYNCED KARAOKE LYRICS ENGINE                              */
+    /* ============================================================ */
+    let currentLyricsData = [];
+    let activeLyricIndex = -1;
+
+    function parseLrc(lrcContent) {
+      if (!lrcContent) return [];
+      const lines = lrcContent.split('\n');
+      const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/;
+      const parsed = [];
+      for (const line of lines) {
+        const match = timeRegex.exec(line.trim());
+        if (match) {
+          const minutes = parseInt(match[1], 10);
+          const seconds = parseInt(match[2], 10);
+          const ms = parseInt(match[3].padEnd(3, '0').slice(0, 3), 10);
+          parsed.push({ time: minutes * 60 + seconds + ms / 1000, text: match[4].trim() });
+        }
+      }
+      return parsed.sort((a, b) => a.time - b.time);
+    }
+
+    function renderLyricsCanvas(lyrics) {
+      currentLyricsData = lyrics || [];
+      activeLyricIndex = -1;
+      const container = document.getElementById('lyrics-viewport');
+      container.innerHTML = '';
+
+      if (currentLyricsData.length === 0) {
+        container.innerHTML = '<div class="py-12 text-center text-xs font-mono text-on-surface-variant">No synced karaoke lyrics found for this track.</div>';
+        return;
+      }
+
+      currentLyricsData.forEach((item, idx) => {
+        const lineEl = document.createElement('div');
+        lineEl.id = `lyric-line-${idx}`;
+        lineEl.className = 'group flex items-start justify-between cursor-pointer p-2.5 rounded-xl transition-all duration-200 opacity-40 hover:opacity-90';
+        lineEl.onclick = () => seekToLyricTime(item.time);
+
+        lineEl.innerHTML = `
+          <div class="flex flex-col min-w-0 pr-2">
+            <span class="font-mono text-[10px] text-on-surface-variant/70 tracking-wider mb-0.5">${formatTime(item.time)}</span>
+            <p class="text-sm text-on-surface font-semibold tracking-tight transition-colors line-text">${item.text}</p>
+          </div>
+          <span class="material-symbols-outlined text-primary text-[18px] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">play_circle</span>
+        `;
+        container.appendChild(lineEl);
+      });
+    }
+
+    function syncLyricsWithTime(currentTime) {
+      if (!currentLyricsData.length) return;
+
+      let foundIndex = -1;
+      for (let i = 0; i < currentLyricsData.length; i++) {
+        if (currentTime >= currentLyricsData[i].time) {
+          foundIndex = i;
+        } else {
+          break;
+        }
+      }
+
+      if (foundIndex !== activeLyricIndex) {
+        // Remove previous highlight
+        if (activeLyricIndex >= 0) {
+          const prevEl = document.getElementById(`lyric-line-${activeLyricIndex}`);
+          if (prevEl) {
+            prevEl.classList.remove('lyric-active', 'opacity-100');
+            prevEl.classList.add('opacity-45');
+            const txt = prevEl.querySelector('.line-text');
+            if (txt) txt.classList.remove('text-primary', 'text-base', 'font-bold');
+          }
+        }
+
+        // Apply new highlight
+        activeLyricIndex = foundIndex;
+        if (activeLyricIndex >= 0) {
+          const currentEl = document.getElementById(`lyric-line-${activeLyricIndex}`);
+          if (currentEl) {
+            currentEl.classList.add('lyric-active', 'opacity-100');
+            currentEl.classList.remove('opacity-40', 'opacity-45');
+            const txt = currentEl.querySelector('.line-text');
+            if (txt) txt.classList.add('text-primary', 'text-base', 'font-bold');
+
+            // Auto-scroll if locked
+            if (autoScrollLocked) {
+              currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        }
+      }
+    }
+
+    function seekToLyricTime(timestamp) {
+      audio.currentTime = timestamp;
+      if (audio.paused) {
+        audio.play().then(() => setPlayState(true));
+      }
+      showToast(`Jumped to: ${formatTime(timestamp)}`);
+    }
+
+    function toggleAutoScrollLock() {
+      autoScrollLocked = !autoScrollLocked;
+      const dot = document.getElementById('autoscroll-dot');
+      const label = document.getElementById('autoscroll-label');
+      const icon = document.getElementById('autoscroll-icon');
+
+      if (autoScrollLocked) {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-primary';
+        label.innerText = 'Auto-Scroll Locked';
+        icon.innerText = 'lock';
+        showToast("Lyrics Auto-Scroll Locked");
+        if (activeLyricIndex >= 0) {
+          const activeEl = document.getElementById(`lyric-line-${activeLyricIndex}`);
+          if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-on-surface-variant';
+        label.innerText = 'Manual Scroll Mode';
+        icon.innerText = 'lock_open';
+        showToast("Manual Lyrics Browsing Mode");
+      }
+    }
+
+    function switchNowPlayingView(mode) {
+      currentViewMode = mode;
+      const artBtn = document.getElementById('btn-mode-art');
+      const lyricsBtn = document.getElementById('btn-mode-lyrics');
+      const artView = document.getElementById('view-cover-art');
+      const lyricsView = document.getElementById('view-synced-lyrics');
+
+      if (mode === 'art') {
+        artBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono uppercase font-bold tracking-wide transition-all duration-200 bg-surface-bright text-primary shadow-sm';
+        lyricsBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono uppercase transition-all duration-200 text-on-surface-variant hover:text-on-surface';
+        artView.classList.remove('hidden');
+        artView.classList.add('flex');
+        lyricsView.classList.add('hidden');
+        lyricsView.classList.remove('flex');
+      } else {
+        lyricsBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono uppercase font-bold tracking-wide transition-all duration-200 bg-surface-bright text-primary shadow-sm';
+        artBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono uppercase transition-all duration-200 text-on-surface-variant hover:text-on-surface';
+        lyricsView.classList.remove('hidden');
+        lyricsView.classList.add('flex');
+        artView.classList.add('hidden');
+        artView.classList.remove('flex');
+        if (activeLyricIndex >= 0) {
+          const activeEl = document.getElementById(`lyric-line-${activeLyricIndex}`);
+          if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+
+    function openNowPlayingModal(initialMode = null) {
+      const modal = document.getElementById('now-playing-overlay');
+      modal.classList.add('open');
+      if (initialMode) switchNowPlayingView(initialMode);
+    }
+
+    function closeNowPlayingModal() {
+      const modal = document.getElementById('now-playing-overlay');
+      modal.classList.remove('open');
+    }
+
+    // Touch swipe-up to expand mini player & swipe-down to collapse overlay
+    (function initMiniPlayerSwipeGestures() {
+      let miniTouchStartY = 0;
+      const mini = document.getElementById('persistent-mini-player');
+      if (mini) {
+        mini.addEventListener('touchstart', (e) => {
+          miniTouchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        mini.addEventListener('touchend', (e) => {
+          const touchEndY = e.changedTouches[0].clientY;
+          if (miniTouchStartY - touchEndY > 30) {
+            openNowPlayingModal();
+          }
+        }, { passive: true });
+      }
+
+      let overlayTouchStartY = 0;
+      const overlay = document.getElementById('now-playing-overlay');
+      if (overlay) {
+        overlay.addEventListener('touchstart', (e) => {
+          overlayTouchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        overlay.addEventListener('touchend', (e) => {
+          const touchEndY = e.changedTouches[0].clientY;
+          if (touchEndY - overlayTouchStartY > 50 && overlay.scrollTop <= 10) {
+            closeNowPlayingModal();
+          }
+        }, { passive: true });
+      }
+    })();
+
+    /* ============================================================ */
+    /* 4. CLIENT-SIDE ROUTING & NAVIGATION CONTROLLER               */
+    /* ============================================================ */
+    function navigateTo(screenId) {
+      if (screenId === 'now-playing' || screenId === 'now-playing-player') {
+        openNowPlayingModal();
+        return;
+      }
+
+      // Hide all screens
+      const screens = document.querySelectorAll('.screen-view');
+      screens.forEach(s => s.classList.remove('active'));
+
+      // Show target screen
+      const target = document.getElementById(`screen-${screenId}`);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Update Nav Bar active states
+      const navTabs = document.querySelectorAll('.nav-tab');
+      navTabs.forEach(tab => {
+        if (tab.dataset.screen === screenId) {
+          tab.classList.remove('text-on-surface-variant');
+          tab.classList.add('text-primary');
+        } else {
+          tab.classList.remove('text-primary');
+          tab.classList.add('text-on-surface-variant');
+        }
+      });
+
+      // Update URL hash without reloads
+      window.location.hash = screenId;
+    }
+
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.replace('#', '') || 'home-ingest';
+      if (hash === 'now-playing' || hash === 'now-playing-player') {
+        openNowPlayingModal();
+      } else {
+        navigateTo(hash);
+      }
+    });
+
+    /* ============================================================ */
+    /* 5. SCREEN 1: LINK INGESTION CONTROLLER                       */
+    /* ============================================================ */
+    let currentPlatform = 'spotify';
+
+    function setPlatform(platform) {
+      currentPlatform = platform;
+      const buttons = document.querySelectorAll('.platform-btn');
+      buttons.forEach(btn => {
+        if (btn.dataset.platform === platform) {
+          btn.className = 'platform-btn flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 bg-surface-container-high text-primary border border-primary/30 shadow-[0_0_12px_rgba(83,224,118,0.25)]';
+        } else {
+          btn.className = 'platform-btn flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high';
+        }
+      });
+
+      const iconMap = {
+        spotify: 'graphic_eq',
+        youtube: 'smart_display',
+        applemusic: 'album',
+        soundcloud: 'cloud'
+      };
+
+      const placeholderMap = {
+        spotify: 'Paste Spotify URL (open.spotify.com/playlist/...)',
+        youtube: 'Paste YouTube URL (youtube.com/watch?v=...)',
+        applemusic: 'Paste Apple Music URL (music.apple.com/...)',
+        soundcloud: 'Paste SoundCloud URL (soundcloud.com/...)'
+      };
+
+      document.getElementById('input-platform-icon').innerHTML = `<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">${iconMap[platform]}</span>`;
+      document.getElementById('url-input').placeholder = placeholderMap[platform];
+    }
+
+    async function handleSmartPaste() {
+      const input = document.getElementById('url-input');
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            input.value = text;
+            showToast("Pasted from clipboard");
+            return;
+          }
+        }
+      } catch (e) {}
+      input.value = 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M';
+      showToast("Pasted Spotify Playlist Link");
+    }
+
+    function clearUrlInput() {
+      document.getElementById('url-input').value = '';
+    }
+
+    function loadHistoryItem(url, platform) {
+      setPlatform(platform);
+      document.getElementById('url-input').value = url;
+      showToast(`Loaded ${platform} stream URL`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearIngestHistory() {
+      document.getElementById('history-list').innerHTML = '<div class="p-4 text-center text-xs font-mono text-on-surface-variant">History cleared.</div>';
+      document.getElementById('history-count').innerText = '0';
+      showToast("Ingestion history cleared");
+    }
+
+    let isExtracting = false;
+    function startExtractionSimulator() {
+      if (isExtracting) return;
+      const url = document.getElementById('url-input').value.trim();
+      if (!url) {
+        showToast("Please enter a valid URL");
+        return;
+      }
+
+      isExtracting = true;
+      const btn = document.getElementById('process-btn');
+      const btnText = document.getElementById('process-text');
+      const btnIcon = document.getElementById('process-icon');
+      const card = document.getElementById('extraction-status-card');
+      const pct = document.getElementById('extraction-pct');
+      const bar = document.getElementById('extraction-bar');
+      const step = document.getElementById('extraction-step');
+
+      btn.disabled = true;
+      btnText.innerText = 'Extracting Audio Manifest...';
+      btnIcon.innerText = 'hourglass_empty';
+      btnIcon.classList.add('animate-spin');
+
+      card.classList.remove('hidden');
+      card.classList.add('flex');
+
+      let progress = 10;
+      pct.innerText = progress + '%';
+      bar.style.width = progress + '%';
+      step.innerText = 'Handshaking with platform gateway...';
+
+      const interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 20) + 14;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          pct.innerText = '100%';
+          bar.style.width = '100%';
+          step.innerText = 'Manifest parsed! 50 tracks ready for download.';
+
+          setTimeout(() => {
+            isExtracting = false;
+            btn.disabled = false;
+            btnText.innerText = 'Process Link & Fetch Metadata';
+            btnIcon.innerText = 'bolt';
+            btnIcon.classList.remove('animate-spin');
+            card.classList.add('hidden');
+            card.classList.remove('flex');
+
+            // Seamlessly route to Screen 2: Playlist Inspector
+            navigateTo('playlist-inspector');
+            showToast("Manifest Loaded: 50 Tracks Ready");
+          }, 800);
+        } else {
+          pct.innerText = progress + '%';
+          bar.style.width = progress + '%';
+          if (progress > 35 && progress < 70) {
+            step.innerText = 'Extracting ISRC keys & HD album artwork...';
+          } else if (progress >= 70) {
+            step.innerText = 'Synthesizing FLAC 24-bit audio tags & lyrics...';
+          }
+        }
+      }, 250);
+    }
+
+    /* ============================================================ */
+    /* 6. SCREEN 2: PLAYLIST INSPECTOR CONTROLLER                   */
+    /* ============================================================ */
+    let inspectorTracks = [
+      { id: "p1", title: "Espresso", artist: "Sabrina Carpenter", duration: "02:55", size: 7.4, status: "new", checked: true },
+      { id: "p2", title: "Birds of a Feather", artist: "Billie Eilish", duration: "03:30", size: 8.2, status: "downloaded", checked: true },
+      { id: "p3", title: "Good Luck, Babe!", artist: "Chappell Roan", duration: "03:38", size: 8.5, status: "new", checked: true },
+      { id: "p4", title: "A Bar Song (Tipsy)", artist: "Shaboozey", duration: "02:51", size: 6.9, status: "downloaded", checked: false },
+      { id: "p5", title: "Taste", artist: "Sabrina Carpenter", duration: "02:37", size: 7.1, status: "new", checked: true },
+      { id: "p6", title: "Not Like Us", artist: "Kendrick Lamar", duration: "04:34", size: 10.4, status: "failed", checked: false },
+      { id: "p7", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", duration: "04:11", size: 9.8, status: "new", checked: true },
+      { id: "p8", title: "Lose Control", artist: "Teddy Swims", duration: "03:30", size: 8.3, status: "downloaded", checked: false }
+    ];
+
+    function renderInspectorList() {
+      const container = document.getElementById('inspector-tracklist');
+      container.innerHTML = '';
+
+      inspectorTracks.forEach((t, i) => {
+        const row = document.createElement('div');
+        row.id = `insp-row-${t.id}`;
+        row.className = `track-row group flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low border border-white/5 hover:bg-surface-container transition-colors cursor-pointer`;
+        row.onclick = () => toggleInspectorCheck(t.id);
+
+        const checkClass = t.checked ? 'bg-primary text-on-primary' : 'bg-surface-container-highest text-transparent';
+
+        row.innerHTML = `
+          <button class="track-checkbox w-6 h-6 rounded-lg ${checkClass} flex items-center justify-center flex-shrink-0 transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[16px] font-bold">check</span>
+          </button>
+          <span class="text-xs font-mono text-on-surface-variant w-5 text-center tabular-nums flex-shrink-0">${String(i+1).padStart(2, '0')}</span>
+          <div class="flex flex-col min-w-0 flex-1">
+            <span class="text-xs font-semibold text-on-surface truncate">${t.title}</span>
+            <span class="text-[11px] text-on-surface-variant truncate">${t.artist}</span>
+          </div>
+          <div class="flex flex-col items-end gap-1 flex-shrink-0 font-mono">
+            <span class="text-[11px] text-on-surface-variant">${t.duration}</span>
+            ${t.status === 'downloaded' 
+              ? '<span class="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] flex items-center gap-1"><span class="material-symbols-outlined text-[11px]">check_circle</span>Downloaded</span>' 
+              : '<span class="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary text-[10px]">New</span>'}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      updateInspectorCTA();
+    }
+
+    function toggleInspectorCheck(id) {
+      const item = inspectorTracks.find(t => t.id === id);
+      if (item) {
+        item.checked = !item.checked;
+        renderInspectorList();
+      }
+    }
+
+    function selectAllTracks() {
+      inspectorTracks.forEach(t => t.checked = true);
+      renderInspectorList();
+      showToast("Selected all tracks");
+    }
+
+    function deselectAllTracks() {
+      inspectorTracks.forEach(t => t.checked = false);
+      renderInspectorList();
+      showToast("Deselected all tracks");
+    }
+
+    function deselectExistingTracks() {
+      inspectorTracks.forEach(t => {
+        if (t.status === 'downloaded') t.checked = false;
+      });
+      renderInspectorList();
+      showToast("Deselected already downloaded tracks");
+    }
+
+    function updateInspectorCTA() {
+      const selected = inspectorTracks.filter(t => t.checked);
+      const totalSize = selected.reduce((sum, t) => sum + t.size, 0).toFixed(1);
+      const ctaBtn = document.getElementById('inspector-download-cta');
+
+      document.getElementById('inspector-cta-label').innerText = `Download ${selected.length} Track${selected.length !== 1 ? 's' : ''}`;
+      document.getElementById('inspector-cta-size').innerText = `${totalSize} MB`;
+
+      if (selected.length === 0) {
+        ctaBtn.classList.add('opacity-50', 'pointer-events-none');
+      } else {
+        ctaBtn.classList.remove('opacity-50', 'pointer-events-none');
+      }
+    }
+
+    function filterInspectorTracks() {
+      const query = document.getElementById('inspector-search').value.toLowerCase().trim();
+      const clearBtn = document.getElementById('inspector-clear-search');
+      if (query) {
+        clearBtn.classList.remove('hidden');
+        clearBtn.classList.add('flex');
+      } else {
+        clearBtn.classList.add('hidden');
+        clearBtn.classList.remove('flex');
+      }
+
+      inspectorTracks.forEach(t => {
+        const row = document.getElementById(`insp-row-${t.id}`);
+        if (!row) return;
+        const match = t.title.toLowerCase().includes(query) || t.artist.toLowerCase().includes(query);
+        row.style.display = match ? 'flex' : 'none';
+      });
+    }
+
+    function clearInspectorSearch() {
+      document.getElementById('inspector-search').value = '';
+      filterInspectorTracks();
+    }
+
+    function downloadSelectedTracks() {
+      const selected = inspectorTracks.filter(t => t.checked);
+      if (!selected.length) return;
+
+      selected.forEach(t => {
+        // Add to active downloads
+        activeDownloads.unshift({
+          id: `dl-${Date.now()}-${t.id}`,
+          title: t.title,
+          artist: t.artist,
+          progress: 5,
+          speed: "3.4 MB/s",
+          currentBytes: "0.4 MB",
+          totalBytes: `${t.size} MB`,
+          eta: "00:04s",
+          status: "downloading",
+          stageText: "Direct Stream Acquisition",
+          format: "FLAC 24/96",
+          color: "primary"
+        });
+      });
+
+      renderDownloadsList();
+      navigateTo('active-downloads');
+      showToast(`Added ${selected.length} tracks to Download Queue!`);
+    }
+
+    /* ============================================================ */
+    /* 7. SCREEN 3: DOWNLOAD TASK MANAGER CONTROLLER                */
+    /* ============================================================ */
+    function renderDownloadsList() {
+      const container = document.getElementById('downloads-active-list');
+      container.innerHTML = '';
+
+      document.getElementById('active-tasks-badge').innerText = activeDownloads.length;
+      document.getElementById('completed-tasks-badge').innerText = completedDownloads.length;
+      document.getElementById('header-active-count').innerText = `${activeDownloads.length} Active`;
+      document.getElementById('nav-downloads-badge').innerText = activeDownloads.length;
+
+      if (activeDownloads.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-xs font-mono text-on-surface-variant">No active downloads in queue.</div>';
+        return;
+      }
+
+      activeDownloads.forEach(task => {
+        const card = document.createElement('div');
+        card.className = `bg-surface-container border border-white/5 rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-xl relative overflow-hidden`;
+
+        let statusBadge = '';
+        if (task.status === 'downloading') {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">Downloading ${task.progress}%</span>`;
+        } else if (task.status === 'syncing_lrc') {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-[10px] font-mono font-bold">Syncing LRC</span>`;
+        } else if (task.status === 'queued') {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant text-[10px] font-mono">Queued</span>`;
+        } else if (task.status === 'failed') {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full bg-error/20 text-error text-[10px] font-mono font-bold">Failed</span>`;
+        }
+
+        const progressBarColor = task.status === 'failed' ? 'bg-error' : (task.status === 'syncing_lrc' ? 'bg-secondary' : 'bg-primary');
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-11 h-11 rounded-xl bg-surface-container-high overflow-hidden flex-shrink-0 flex items-center justify-center border border-white/5">
+                <span class="material-symbols-outlined text-[20px] text-primary">audiotrack</span>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-xs font-bold text-on-surface truncate">${task.title}</span>
+                <span class="text-[11px] text-on-surface-variant truncate">${task.artist}</span>
+              </div>
+            </div>
+            ${statusBadge}
+          </div>
+
+          <div class="w-full flex flex-col gap-1.5">
+            <div class="w-full h-1.5 rounded-full bg-surface-variant overflow-hidden relative">
+              <div class="h-full ${progressBarColor} rounded-full transition-all duration-300" style="width: ${task.progress}%;"></div>
+            </div>
+            <div class="flex items-center justify-between font-mono text-[10px] text-on-surface-variant">
+              <span>${task.currentBytes} / ${task.totalBytes}</span>
+              <span class="text-secondary font-semibold">${task.speed}</span>
+              <span>ETA: ${task.eta}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary text-[10px] font-mono">${task.format}</span>
+              <span class="text-[11px] text-on-surface-variant truncate">${task.stageText}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              ${task.status === 'failed' ? `
+                <button onclick="retryTask('${task.id}')" class="h-7 px-2.5 rounded-full bg-error text-on-error hover:bg-error-container text-xs font-mono font-bold flex items-center gap-1 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px]">refresh</span>
+                  <span>Retry</span>
+                </button>
+              ` : `
+                <button onclick="togglePauseTask('${task.id}')" class="w-7 h-7 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface transition-transform active:scale-95 cursor-pointer">
+                  <span class="material-symbols-outlined text-[16px]">${task.status === 'paused' ? 'play_arrow' : 'pause'}</span>
+                </button>
+              `}
+              <button onclick="cancelTask('${task.id}')" class="w-7 h-7 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface-variant hover:text-error transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderCompletedList() {
+      const container = document.getElementById('downloads-completed-list');
+      container.innerHTML = '';
+
+      if (completedDownloads.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-xs font-mono text-on-surface-variant">No completed downloads yet.</div>';
+        return;
+      }
+
+      completedDownloads.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'p-3 rounded-2xl bg-surface-container border border-white/5 flex items-center justify-between gap-3 shadow-md';
+        row.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-[20px]">check_circle</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-xs font-bold text-on-surface truncate">${item.title}</span>
+              <span class="text-[11px] text-on-surface-variant truncate">${item.artist}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="text-[10px] font-mono text-secondary px-1.5 py-0.5 rounded bg-surface-container-high">${item.format}</span>
+            <button onclick="playCompletedTrack('${item.title}')" class="h-8 px-3 rounded-xl bg-surface-container-high hover:bg-primary hover:text-on-primary text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+              Play
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function switchDownloadTab(tab) {
+      const activeBtn = document.getElementById('dl-tab-active');
+      const compBtn = document.getElementById('dl-tab-completed');
+      const activeList = document.getElementById('downloads-active-list');
+      const compList = document.getElementById('downloads-completed-list');
+
+      if (tab === 'active') {
+        activeBtn.className = 'flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary font-bold text-xs font-mono flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer';
+        compBtn.className = 'flex-1 py-2 px-3 rounded-lg bg-transparent text-on-surface-variant hover:text-on-surface font-medium text-xs font-mono flex items-center justify-center gap-2 transition-all cursor-pointer';
+        activeList.classList.remove('hidden');
+        compList.classList.add('hidden');
+      } else {
+        compBtn.className = 'flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary font-bold text-xs font-mono flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer';
+        activeBtn.className = 'flex-1 py-2 px-3 rounded-lg bg-transparent text-on-surface-variant hover:text-on-surface font-medium text-xs font-mono flex items-center justify-center gap-2 transition-all cursor-pointer';
+        compList.classList.remove('hidden');
+        activeList.classList.add('hidden');
+        renderCompletedList();
+      }
+    }
+
+    function togglePauseTask(id) {
+      const t = activeDownloads.find(item => item.id === id);
+      if (t) {
+        if (t.status === 'paused') {
+          t.status = 'downloading';
+          t.speed = '2.9 MB/s';
+          showToast(`Resumed ${t.title}`);
+        } else {
+          t.status = 'paused';
+          t.speed = 'Paused';
+          showToast(`Paused ${t.title}`);
+        }
+        renderDownloadsList();
+      }
+    }
+
+    function cancelTask(id) {
+      activeDownloads = activeDownloads.filter(t => t.id !== id);
+      renderDownloadsList();
+      showToast("Download task cancelled");
+    }
+
+    function retryTask(id) {
+      const t = activeDownloads.find(item => item.id === id);
+      if (t) {
+        t.status = 'downloading';
+        t.speed = '3.1 MB/s';
+        t.progress = 25;
+        t.stageText = 'Retrying gateway link extraction...';
+        renderDownloadsList();
+        showToast(`Retrying ${t.title}`);
+      }
+    }
+
+    function pauseAllDownloads() {
+      activeDownloads.forEach(t => {
+        if (t.status === 'downloading') {
+          t.status = 'paused';
+          t.speed = 'Paused';
+        }
+      });
+      renderDownloadsList();
+      showToast("Paused all download tasks");
+    }
+
+    function resumeAllDownloads() {
+      activeDownloads.forEach(t => {
+        if (t.status === 'paused') {
+          t.status = 'downloading';
+          t.speed = '3.0 MB/s';
+        }
+      });
+      renderDownloadsList();
+      showToast("Resumed all download tasks");
+    }
+
+    function clearCompletedDownloads() {
+      completedDownloads = [];
+      renderCompletedList();
+      showToast("Cleared completed history");
+    }
+
+    function playCompletedTrack(title) {
+      const foundIdx = TRACKS_REPO.findIndex(t => t.title.toLowerCase().includes(title.toLowerCase()));
+      if (foundIdx >= 0) {
+        loadTrack(foundIdx, true);
+        openNowPlayingModal();
+      } else {
+        loadTrack(0, true);
+        openNowPlayingModal();
+      }
+    }
+
+    /* ============================================================ */
+    /* 8. SCREEN 4: OFFLINE MUSIC LIBRARY CONTROLLER                */
+    /* ============================================================ */
+    let libraryCategory = 'tracks';
+    let isFlacOnly = false;
+    let selectedSort = 'date-desc';
+
+    function renderLibraryList() {
+      const container = document.getElementById('library-track-list');
+      container.innerHTML = '';
+
+      let list = [...TRACKS_REPO];
+
+      if (isFlacOnly) {
+        list = list.filter(t => t.format.includes('FLAC'));
+      }
+
+      const query = (document.getElementById('library-search')?.value || '').toLowerCase().trim();
+      if (query) {
+        list = list.filter(t => t.title.toLowerCase().includes(query) || t.artist.toLowerCase().includes(query));
+      }
+
+      // Sort
+      if (selectedSort === 'title-asc') {
+        list.sort((a, b) => a.title.localeCompare(b.title));
+      } else if (selectedSort === 'artist-asc') {
+        list.sort((a, b) => a.artist.localeCompare(b.artist));
+      } else if (selectedSort === 'size-desc') {
+        list.sort((a, b) => parseFloat(b.size) - parseFloat(a.size));
+      }
+
+      document.getElementById('library-track-count').innerText = `${list.length} Track${list.length !== 1 ? 's' : ''}`;
+
+      list.forEach(t => {
+        const isCurrent = (TRACKS_REPO[currentTrackIndex]?.id === t.id);
+        const row = document.createElement('div');
+        row.id = `lib-row-${t.id}`;
+        row.className = `p-2.5 rounded-2xl ${isCurrent ? 'bg-surface-container-high border border-primary/40 shadow-[0_0_20px_rgba(83,224,118,0.2)]' : 'bg-surface-container-low border border-white/5'} hover:bg-surface-container transition-all flex items-center justify-between gap-3 cursor-pointer`;
+        row.onclick = () => {
+          const idx = TRACKS_REPO.findIndex(item => item.id === t.id);
+          if (idx >= 0) {
+            loadTrack(idx, true);
+          }
+        };
+
+        row.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-highest border border-white/10 shadow-md">
+              <img src="${t.cover}" alt="${t.title}" class="w-full h-full object-cover">
+              ${isCurrent ? `
+                <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <div class="flex items-end gap-[2px] h-3.5">
+                    <span class="w-[2.5px] bg-primary rounded-full eq-bar-1"></span>
+                    <span class="w-[2.5px] bg-primary rounded-full eq-bar-2"></span>
+                    <span class="w-[2.5px] bg-primary rounded-full eq-bar-3"></span>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+            <div class="flex flex-col min-w-0 pr-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold ${isCurrent ? 'text-primary' : 'text-on-surface'} truncate">${t.title}</span>
+                <span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-mono font-bold">${t.badge}</span>
+              </div>
+              <span class="text-[11px] text-on-surface-variant truncate mt-0.5">${t.artist}</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-shrink-0 font-mono">
+            <span class="text-[11px] text-on-surface-variant">${t.duration}</span>
+            <button onclick="event.stopPropagation(); openContextMenu('${t.id}')" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">more_vert</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function highlightActiveLibraryTrack() {
+      renderLibraryList();
+    }
+
+    function setLibraryCategory(cat, btn) {
+      libraryCategory = cat;
+      const buttons = document.querySelectorAll('.lib-cat-btn');
+      buttons.forEach(b => {
+        b.className = 'lib-cat-btn px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface text-xs font-mono font-medium flex items-center gap-1.5 transition-colors flex-shrink-0 cursor-pointer';
+      });
+      btn.className = 'lib-cat-btn px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_16px_rgba(29,185,84,0.3)] transition-transform active:scale-95 flex-shrink-0 cursor-pointer';
+      showToast(`Category: ${cat.toUpperCase()}`);
+    }
+
+    function filterLibraryTracks() {
+      renderLibraryList();
+    }
+
+    function toggleFlacOnlyFilter() {
+      isFlacOnly = !isFlacOnly;
+      const chip = document.getElementById('flac-only-chip');
+      if (isFlacOnly) {
+        chip.classList.add('bg-secondary/20', 'border-secondary/40', 'text-secondary');
+        showToast("Filtering: FLAC only");
+      } else {
+        chip.classList.remove('bg-secondary/20', 'border-secondary/40');
+        showToast("Filtering: All formats");
+      }
+      renderLibraryList();
+    }
+
+    function toggleSortDropdown() {
+      const menu = document.getElementById('sort-dropdown-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function applySort(sortKey, label) {
+      selectedSort = sortKey;
+      document.getElementById('current-sort-label').innerText = label;
+      document.getElementById('sort-dropdown-menu').classList.add('hidden');
+      renderLibraryList();
+      showToast(`Sorted by: ${label}`);
+    }
+
+    function shuffleAllLibrary() {
+      const randomIdx = Math.floor(Math.random() * TRACKS_REPO.length);
+      loadTrack(randomIdx, true);
+      openNowPlayingModal();
+      showToast(`Shuffled & Playing: ${TRACKS_REPO[randomIdx].title}`);
+    }
+
+    /* Context Action Bottom Sheet */
+    let contextActiveTrackId = null;
+
+    function openContextMenu(trackId) {
+      contextActiveTrackId = trackId;
+      const track = TRACKS_REPO.find(t => t.id === trackId);
+      if (!track) return;
+
+      document.getElementById('context-sheet-title').innerText = track.title;
+      document.getElementById('context-sheet-artist').innerText = track.artist;
+      document.getElementById('context-sheet-art').src = track.cover;
+
+      const sheet = document.getElementById('context-sheet-backdrop');
+      sheet.classList.remove('hidden');
+    }
+
+    function closeContextMenu() {
+      document.getElementById('context-sheet-backdrop').classList.add('hidden');
+      contextActiveTrackId = null;
+    }
+
+    function contextAction(action) {
+      const track = TRACKS_REPO.find(t => t.id === contextActiveTrackId);
+      closeContextMenu();
+      if (!track) return;
+
+      if (action === 'play-next') {
+        showToast(`'${track.title}' set as Next Track`);
+      } else if (action === 'view-lyrics') {
+        const idx = TRACKS_REPO.findIndex(t => t.id === track.id);
+        loadTrack(idx, true);
+        openNowPlayingModal('lyrics');
+      } else if (action === 'share') {
+        showToast(`Lossless export: ${track.title}.flac`);
+      } else if (action === 'delete') {
+        showToast(`Purged '${track.title}' from local vault`);
+      }
+    }
+
+    /* ============================================================ */
+    /* 9. SCREEN 6: APP SETTINGS CONTROLLER                         */
+    /* ============================================================ */
+    function updateConcurrency(value) {
+      const badge = document.getElementById('concurrency-val');
+      badge.innerText = `${value} Thread${value > 1 ? 's' : ''}`;
+    }
+
+    function clearAppCache() {
+      const btn = document.getElementById('clear-cache-btn');
+      const banner = document.getElementById('cache-cleared-banner');
+      const display = document.getElementById('cache-size-display');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+      display.innerText = '0 MB';
+      banner.classList.remove('hidden');
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        showToast("Cache Cleared: 48 MB Purged");
+      }, 1000);
+    }
+
+    function checkAppUpdates() {
+      const btn = document.getElementById('check-updates-btn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">autorenew</span> Checking...`;
+
+      setTimeout(() => {
+        btn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-primary">check</span> Latest Build`;
+        showToast("BeatVault Mobile is on the latest build");
+        setTimeout(() => {
+          btn.innerHTML = orig;
+        }, 2500);
+      }, 900);
+    }
+
+    /* Toast Notification Helper */
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById('toast-pill');
+      document.getElementById('toast-text').innerText = message;
+      toast.classList.remove('opacity-0', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-2');
+      }, 2400);
+    }
+
+    /* ============================================================ */
+    /* 10. INITIALIZATION & PWA SERVICE WORKER REGISTRATION         */
+    /* ============================================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+      initAudioEngine();
+      renderInspectorList();
+      renderDownloadsList();
+      renderLibraryList();
+
+      // Check initial URL hash
+      const hash = window.location.hash.replace('#', '');
+      if (hash && hash !== 'home-ingest') {
+        if (hash === 'now-playing') {
+          openNowPlayingModal();
+        } else {
+          navigateTo(hash);
+        }
+      }
+
+      // Register PWA Service Worker for offline performance
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('BeatVault Mobile: Service Worker registered'))
+          .catch(err => console.log('SW registration error:', err));
+      }
+    });
+  </script>
+</body>
+</html>

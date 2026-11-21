@@ -449,3 +449,32 @@ class AppAPI:
             delay_seconds=delay_seconds,
         )
 
+    # =========================================================================
+    # High-level API Bridge Compatibility Aliases
+    # =========================================================================
+    def get_playlist(self, url: str) -> Dict[str, Any]:
+        """Alias for load_playlist."""
+        return self.load_playlist(url)
+
+    def download_playlist(self, tracks: List[Dict[str, Any]], destination_folder: str = "", **kwargs) -> Dict[str, Any]:
+        """Alias for start_download."""
+        return self.start_download(tracks, destination_folder, **kwargs)
+
+    def download_track(self, track: Dict[str, Any], destination_folder: str = "", **kwargs) -> Dict[str, Any]:
+        """Alias for downloading single track."""
+        return self.start_download([track], destination_folder, **kwargs)
+
+    def open_download_folder(self, folder_path: str = "") -> Dict[str, Any]:
+        """Alias for open_folder."""
+        return self.open_folder(folder_path)
+
+    def get_downloads(self) -> Dict[str, Any]:
+        """Alias returning active downloads/status."""
+        return self.get_status()
+
+
+# Module-level alias
+BeatVaultApi = AppAPI
+
+
+
