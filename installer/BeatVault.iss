@@ -4,7 +4,7 @@
 ; =====================================================================
 
 #define MyAppName "BeatVault"
-#define MyAppVersion "2.5.0"
+#define MyAppVersion "1.6.9"
 #define MyAppPublisher "Aaditya Shekhar"
 #define MyAppURL "https://github.com/aadityashekhar321/BeatVault"
 #define MyAppExeName "BeatVault.exe"

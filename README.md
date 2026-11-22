@@ -20,7 +20,7 @@
 
 <p align="center">
   <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
-    <img src="https://img.shields.io/badge/Release-v2.5.0--stable-10b981?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
+    <img src="https://img.shields.io/badge/Release-v1.6.9--stable-10b981?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
   </a>
   <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
     <img src="https://img.shields.io/badge/⬇️_Download-Setup_Installer_(.exe)-53E076?style=for-the-badge&logo=windows&logoColor=black" alt="Download Installer" />
@@ -240,7 +240,7 @@ Personalize your studio workstation with 4 signature neon accents designed for O
 
 ### 🔄 10. In-App 1-Click Auto-Updater & GitHub Release Sync
 - **Non-Blocking Background Check:** Queries the official GitHub Releases API asynchronously during startup without delaying app launch.
-- **Visual Update Toast & Banner:** Displays current vs latest version tags (`v1.0.0` vs `v2.5.0`), release notes, and a 1-click **Update Now** CTA.
+- **Visual Update Toast & Banner:** Displays current vs latest version tags (`v1.0.0` vs `v1.6.9`), release notes, and a 1-click **Update Now** CTA.
 - **Automated Asset Downloader:** Directly fetches `BeatVault-Setup.exe` into user's downloads and prompts 1-click execution.
 
 ---
@@ -303,7 +303,7 @@ BeatVault is engineered for keyboard power users. Control your entire studio exp
 
 ## 📊 Comparison Matrix
 
-| Capability | Generic Downloaders / Web Bots | Telegram Bots | 🎵 **BeatVault v2.5.0** |
+| Capability | Generic Downloaders / Web Bots | Telegram Bots | 🎵 **BeatVault v1.6.9** |
 | :--- | :---: | :---: | :---: |
 | **Supported Platforms** | ❌ Spotify only | ⚠️ 1 Platform | **🌐 Multi-Platform (Spotify, YouTube, Apple Music, SoundCloud)** |
 | **Download Concurrency** | ❌ 1-by-1 Sequential | ❌ Single queue | **⚡ 1x to 4x Configurable Parallel ThreadPool** |
@@ -420,7 +420,7 @@ BeatVault/
 ├── spotify_service.py           # Zero-config Spotify playlist & album scraper
 ├── tray_and_media_service.py    # Windows System Tray (pystray) & Global Media Keys (ctypes)
 ├── updater.py                   # In-app GitHub release checker & updater engine
-├── version.py                   # Central source of truth for versioning (v2.5.0)
+├── version.py                   # Central source of truth for versioning (v1.6.9)
 ├── requirements.txt             # Python dependencies
 ├── LICENSE                      # MIT License
 └── README.md                    # Official documentation showcase

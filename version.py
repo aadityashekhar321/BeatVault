@@ -5,7 +5,7 @@ Central source of truth for version tracking, metadata, and GitHub release synch
 
 from typing import Dict, Any
 
-__version__ = "2.5.0"
+__version__ = "1.6.9"
 BUILD_ID = "2026.11-STABLE"
 
 APP_NAME = "BeatVault"

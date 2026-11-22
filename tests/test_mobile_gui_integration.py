@@ -703,16 +703,16 @@ class TestAudioWorkstationAndGUILogicEnhancements(unittest.TestCase):
     def test_unified_version_synchronization(self):
         """Verify unified version 2.5.0 across GUI and Mobile files."""
         from version import __version__, BUILD_ID
-        self.assertEqual(__version__, "2.5.0")
+        self.assertEqual(__version__, "1.6.9")
         self.assertEqual(BUILD_ID, "2026.11-STABLE")
 
         # Desktop GUI
-        self.assertIn('id="settingsVersionBadge" class="text-on-surface-variant text-xs font-mono">v2.5.0-STABLE</span>', self.gui_html)
-        self.assertIn('id="appBuildBadge" class="px-2 py-0.2 rounded bg-surface-container-highest text-secondary text-[10px] font-mono">v2.5.0</span>', self.gui_html)
-        self.assertIn('id="modalCurrentVersion" class="font-mono text-on-surface">v2.5.0</span>', self.gui_html)
+        self.assertIn('id="settingsVersionBadge" class="text-on-surface-variant text-xs font-mono">v1.6.9-STABLE</span>', self.gui_html)
+        self.assertIn('id="appBuildBadge" class="px-2 py-0.2 rounded bg-surface-container-highest text-secondary text-[10px] font-mono">v1.6.9</span>', self.gui_html)
+        self.assertIn('id="modalCurrentVersion" class="font-mono text-on-surface">v1.6.9</span>', self.gui_html)
 
         # Mobile GUI
-        self.assertIn('v2.5.0 (Build 2026.11)', self.mobile_html)
+        self.assertIn('v1.6.9 (Build 2026.11)', self.mobile_html)
 
     def test_converting_to_mp3_status_in_downloader_and_queue(self):
         """3. Verify downloader emits converting status and both GUI & Mobile queues render dynamic 'Converting to MP3...' text."""

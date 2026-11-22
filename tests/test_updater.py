@@ -120,8 +120,8 @@ class TestVersionInfo(unittest.TestCase):
 
     def test_version_info_structure(self):
         info = get_version_info()
-        self.assertEqual(__version__, "2.5.0")
-        self.assertEqual(info["version"], "2.5.0")
+        self.assertEqual(__version__, "1.6.9")
+        self.assertEqual(info["version"], "1.6.9")
         self.assertEqual(info["app_name"], "BeatVault")
         self.assertIn("github.com", info["repo_url"])
 

@@ -969,7 +969,7 @@
             <div class="flex items-center gap-2">
               <span class="px-2 py-0.5 rounded bg-surface-container-high text-secondary text-[11px] font-bold uppercase">SYSTEM_CONFIG</span>
               <span class="text-on-surface-variant text-xs">/</span>
-              <span id="settingsVersionBadge" class="text-on-surface-variant text-xs font-mono">v2.5.0-STABLE</span>
+              <span id="settingsVersionBadge" class="text-on-surface-variant text-xs font-mono">v1.6.9-STABLE</span>
             </div>
             <h2 class="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">App Settings &amp; Storage Configuration</h2>
             <p class="text-xs text-on-surface-variant">Configure audio transcoding targets, SAF scoped storage mounts, and worker concurrency.</p>
@@ -1258,7 +1258,7 @@
                 <div class="flex flex-col">
                   <div class="flex items-center gap-2">
                     <h3 class="text-sm font-bold text-on-surface">BeatVault Studio</h3>
-                    <span id="appBuildBadge" class="px-2 py-0.2 rounded bg-surface-container-highest text-secondary text-[10px] font-mono">v2.5.0</span>
+                    <span id="appBuildBadge" class="px-2 py-0.2 rounded bg-surface-container-highest text-secondary text-[10px] font-mono">v1.6.9</span>
                   </div>
                   <p class="text-[11px] text-on-surface-variant">FFmpeg 6.1 Audio Core • Python Pywebview Desktop</p>
                 </div>
@@ -1583,11 +1583,11 @@
       <div class="p-3.5 rounded-xl bg-surface-container-lowest border border-white/5 flex flex-col gap-2 text-xs">
         <div class="flex items-center justify-between">
           <span class="text-on-surface-variant">Installed Version:</span>
-          <span id="modalCurrentVersion" class="font-mono text-on-surface">v2.5.0</span>
+          <span id="modalCurrentVersion" class="font-mono text-on-surface">v1.6.9</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="text-on-surface-variant">Latest Release:</span>
-          <span id="modalLatestVersion" class="font-mono font-bold text-primary">v2.5.0</span>
+          <span id="modalLatestVersion" class="font-mono font-bold text-primary">v1.6.9</span>
         </div>
         <div class="pt-2 border-t border-white/5 flex flex-col gap-1">
           <span class="text-on-surface-variant font-medium">Release Highlights:</span>
@@ -4934,7 +4934,7 @@
           if (window.pywebview && window.pywebview.api && window.pywebview.api.check_for_updates) {
             res = await window.pywebview.api.check_for_updates(manual);
           } else {
-            res = { success: true, update_available: false, current_version: '2.5.0', latest_version: '2.5.0' };
+            res = { success: true, update_available: false, current_version: '1.6.9', latest_version: '1.6.9' };
           }
 
           if (res && res.update_available) {
@@ -5336,9 +5336,9 @@
           async get_default_folder() { return 'C:/Users/Music/BeatVault'; },
           async get_audio_data(file_path) { return { success: true, data_url: null }; },
           async get_lyrics() { return { success: true, synced_lyrics: SAMPLE_LRC }; },
-          async check_for_updates() { return { success: true, update_available: false, current_version: '2.5.0' }; },
+          async check_for_updates() { return { success: true, update_available: false, current_version: '1.6.9' }; },
           async open_release_page() { return { success: true }; },
-          async get_version_info() { return { success: true, info: { version: '2.5.0' } }; },
+          async get_version_info() { return { success: true, info: { version: '1.6.9' } }; },
           async scan_duplicates(tracks, folder) { return { success: true, duplicate_count: 0, tracks: tracks }; },
           // Aliases for comprehensive API bridge compatibility
           async get_playlist(url) { return this.load_playlist(url); },
