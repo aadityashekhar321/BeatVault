@@ -545,7 +545,11 @@
             <div class="rounded-2xl bg-surface-container-low p-5 shadow-sm border border-white/5 flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <h3 class="text-sm font-bold text-on-surface">Recent Media Ingests</h3>
-                <span class="text-[11px] font-bold text-on-surface-variant uppercase">Quick Load</span>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="App.ingest.clearRecentIngests()" class="text-[11px] font-bold text-on-surface-variant hover:text-error transition-colors uppercase cursor-pointer" title="Clear Recent Ingests">Clear</button>
+                  <span class="text-[11px] font-bold text-on-surface-variant/40">•</span>
+                  <span class="text-[11px] font-bold text-on-surface-variant uppercase">Quick Load</span>
+                </div>
               </div>
               <div class="flex flex-col gap-2" id="recentIngestsContainer">
                 <!-- Injected via JavaScript -->
@@ -1820,7 +1824,7 @@
         },
         settings: {
           concurrency: 2,
-          audioQuality: '320',
+          audioQuality: '192',
           filenameTemplate: 'title_artist',
           destinationFolder: 'C:/Users/Music/BeatVault',
           embedLyrics: true,
@@ -1858,6 +1862,8 @@
        MODULE: NAVIGATION & COLLAPSIBLE SIDEBAR
        ========================================================== */
     App.nav = {
+      validViews: ['ingest', 'inspector', 'queue', 'library', 'settings'],
+
       init() {
         // Sidebar Toggle
         const toggleBtn = document.getElementById('sidebarToggleBtn');
@@ -1883,16 +1889,17 @@
           });
         });
 
-        // Hash Navigation Listener
+        // Hash Navigation Listener with strict valid-view guard
         window.addEventListener('hashchange', () => {
           const hash = window.location.hash.replace('#', '');
-          if (hash && ['ingest', 'inspector', 'queue', 'library', 'settings'].includes(hash)) {
+          if (hash && this.validViews.includes(hash)) {
             this.goTo(hash);
           }
         });
 
-        // Initialize active view from hash or default
-        const initHash = window.location.hash.replace('#', '') || 'ingest';
+        // Initialize active view from hash or default to 'ingest'
+        const rawHash = window.location.hash.replace('#', '');
+        const initHash = this.validViews.includes(rawHash) ? rawHash : 'ingest';
         this.goTo(initHash);
       },
 
@@ -1911,22 +1918,34 @@
         const collapsedIcons = document.querySelectorAll('.sidebar-collapsed-icon');
 
         if (collapsed) {
-          sidebar.classList.remove('sidebar-expanded');
-          sidebar.classList.add('sidebar-collapsed');
-          header.classList.remove('header-expanded');
-          header.classList.add('header-collapsed');
-          wrapper.classList.remove('content-expanded');
-          wrapper.classList.add('content-collapsed');
+          if (sidebar) {
+            sidebar.classList.remove('sidebar-expanded');
+            sidebar.classList.add('sidebar-collapsed');
+          }
+          if (header) {
+            header.classList.remove('header-expanded');
+            header.classList.add('header-collapsed');
+          }
+          if (wrapper) {
+            wrapper.classList.remove('content-expanded');
+            wrapper.classList.add('content-collapsed');
+          }
           if (toggleIcon) toggleIcon.textContent = 'menu';
           textElements.forEach(el => el.classList.add('hidden'));
           collapsedIcons.forEach(el => el.classList.remove('hidden'));
         } else {
-          sidebar.classList.remove('sidebar-collapsed');
-          sidebar.classList.add('sidebar-expanded');
-          header.classList.remove('header-collapsed');
-          header.classList.add('header-expanded');
-          wrapper.classList.remove('content-collapsed');
-          wrapper.classList.add('content-expanded');
+          if (sidebar) {
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebar.classList.add('sidebar-expanded');
+          }
+          if (header) {
+            header.classList.remove('header-collapsed');
+            header.classList.add('header-expanded');
+          }
+          if (wrapper) {
+            wrapper.classList.remove('content-collapsed');
+            wrapper.classList.add('content-expanded');
+          }
           if (toggleIcon) toggleIcon.textContent = 'menu_open';
           textElements.forEach(el => el.classList.remove('hidden'));
           collapsedIcons.forEach(el => el.classList.add('hidden'));
@@ -1938,10 +1957,12 @@
       },
 
       goTo(viewId) {
-        if (!viewId) return;
+        if (!viewId || !this.validViews.includes(viewId)) {
+          viewId = 'ingest';
+        }
         App.state.activeView = viewId;
 
-        // Update active nav class
+        // Update active nav class and filled icon variation
         const navLinks = document.querySelectorAll('#sidebarNav a');
         navLinks.forEach(link => {
           const path = link.getAttribute('data-nav');
@@ -2031,6 +2052,54 @@
         App.state.selectedEngine = key;
       },
 
+      async pasteFromClipboard() {
+        const urlInput = document.getElementById('mediaUrlInput');
+        if (!urlInput) return;
+        try {
+          if (!navigator.clipboard || !navigator.clipboard.readText) {
+            throw new Error('Clipboard API unavailable');
+          }
+          const clip = await navigator.clipboard.readText();
+          if (clip && clip.trim()) {
+            const cleaned = this.cleanUrl(clip);
+            urlInput.value = cleaned;
+            const detected = this.detectEngine(cleaned);
+            if (detected) {
+              this.selectEngine(detected);
+            }
+            App.ui.showToast('Pasted URL from clipboard', 'info');
+          } else {
+            App.ui.showToast('Clipboard is empty', 'warning');
+          }
+        } catch (e) {
+          console.warn('Clipboard read error:', e);
+          let manual = null;
+          try {
+            manual = prompt('Paste playlist or track URL (Ctrl+V / Cmd+V):');
+          } catch (_) {}
+          if (manual && manual.trim()) {
+            const cleaned = this.cleanUrl(manual);
+            urlInput.value = cleaned;
+            const detected = this.detectEngine(cleaned);
+            if (detected) this.selectEngine(detected);
+            App.ui.showToast('Pasted URL from prompt', 'info');
+          } else {
+            App.ui.showToast('Clipboard permission was denied or unavailable. Please paste manually.', 'warning');
+          }
+        }
+        urlInput.focus();
+      },
+
+      clearRecentIngests() {
+        try {
+          localStorage.removeItem('beatvault_recent_ingests');
+        } catch (e) {
+          console.warn('Could not clear recent ingests:', e);
+        }
+        this.renderRecentIngests();
+        App.ui.showToast('Cleared recent media ingests', 'info');
+      },
+
       init() {
         const engineBtns = document.querySelectorAll('.engine-btn');
         const urlInput = document.getElementById('mediaUrlInput');
@@ -2080,42 +2149,8 @@
           });
         }
 
-        if (pasteBtn && urlInput) {
-          pasteBtn.addEventListener('click', async () => {
-            try {
-              if (!navigator.clipboard || !navigator.clipboard.readText) {
-                throw new Error('Clipboard API unavailable');
-              }
-              const clip = await navigator.clipboard.readText();
-              if (clip && clip.trim()) {
-                const cleaned = this.cleanUrl(clip);
-                urlInput.value = cleaned;
-                const detected = this.detectEngine(cleaned);
-                if (detected) {
-                  this.selectEngine(detected);
-                }
-                App.ui.showToast('Pasted URL from clipboard', 'info');
-              } else {
-                App.ui.showToast('Clipboard is empty', 'warning');
-              }
-            } catch (e) {
-              console.warn('Clipboard read error:', e);
-              let manual = null;
-              try {
-                manual = prompt('Paste playlist or track URL (Ctrl+V / Cmd+V):');
-              } catch (_) {}
-              if (manual && manual.trim()) {
-                const cleaned = this.cleanUrl(manual);
-                urlInput.value = cleaned;
-                const detected = this.detectEngine(cleaned);
-                if (detected) this.selectEngine(detected);
-                App.ui.showToast('Pasted URL from prompt', 'info');
-              } else {
-                App.ui.showToast('Clipboard permission was denied or unavailable. Please paste manually.', 'warning');
-              }
-            }
-            urlInput.focus();
-          });
+        if (pasteBtn) {
+          pasteBtn.addEventListener('click', () => this.pasteFromClipboard());
         }
 
         if (processBtn && processText) {
@@ -2149,8 +2184,10 @@
 
         try {
           let res = null;
-          if (window.pywebview && window.pywebview.api && window.pywebview.api.load_playlist) {
-            res = await window.pywebview.api.load_playlist(url);
+          const api = window.pywebview && window.pywebview.api;
+          if (api && (api.load_playlist || api.get_playlist)) {
+            const fn = api.load_playlist || api.get_playlist;
+            res = await fn.call(api, url);
           } else {
             // Simulated browser mock
             await new Promise(r => setTimeout(r, 900));
@@ -2238,8 +2275,10 @@
           return;
         }
 
-        container.innerHTML = items.map(item => `
-          <div class="group flex items-center gap-3 p-2 rounded-xl hover:bg-surface-container-high transition-all border border-transparent hover:border-white/5 cursor-pointer" onclick="App.ingest.loadRecent('${item.url}')">
+        container.innerHTML = items.map(item => {
+          const safeUrl = (item.url || '').replace(/'/g, "\\'");
+          return `
+          <div class="group flex items-center gap-3 p-2 rounded-xl hover:bg-surface-container-high transition-all border border-transparent hover:border-white/5 cursor-pointer" onclick="App.ingest.loadRecent('${safeUrl}')">
             <img src="${item.cover || '../assets/icon_transparent.png'}" alt="Cover" class="w-11 h-11 rounded-lg object-cover shrink-0 shadow-sm bg-surface-container-highest"/>
             <div class="flex flex-col flex-1 min-w-0">
               <span class="text-xs font-bold text-on-surface truncate">${item.title}</span>
@@ -2253,7 +2292,8 @@
               <span class="material-symbols-outlined text-[17px]">play_arrow</span>
             </button>
           </div>
-        `).join('');
+        `;
+        }).join('');
       },
 
       loadRecent(url) {
@@ -2305,8 +2345,8 @@
             });
             chip.classList.add('bg-primary-container', 'text-on-primary-container', 'font-bold', 'shadow-sm');
             chip.classList.remove('bg-surface-container-high', 'text-on-surface-variant', 'font-semibold');
-            this.filterMode = chip.getAttribute('data-filter') || 'all';
-            this.renderTrackRows();
+            const mode = chip.getAttribute('data-filter') || 'all';
+            this.filterTracks(mode);
           });
         });
 
@@ -2346,7 +2386,7 @@
         // Download Selected Button
         const dlBtn = document.getElementById('btnDownloadSelected');
         if (dlBtn) {
-          dlBtn.addEventListener('click', () => App.queue.startBatchDownload());
+          dlBtn.addEventListener('click', () => this.downloadSelected());
         }
 
         // Initialize empty state if no tracks loaded
@@ -2356,6 +2396,31 @@
           if (emptyState) emptyState.classList.remove('hidden');
           if (content) content.classList.add('hidden');
         }
+      },
+
+      filterTracks(filterMode, query) {
+        if (filterMode !== undefined) this.filterMode = filterMode;
+        if (query !== undefined) this.searchQuery = (query || '').trim().toLowerCase();
+        this.renderTrackRows();
+      },
+
+      toggleTrackSelection(idx, checked) {
+        if (App.state.loadedTracks && App.state.loadedTracks[idx]) {
+          App.state.loadedTracks[idx].selected = checked;
+        }
+        this.updateSelectionSummary();
+      },
+
+      toggleTrack(idx, checked) {
+        this.toggleTrackSelection(idx, checked);
+      },
+
+      downloadSelected() {
+        return App.queue.startBatchDownload();
+      },
+
+      downloadSingleTrack(idx) {
+        return App.queue.downloadSingleTrack(idx);
       },
 
       loadPlaylistData(playlist) {
@@ -2391,7 +2456,6 @@
         const author = document.getElementById('inspectorAuthor');
         const countBadge = document.getElementById('inspectorTrackCountBadge');
         const durationBadge = document.getElementById('inspectorDurationBadge');
-        const sizeBadge = document.getElementById('inspectorSizeBadge');
         const platformBadge = document.getElementById('inspectorPlatformBadge');
 
         if (cover && playlist.cover_url) cover.src = playlist.cover_url;
@@ -2587,7 +2651,7 @@
           return `
             <div class="track-row grid grid-cols-12 items-center gap-4 rounded-xl bg-surface-container-low px-4 py-2.5 hover:bg-surface-container-high transition-all border border-transparent hover:border-white/5" data-index="${idx}">
               <div class="col-span-1 flex items-center gap-3">
-                <input type="checkbox" ${isSelected ? 'checked' : ''} class="track-chk h-4 w-4 accent-primary-container rounded cursor-pointer" onchange="App.inspector.toggleTrack(${idx}, this.checked)"/>
+                <input type="checkbox" ${isSelected ? 'checked' : ''} class="track-chk h-4 w-4 accent-primary-container rounded cursor-pointer" onchange="App.inspector.toggleTrackSelection(${idx}, this.checked)"/>
                 <span class="text-xs text-on-surface-variant tabular-nums">${numStr}</span>
               </div>
               <div class="col-span-5 flex min-w-0 items-center gap-3">
@@ -2608,20 +2672,13 @@
               </div>
               <div class="col-span-1 flex items-center justify-end gap-2">
                 <span class="text-xs text-on-surface-variant tabular-nums">${t.duration || '3:30'}</span>
-                <button type="button" class="w-7 h-7 rounded-full bg-surface-container hover:bg-primary-container text-on-surface-variant hover:text-on-primary-container flex items-center justify-center transition-all" title="Download Song" onclick="App.queue.downloadSingleTrack(${idx})">
+                <button type="button" class="w-7 h-7 rounded-full bg-surface-container hover:bg-primary-container text-on-surface-variant hover:text-on-primary-container flex items-center justify-center transition-all" title="Download Song" onclick="App.inspector.downloadSingleTrack(${idx})">
                   <span class="material-symbols-outlined text-[16px]">download</span>
                 </button>
               </div>
             </div>
           `;
         }).join('');
-      },
-
-      toggleTrack(idx, checked) {
-        if (App.state.loadedTracks[idx]) {
-          App.state.loadedTracks[idx].selected = checked;
-        }
-        this.updateSelectionSummary();
       },
 
       selectNone() {
@@ -2757,47 +2814,54 @@
         const btnClear = document.getElementById('btnClearDone');
 
         if (btnPause) {
-          btnPause.addEventListener('click', async () => {
-            if (window.pywebview && window.pywebview.api && window.pywebview.api.pause_download) {
-              try {
-                await window.pywebview.api.pause_download();
-              } catch (e) {
-                console.warn('pause_download error:', e);
-              }
-            }
-            App.state.isPaused = true;
-            App.ui.showToast('Download queue paused', 'info');
-            this.updateTelemetry();
-          });
+          btnPause.addEventListener('click', () => this.pauseAll());
         }
 
         if (btnResume) {
-          btnResume.addEventListener('click', async () => {
-            if (window.pywebview && window.pywebview.api && window.pywebview.api.resume_download) {
-              try {
-                await window.pywebview.api.resume_download();
-              } catch (e) {
-                console.warn('resume_download error:', e);
-              }
-            }
-            App.state.isPaused = false;
-            App.ui.showToast('Download queue resumed', 'info');
-            this.updateTelemetry();
-          });
+          btnResume.addEventListener('click', () => this.resumeAll());
         }
 
         if (btnClear) {
-          btnClear.addEventListener('click', () => {
-            App.state.completedTasks = [];
-            this.renderCompletedTasks();
-            App.ui.showToast('Cleared completed download history', 'info');
-          });
+          btnClear.addEventListener('click', () => this.clearDone());
         }
 
         // Render initial task lists and telemetry
         this.renderActiveTasks();
         this.renderCompletedTasks();
         this.updateTelemetry();
+      },
+
+      async pauseAll() {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.pause_download) {
+          try {
+            await window.pywebview.api.pause_download();
+          } catch (e) {
+            console.warn('pause_download error:', e);
+          }
+        }
+        App.state.isPaused = true;
+        App.ui.showToast('Download queue paused', 'info');
+        this.updateTelemetry();
+      },
+
+      async resumeAll() {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.resume_download) {
+          try {
+            await window.pywebview.api.resume_download();
+          } catch (e) {
+            console.warn('resume_download error:', e);
+          }
+        }
+        App.state.isPaused = false;
+        App.ui.showToast('Download queue resumed', 'info');
+        this.updateTelemetry();
+      },
+
+      clearDone() {
+        App.state.completedTasks = [];
+        this.renderCompletedTasks();
+        this.updateTelemetry();
+        App.ui.showToast('Cleared completed download history', 'info');
       },
 
       async startBatchDownload() {
@@ -2809,7 +2873,7 @@
 
         const folder = App.state.settings.destinationFolder || 'C:/Users/Music/BeatVault';
         const playlistTitle = App.state.currentPlaylist ? App.state.currentPlaylist.title : 'BeatVault Archival';
-        const quality = App.state.settings.audioQuality || '320';
+        const quality = App.state.settings.audioQuality || '192';
         const template = App.state.settings.filenameTemplate || 'title_artist';
         const embedLyrics = App.state.settings.embedLyrics !== false;
         const concurrency = App.state.settings.concurrency || 2;
@@ -2855,13 +2919,13 @@
       },
 
       async downloadSingleTrack(idx) {
-        const targetTrack = App.state.loadedTracks[idx];
+        const targetTrack = (App.state.loadedTracks && App.state.loadedTracks[idx]) || null;
         if (!targetTrack) return;
         const isolatedList = [{ ...targetTrack, selected: true }];
 
         const folder = App.state.settings.destinationFolder || 'C:/Users/Music/BeatVault';
         const playlistTitle = App.state.currentPlaylist ? App.state.currentPlaylist.title : 'BeatVault Archival';
-        const quality = App.state.settings.audioQuality || '320';
+        const quality = App.state.settings.audioQuality || '192';
         const template = App.state.settings.filenameTemplate || 'title_artist';
         const embedLyrics = App.state.settings.embedLyrics !== false;
         const concurrency = 1;
@@ -3031,6 +3095,9 @@
         }
         if (App.state.activeTasks[idx]) {
           App.state.activeTasks.splice(idx, 1);
+          if (App.state.activeTasks.length === 0) {
+            App.state.isDownloading = false;
+          }
           this.renderActiveTasks();
           this.updateTelemetry();
           App.ui.showToast('Download cancelled', 'info');
@@ -3054,18 +3121,20 @@
         const tabCompletedCount = document.getElementById('tabCompletedCount');
         if (tabCompletedCount) tabCompletedCount.textContent = completedCount;
 
-        // Bandwidth calculation from real reported speeds
+        // Bandwidth calculation from real reported speeds (supports KB/s, KiB/s, MB/s, MiB/s, GB/s, GiB/s, B/s)
         let totalMBs = 0;
         if (activeCount > 0 && !App.state.isPaused) {
           for (const t of App.state.activeTasks) {
             if (t.speed && typeof t.speed === 'string') {
-              const s = t.speed.trim();
+              const s = t.speed.trim().toLowerCase();
               const num = parseFloat(s.replace(/[^0-9.]/g, ''));
               if (!isNaN(num) && num > 0) {
-                if (s.toLowerCase().includes('kb/s')) {
+                if (s.includes('kib') || s.includes('kb')) {
                   totalMBs += (num / 1024);
-                } else if (s.toLowerCase().includes('gb/s')) {
+                } else if (s.includes('gib') || s.includes('gb')) {
                   totalMBs += (num * 1024);
+                } else if (s.includes('b/s') && !s.includes('m') && !s.includes('k') && !s.includes('g')) {
+                  totalMBs += (num / (1024 * 1024));
                 } else {
                   totalMBs += num;
                 }
@@ -3201,8 +3270,8 @@
             btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant', 'font-semibold');
             btn.classList.add('bg-white', 'text-surface', 'font-bold');
 
-            App.state.libraryCategory = btn.getAttribute('data-cat');
-            this.render();
+            const cat = btn.getAttribute('data-cat') || 'all';
+            this.filterTracks(undefined, cat);
           });
         });
 
@@ -3210,8 +3279,7 @@
         const search = document.getElementById('librarySearchInput');
         if (search) {
           search.addEventListener('input', (e) => {
-            App.state.filterQuery = e.target.value.toLowerCase().trim();
-            this.render();
+            this.filterTracks(e.target.value);
           });
         }
 
@@ -3271,6 +3339,25 @@
         }
         this.render();
         if (App.settings && App.settings.updateStorageMetrics) App.settings.updateStorageMetrics();
+      },
+
+      filterTracks(query, category) {
+        if (query !== undefined) App.state.filterQuery = (query || '').toLowerCase().trim();
+        if (category !== undefined) App.state.libraryCategory = category;
+        this.render();
+      },
+
+      deleteTrack(id) {
+        if (!id) return;
+        App.state.libraryTracks = App.state.libraryTracks.filter(t => t.id !== id);
+        try {
+          localStorage.setItem('beatvault_offline_library', JSON.stringify(App.state.libraryTracks));
+        } catch (e) {
+          console.warn('Error saving offline library to localStorage:', e);
+        }
+        this.render();
+        if (App.settings && App.settings.updateStorageMetrics) App.settings.updateStorageMetrics();
+        App.ui.showToast('Track removed from offline library', 'info');
       },
 
       loadSampleLibrary() {
@@ -3370,6 +3457,7 @@
       },
 
       addTrackFromDownload(task) {
+        if (!task) return;
         App.state.libraryTracks.unshift({
           id: `lib-dl-${Date.now()}`,
           title: task.title,
@@ -3394,10 +3482,9 @@
       },
 
       clearSearch() {
-        App.state.filterQuery = '';
+        this.filterTracks('');
         const search = document.getElementById('librarySearchInput');
         if (search) search.value = '';
-        this.render();
         if (App.settings && App.settings.updateStorageMetrics) App.settings.updateStorageMetrics();
       },
 
@@ -3527,6 +3614,7 @@
         list.innerHTML = tracks.map((t, idx) => {
           const isPlaying = currentlyPlaying && currentlyPlaying.title === t.title;
           const numStr = String(idx + 1).padStart(2, '0');
+          const safeId = (t.id || `lib-${idx}`).replace(/'/g, "\\'");
           return `
             <div class="track-row group relative grid grid-cols-12 items-center px-4 py-3 rounded-xl ${isPlaying ? 'bg-surface-container-high/90 border border-primary/30' : 'hover:bg-surface-container-high/60 border border-transparent'} transition-all cursor-pointer" onclick="App.library.playTrack(${idx})">
               <!-- # / Equalizer Column -->
@@ -3566,8 +3654,8 @@
               <!-- Time & Options -->
               <div class="col-span-1 flex items-center justify-end gap-2">
                 <span class="text-xs ${isPlaying ? 'text-primary font-bold' : 'text-on-surface-variant'} tabular-nums">${t.duration || '03:30'}</span>
-                <button type="button" class="p-1 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors" onclick="event.stopPropagation(); App.ui.showToast('Audio options: ${t.title}', 'info');">
-                  <span class="material-symbols-outlined text-[17px]">more_vert</span>
+                <button type="button" class="p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-surface-container-highest transition-colors" title="Delete from Library" onclick="event.stopPropagation(); App.library.deleteTrack('${safeId}')">
+                  <span class="material-symbols-outlined text-[17px]">delete</span>
                 </button>
               </div>
             </div>
@@ -3616,7 +3704,7 @@
           });
         });
 
-        // Concurrency Slider
+        // Concurrency Slider & Real-time Badge Sync
         const slider = document.getElementById('settingConcurrencySlider');
         const badge = document.getElementById('settingConcurrencyBadge');
         const label = document.getElementById('settingConcurrencyLabel');
@@ -3640,13 +3728,7 @@
         // Clear Cache Button
         const clearCacheBtn = document.getElementById('btnClearCache');
         if (clearCacheBtn) {
-          clearCacheBtn.addEventListener('click', () => {
-            const bar = document.getElementById('settingCacheBar');
-            const legend = document.getElementById('settingCacheLegend');
-            if (bar) bar.style.width = '0%';
-            if (legend) legend.innerHTML = '<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>Cache (0MB)';
-            App.ui.showToast('Waveform & Lyric cache cleared (120MB freed)', 'success');
-          });
+          clearCacheBtn.addEventListener('click', () => this.clearCache());
         }
 
         // Save & Reset Buttons
@@ -3670,6 +3752,14 @@
         });
 
         await this.load();
+      },
+
+      clearCache() {
+        const bar = document.getElementById('settingCacheBar');
+        const legend = document.getElementById('settingCacheLegend');
+        if (bar) bar.style.width = '0%';
+        if (legend) legend.innerHTML = '<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>Cache (0MB)';
+        App.ui.showToast('Waveform & Lyric cache cleared (120MB freed)', 'success');
       },
 
       async load() {
@@ -3716,6 +3806,8 @@
           const label = document.getElementById('settingConcurrencyLabel');
           if (badge) badge.textContent = `${s.concurrency} WORKERS`;
           if (label) label.textContent = `${s.concurrency} Active Threads`;
+          const inspConc = document.getElementById('inspectorConcurrencyText');
+          if (inspConc) inspConc.textContent = `${s.concurrency} Threads Active`;
         }
 
         const template = document.getElementById('settingFilenameTemplate');
@@ -3729,6 +3821,31 @@
 
         const autoSkip = document.getElementById('toggleAutoSkipDupes');
         if (autoSkip && s.autoSkipDupes !== undefined) autoSkip.checked = !!s.autoSkipDupes;
+
+        // Sync quality cards with loaded audioQuality (defaults to '192' Recommended)
+        const q = s.audioQuality || '192';
+        const cards = document.querySelectorAll('.settings-quality-card');
+        cards.forEach(card => {
+          const cardQ = card.getAttribute('data-quality');
+          const icon = card.querySelector('.material-symbols-outlined');
+          if (cardQ === q) {
+            card.classList.remove('bg-surface-container-low', 'border-white/5');
+            card.classList.add('bg-surface-container-highest', 'border-primary/40', 'shadow-sm');
+            if (icon) {
+              icon.textContent = 'radio_button_checked';
+              icon.classList.remove('text-on-surface-variant');
+              icon.classList.add('text-primary');
+            }
+          } else {
+            card.classList.remove('bg-surface-container-highest', 'border-primary/40', 'shadow-sm');
+            card.classList.add('bg-surface-container-low', 'border-white/5');
+            if (icon) {
+              icon.textContent = 'radio_button_unchecked';
+              icon.classList.remove('text-primary');
+              icon.classList.add('text-on-surface-variant');
+            }
+          }
+        });
 
         this.updateStorageMetrics();
       },
@@ -3796,7 +3913,7 @@
           embedLyrics: embedLyrics ? embedLyrics.checked : true,
           embedArtwork: embedArt ? embedArt.checked : true,
           autoSkipDupes: autoSkip ? autoSkip.checked : true,
-          audioQuality: App.state.settings.audioQuality || '320'
+          audioQuality: App.state.settings.audioQuality || '192'
         };
 
         try {
@@ -3881,7 +3998,7 @@
       resetDefaults() {
         App.state.settings = {
           concurrency: 2,
-          audioQuality: '320',
+          audioQuality: '192',
           filenameTemplate: 'title_artist',
           destinationFolder: 'C:/Users/Music/BeatVault',
           embedLyrics: true,
@@ -3975,7 +4092,7 @@
         if (btnShuffle) btnShuffle.addEventListener('click', () => this.toggleShuffle());
 
         const btnRepeat = document.getElementById('btnPlayerRepeat');
-        if (btnRepeat) btnRepeat.addEventListener('click', () => this.cycleRepeatMode());
+        if (btnRepeat) btnRepeat.addEventListener('click', () => this.toggleRepeat());
 
         const seek = document.getElementById('playerSeek');
         if (seek) {
@@ -4022,6 +4139,8 @@
 
       async loadAndPlay(track) {
         if (!track) return;
+        const context = arguments.length > 1 ? arguments[1] : null;
+        if (context) this.playbackContext = context;
         App.state.currentPlayback = track;
 
         // Update player bar elements
@@ -4040,14 +4159,14 @@
             cover.classList.remove('opacity-40', 'p-2', 'object-contain');
             cover.classList.add('object-cover');
           } else {
-            cover.src = '../assets/icon_transparent.png';
-            cover.classList.remove('object-cover');
-            cover.classList.add('opacity-40', 'p-2', 'object-contain');
+            cover.src = 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500';
+            cover.classList.remove('opacity-40', 'p-2', 'object-contain');
+            cover.classList.add('object-cover');
           }
         }
         if (format) format.textContent = (track.quality || 'FLAC 24b').slice(0, 10);
 
-        // Update Now Playing Modal left pane
+        // Update Now Playing Modal left pane - never logo when a song is playing!
         const npTitle = document.getElementById('nowPlayingTitle');
         const npArtist = document.getElementById('nowPlayingArtist');
         const npCover = document.getElementById('nowPlayingCover');
@@ -4059,9 +4178,9 @@
             npCover.classList.remove('opacity-30', 'p-12', 'object-contain');
             npCover.classList.add('object-cover', 'opacity-100');
           } else {
-            npCover.src = '../assets/icon_transparent.png';
-            npCover.classList.remove('object-cover', 'opacity-100');
-            npCover.classList.add('opacity-30', 'p-12', 'object-contain');
+            npCover.src = 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500';
+            npCover.classList.remove('opacity-30', 'p-12', 'object-contain');
+            npCover.classList.add('object-cover', 'opacity-100');
           }
         }
 
@@ -4069,7 +4188,7 @@
         const filePath = track.file_path || track.filePath;
         let audioSrcSet = false;
 
-        if (filePath && window.pywebview?.api?.get_audio_data) {
+        if (filePath && window.pywebview && window.pywebview.api && window.pywebview.api.get_audio_data) {
           try {
             const res = await window.pywebview.api.get_audio_data(filePath);
             if (res && res.success && res.data_url) {
@@ -4096,13 +4215,13 @@
         // OS Media Session API Integration (System Media Transport Controls)
         if ('mediaSession' in navigator) {
           try {
-            const coverUrl = songCover || '../assets/icon_transparent.png';
+            const mediaCover = songCover || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500';
             navigator.mediaSession.metadata = new MediaMetadata({
               title: track.title || 'Unknown Title',
               artist: track.artist || 'Unknown Artist',
               album: track.album || 'BeatVault Lossless',
               artwork: [
-                { src: coverUrl, sizes: '512x512', type: 'image/jpeg' }
+                { src: mediaCover, sizes: '512x512', type: 'image/jpeg' }
               ]
             });
 
@@ -4152,7 +4271,7 @@
       },
 
       playTrack(idx) {
-        const track = App.state.loadedTracks[idx];
+        const track = App.state.loadedTracks && App.state.loadedTracks[idx];
         if (track) {
           this.playbackContext = 'inspector';
           this.loadAndPlay(track, 'inspector');
@@ -4160,7 +4279,7 @@
       },
 
       playCompletedTrack(idx) {
-        const track = App.state.completedTasks[idx];
+        const track = App.state.completedTasks && App.state.completedTasks[idx];
         if (track) {
           this.playbackContext = 'completed';
           this.loadAndPlay(track, 'completed');
@@ -4175,6 +4294,7 @@
             return;
           }
         }
+        if (!this.audio) return;
         if (this.audio.paused) {
           this.audio.play().catch(() => {});
         } else {
@@ -4207,6 +4327,10 @@
         }
         const curIdx = App.state.currentPlayback ? tracks.findIndex(t => (App.state.currentPlayback.id && t.id === App.state.currentPlayback.id) || (t.title === App.state.currentPlayback.title && t.artist === App.state.currentPlayback.artist)) : -1;
         this.unplayedIndices = tracks.map((_, i) => i).filter(i => i !== curIdx);
+      },
+
+      toggleRepeat() {
+        return this.cycleRepeatMode();
       },
 
       cycleRepeatMode() {
@@ -4272,8 +4396,10 @@
 
         // Repeat off check at playlist boundary
         if (curIdx === tracks.length - 1 && this.repeatMode === 'off') {
-          this.audio.pause();
-          this.audio.currentTime = 0;
+          if (this.audio) {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+          }
           this.isPlaying = false;
           this.updatePlayIcon(false);
           return;
@@ -4402,6 +4528,7 @@
     App.lyrics = {
       isAutoScroll: true,
       userScrolledTimeout: null,
+      lines: [],
 
       init() {
         const btnCollapse = document.getElementById('btnCollapseLyrics');
@@ -4468,13 +4595,23 @@
                 npCover.classList.remove('opacity-30', 'p-12', 'object-contain');
                 npCover.classList.add('object-cover', 'opacity-100');
               } else {
-                npCover.src = '../assets/icon_transparent.png';
-                npCover.classList.remove('object-cover', 'opacity-100');
-                npCover.classList.add('opacity-30', 'p-12', 'object-contain');
+                npCover.src = 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500';
+                npCover.classList.remove('opacity-30', 'p-12', 'object-contain');
+                npCover.classList.add('object-cover', 'opacity-100');
               }
             }
             this.loadForTrack(p.title, p.artist, p.duration_sec);
           } else {
+            const npTitle = document.getElementById('nowPlayingTitle');
+            const npArtist = document.getElementById('nowPlayingArtist');
+            const npCover = document.getElementById('nowPlayingCover');
+            if (npTitle) npTitle.textContent = 'No Track Playing';
+            if (npArtist) npArtist.textContent = 'Select a track to view synchronized lyrics';
+            if (npCover) {
+              npCover.src = '../assets/icon_transparent.png';
+              npCover.classList.remove('object-cover', 'opacity-100');
+              npCover.classList.add('opacity-30', 'p-12', 'object-contain');
+            }
             const container = document.getElementById('lyricsContainer');
             if (container) {
               container.innerHTML = `
@@ -4548,10 +4685,31 @@
         this.parseAndRender(lrcText);
       },
 
-      parseAndRender(lrcText) {
+      renderLines(lines) {
         const container = document.getElementById('lyricsContainer');
         if (!container) return;
 
+        const linesToRender = lines || this.lines || (App.state.lyrics && App.state.lyrics.lines) || [];
+        if (linesToRender.length === 0) {
+          container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-sm"><i class="fa-solid fa-microphone-slash text-2xl mb-2 block opacity-40"></i>No synchronized lyrics available for this track.</div>`;
+          return;
+        }
+
+        container.innerHTML = linesToRender.map((l, idx) => {
+          const timeStr = l.time >= 0 ? this.formatLrcTime(l.time) : '--:--';
+          return `
+            <div id="lyric-line-${idx}" class="lyric-line flex items-center justify-between gap-4 px-4 py-2.5 rounded-xl hover:bg-surface-container/60 transition-all cursor-pointer group" onclick="App.lyrics.onLineClick(${idx})">
+              <div class="flex items-baseline gap-4 min-w-0">
+                <span class="text-[11px] font-mono text-on-surface-variant/40 w-12 shrink-0 tabular-nums">${timeStr}</span>
+                <span class="lyric-text text-sm font-semibold text-on-surface-variant/70 group-hover:text-on-surface transition-colors truncate">${l.text}</span>
+              </div>
+              <span class="material-symbols-outlined text-primary text-[18px] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">play_arrow</span>
+            </div>
+          `;
+        }).join('');
+      },
+
+      parseAndRender(lrcText) {
         const lines = [];
         const rawLines = lrcText.split(/\r?\n/);
         const tagRegex = /\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]/g;
@@ -4577,29 +4735,7 @@
         this.lines = lines;
         App.state.lyrics.lines = lines;
         App.state.lyrics.activeIndex = -1;
-
-        if (lines.length === 0) {
-          container.innerHTML = `
-            <div class="text-center py-12 text-zinc-500 text-sm">
-              <i class="fa-solid fa-microphone-slash text-2xl mb-2 block opacity-40"></i>
-              No synchronized lyrics available for this track.
-            </div>
-          `;
-          return;
-        }
-
-        container.innerHTML = lines.map((l, idx) => {
-          const timeStr = l.time >= 0 ? this.formatLrcTime(l.time) : '--:--';
-          return `
-            <div id="lyric-line-${idx}" class="lyric-line flex items-center justify-between gap-4 px-4 py-2.5 rounded-xl hover:bg-surface-container/60 transition-all cursor-pointer group" onclick="App.lyrics.onLineClick(${idx})">
-              <div class="flex items-baseline gap-4 min-w-0">
-                <span class="text-[11px] font-mono text-on-surface-variant/40 w-12 shrink-0 tabular-nums">${timeStr}</span>
-                <span class="lyric-text text-sm font-semibold text-on-surface-variant/70 group-hover:text-on-surface transition-colors truncate">${l.text}</span>
-              </div>
-              <span class="material-symbols-outlined text-primary text-[18px] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">play_arrow</span>
-            </div>
-          `;
-        }).join('');
+        this.renderLines(lines);
       },
 
       sync(currentTime) {
@@ -4696,31 +4832,34 @@
         });
       },
 
+      draw() {
+        if (!this.ctx || !this.canvas) return;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        this.ctx.clearRect(0, 0, w, h);
+
+        const bars = 8;
+        const barW = 4;
+        const gap = 2;
+
+        for (let i = 0; i < bars; i++) {
+          const barH = Math.max(3, Math.floor(Math.random() * h * 0.9));
+          const x = i * (barW + gap);
+          const y = h - barH;
+
+          this.ctx.fillStyle = i % 2 === 0 ? '#53e076' : '#4cd7f6';
+          this.ctx.fillRect(x, y, barW, barH);
+        }
+      },
+
       start() {
         if (document.hidden) return;
         if (this.animId) cancelAnimationFrame(this.animId);
-        const draw = () => {
-          if (!this.ctx || !this.canvas) return;
-          const w = this.canvas.width;
-          const h = this.canvas.height;
-          this.ctx.clearRect(0, 0, w, h);
-
-          const bars = 8;
-          const barW = 4;
-          const gap = 2;
-
-          for (let i = 0; i < bars; i++) {
-            const barH = Math.max(3, Math.floor(Math.random() * h * 0.9));
-            const x = i * (barW + gap);
-            const y = h - barH;
-
-            this.ctx.fillStyle = i % 2 === 0 ? '#53e076' : '#4cd7f6';
-            this.ctx.fillRect(x, y, barW, barH);
-          }
-
-          this.animId = requestAnimationFrame(draw);
+        const loop = () => {
+          this.draw();
+          this.animId = requestAnimationFrame(loop);
         };
-        draw();
+        loop();
       },
 
       stop() {
@@ -4738,6 +4877,8 @@
        MODULE: AUTO-UPDATER & RELEASE SYNC
        ========================================================== */
     App.updates = {
+      latestRelease: null,
+
       init() {
         const btnManual = document.getElementById('btnCheckUpdatesManual');
         if (btnManual) {
@@ -4760,7 +4901,7 @@
           if (res && res.update_available) {
             const badge = document.getElementById('headerUpdateBadge');
             if (badge) badge.classList.remove('hidden');
-            if (manual) this.openModal(res);
+            if (manual) this.showUpdateModal(res);
           } else if (manual) {
             App.ui.showToast('You are running the latest version of BeatVault', 'info');
           }
@@ -4771,16 +4912,20 @@
         }
       },
 
-      openModal(data) {
-        this.latestRelease = data;
+      showUpdateModal(info) {
+        this.latestRelease = info;
         const modal = document.getElementById('updateModal');
         if (modal) {
           modal.classList.add('active');
-          if (data && data.latest_version) {
+          if (info && info.latest_version) {
             const latestEl = document.getElementById('modalLatestVersion');
-            if (latestEl) latestEl.textContent = `v${data.latest_version}`;
+            if (latestEl) latestEl.textContent = `v${info.latest_version}`;
           }
         }
+      },
+
+      openModal(data) {
+        this.showUpdateModal(data);
       },
 
       closeModal() {
@@ -4788,7 +4933,7 @@
         if (modal) modal.classList.remove('active');
       },
 
-      async downloadLatest() {
+      async downloadUpdate() {
         const progressSection = document.getElementById('updateProgressSection');
         if (progressSection) progressSection.classList.remove('hidden');
         const dlBtn = document.getElementById('btnDownloadUpdateAsset');
@@ -4815,12 +4960,20 @@
         }
       },
 
-      installUpdate() {
+      downloadLatest() {
+        return this.downloadUpdate();
+      },
+
+      applyUpdate() {
         if (window.pywebview && window.pywebview.api && window.pywebview.api.open_release_page) {
           window.pywebview.api.open_release_page();
         } else {
           location.reload();
         }
+      },
+
+      installUpdate() {
+        return this.applyUpdate();
       }
     };
 
@@ -5045,6 +5198,9 @@
           if (track) {
             // Move from active to completed
             App.state.activeTasks = App.state.activeTasks.filter(t => (track.id && t.id !== track.id) || (!track.id && t.title !== track.title));
+            if (App.state.activeTasks.length === 0) {
+              App.state.isDownloading = false;
+            }
             App.state.completedTasks.unshift(track);
             App.library.addTrackFromDownload(track);
             App.queue.renderActiveTasks();
@@ -5069,7 +5225,7 @@
           break;
         }
         case 'update_available': {
-          App.updates.openModal(data);
+          App.updates.showUpdateModal(data);
           break;
         }
         case 'update_download_progress': {

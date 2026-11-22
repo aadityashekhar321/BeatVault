@@ -263,6 +263,9 @@ class DownloadWorker:
 
     def _emit_progress(self, track: Dict[str, Any], percent: float, speed_str: str = "", eta_str: str = ""):
         track["progress"] = round(percent, 1)
+        track["percent"] = track["progress"]
+        track["speed"] = speed_str
+        track["eta"] = eta_str
         if self.on_progress:
             self.on_progress({
                 "track": track,
@@ -275,10 +278,19 @@ class DownloadWorker:
             })
 
     def _emit_track_complete(self, track: Dict[str, Any]):
+        track["percent"] = 100.0
+        track["progress"] = 100.0
+        track["speed"] = ""
+        track["eta"] = ""
         if self.on_track_complete:
             self.on_track_complete({
                 "track": track,
-                "stats": self.stats
+                "stats": self.stats,
+                "percent": 100.0,
+                "speed": "",
+                "eta": "",
+                "status": track.get("status", "completed"),
+                "status_message": track.get("status_message", "Completed")
             })
 
     def _smart_find_source(self, track: Dict[str, Any]) -> str:

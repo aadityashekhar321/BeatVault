@@ -61,12 +61,14 @@ class AppAPI:
 
     def save_settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
         """Saves user settings to persisted settings.json."""
+        if not isinstance(settings, dict):
+            return {"success": False, "error": "Settings must be a dictionary"}
         config_file = self._get_config_path()
         try:
             current_res = self.get_settings()
             current = current_res.get("settings", {})
-            if isinstance(settings, dict):
-                current.update(settings)
+            current.update(settings)
+            os.makedirs(os.path.dirname(config_file), exist_ok=True)
             with open(config_file, "w", encoding="utf-8") as f:
                 json.dump(current, f, indent=2, ensure_ascii=False)
             return {"success": True, "settings": current}
@@ -124,8 +126,10 @@ class AppAPI:
         Parses Spotify, YouTube, Apple Music, or SoundCloud playlist/album URL
         and retrieves tracks metadata.
         """
+        if not url or not isinstance(url, str) or not url.strip():
+            return {"success": False, "error": "Invalid or empty URL"}
         try:
-            data = self.platform_service.fetch_metadata(url)
+            data = self.platform_service.fetch_metadata(url.strip())
             return {"success": True, "data": data}
         except Exception as e:
             logger.error(f"Error loading playlist: {e}")
@@ -185,16 +189,26 @@ class AppAPI:
 
     def get_audio_data(self, file_path: str) -> Dict[str, Any]:
         """
-        Reads a local MP3 file and returns base64 audio data for the in-app player.
+        Reads a local audio file (MP3, FLAC, WAV, M4A, etc.) and returns base64 audio data for the in-app player.
         """
-        if not file_path or not os.path.exists(file_path):
+        if not file_path or not isinstance(file_path, str) or not os.path.exists(file_path):
             return {"success": False, "error": "File not found"}
 
         try:
+            ext = os.path.splitext(file_path)[1].lower()
+            mime_map = {
+                ".mp3": "audio/mpeg",
+                ".flac": "audio/flac",
+                ".wav": "audio/wav",
+                ".m4a": "audio/mp4",
+                ".ogg": "audio/ogg",
+                ".opus": "audio/opus"
+            }
+            mime_type = mime_map.get(ext, "audio/mpeg")
             with open(file_path, "rb") as f:
                 encoded = base64.b64encode(f.read()).decode("utf-8")
-            data_uri = f"data:audio/mp3;base64,{encoded}"
-            return {"success": True, "data_url": data_uri}
+            data_uri = f"data:{mime_type};base64,{encoded}"
+            return {"success": True, "data_url": data_uri, "mime_type": mime_type}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -218,7 +232,9 @@ class AppAPI:
         """
         Pre-scans the destination folder for duplicates before starting downloads.
         """
-        if not folder or not os.path.exists(folder):
+        if not isinstance(tracks, list):
+            return {"success": False, "error": "Tracks parameter must be a list"}
+        if not folder or not isinstance(folder, str) or not os.path.exists(folder):
             return {"success": False, "error": "Destination folder does not exist"}
 
         try:
@@ -227,6 +243,8 @@ class AppAPI:
             results = []
 
             for track in tracks:
+                if not isinstance(track, dict):
+                    continue
                 dup = detector.check_duplicate(track.get("title", ""), track.get("artist", ""))
                 track_copy = dict(track)
                 if dup:
@@ -265,13 +283,16 @@ class AppAPI:
         if self.current_worker and self.current_worker.stats.get("is_active"):
             return {"success": False, "error": "A download session is already active"}
 
-        if not destination_folder:
+        if not destination_folder or not isinstance(destination_folder, str):
             return {"success": False, "error": "Please choose a download folder"}
 
-        if not tracks:
+        if not tracks or not isinstance(tracks, list):
             return {"success": False, "error": "No tracks to download"}
 
-        os.makedirs(destination_folder, exist_ok=True)
+        try:
+            os.makedirs(destination_folder, exist_ok=True)
+        except Exception as e:
+            return {"success": False, "error": f"Cannot create download folder: {e}"}
 
         try:
             concurrency_val = int(concurrency)
@@ -322,55 +343,71 @@ class AppAPI:
           respond_duplicate(track_id: str, action: str, apply_to_all: bool = False)
         decision: 'skip' | 'download_again' | 'replace' | 'overwrite'
         """
-        if not self.current_worker:
-            return {"success": False, "error": "No active worker"}
+        try:
+            if not self.current_worker:
+                return {"success": False, "error": "No active worker"}
 
-        decision = "skip"
-        apply_to_all = False
+            decision = "skip"
+            apply_to_all = False
 
-        if len(args) >= 3:
-            # (track_id, action, apply_to_all)
-            decision = str(args[1])
-            apply_to_all = bool(args[2])
-        elif len(args) == 2:
-            decision = str(args[0])
-            apply_to_all = bool(args[1])
-        elif len(args) == 1:
-            decision = str(args[0])
+            if len(args) >= 3:
+                # (track_id, action, apply_to_all)
+                decision = str(args[1])
+                apply_to_all = bool(args[2])
+            elif len(args) == 2:
+                decision = str(args[0])
+                apply_to_all = bool(args[1])
+            elif len(args) == 1:
+                decision = str(args[0])
 
-        if "action" in kwargs:
-            decision = kwargs["action"]
-        elif "decision" in kwargs:
-            decision = kwargs["decision"]
+            if "action" in kwargs:
+                decision = kwargs["action"]
+            elif "decision" in kwargs:
+                decision = kwargs["decision"]
 
-        if "apply_to_all" in kwargs:
-            apply_to_all = bool(kwargs["apply_to_all"])
-        elif "applyToAll" in kwargs:
-            apply_to_all = bool(kwargs["applyToAll"])
+            if "apply_to_all" in kwargs:
+                apply_to_all = bool(kwargs["apply_to_all"])
+            elif "applyToAll" in kwargs:
+                apply_to_all = bool(kwargs["applyToAll"])
 
-        if decision == "overwrite":
-            decision = "replace"
+            if decision == "overwrite":
+                decision = "replace"
 
-        self.current_worker.provide_duplicate_decision(decision, apply_to_all)
-        return {"success": True}
+            self.current_worker.provide_duplicate_decision(decision, apply_to_all)
+            return {"success": True}
+        except Exception as e:
+            logger.error(f"Error responding to duplicate: {e}")
+            return {"success": False, "error": str(e)}
 
     def pause_download(self) -> Dict[str, Any]:
-        if self.current_worker:
-            self.current_worker.pause()
-            return {"success": True}
-        return {"success": False, "error": "No active download"}
+        try:
+            if self.current_worker:
+                self.current_worker.pause()
+                return {"success": True}
+            return {"success": False, "error": "No active download"}
+        except Exception as e:
+            logger.error(f"Error pausing download: {e}")
+            return {"success": False, "error": str(e)}
 
     def resume_download(self) -> Dict[str, Any]:
-        if self.current_worker:
-            self.current_worker.resume()
-            return {"success": True}
-        return {"success": False, "error": "No active download"}
+        try:
+            if self.current_worker:
+                self.current_worker.resume()
+                return {"success": True}
+            return {"success": False, "error": "No active download"}
+        except Exception as e:
+            logger.error(f"Error resuming download: {e}")
+            return {"success": False, "error": str(e)}
 
     def cancel_download(self) -> Dict[str, Any]:
-        if self.current_worker:
-            self.current_worker.cancel()
-            return {"success": True}
-        return {"success": False, "error": "No active download"}
+        try:
+            if self.current_worker:
+                self.current_worker.cancel()
+                return {"success": True}
+            return {"success": False, "error": "No active download"}
+        except Exception as e:
+            logger.error(f"Error cancelling download: {e}")
+            return {"success": False, "error": str(e)}
 
     def minimize_to_tray(self) -> Dict[str, Any]:
         """Minimizes the window to the Windows Notification Area (System Tray)."""

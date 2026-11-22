@@ -403,6 +403,25 @@
         </div>
       </div>
 
+      <!-- Target Quality Switcher (Defaults to MP3 320kbps) -->
+      <div id="inspector-quality-selector" class="hidden flex items-center justify-between p-2.5 rounded-2xl bg-surface-container border border-white/5 text-xs font-mono">
+        <span class="text-on-surface-variant font-semibold flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-primary">high_quality</span>
+          Target Quality:
+        </span>
+        <div class="inline-flex p-0.5 rounded-xl bg-surface-container-high border border-white/5">
+          <button id="btn-insp-q-320" onclick="setInspectorTargetQuality('320')" class="px-3 py-1 rounded-lg text-[11px] font-bold transition-all bg-primary text-on-primary shadow-sm cursor-pointer">
+            MP3 320k
+          </button>
+          <button id="btn-insp-q-192" onclick="setInspectorTargetQuality('192')" class="px-3 py-1 rounded-lg text-[11px] font-medium transition-all text-on-surface-variant hover:text-on-surface cursor-pointer">
+            MP3 192k
+          </button>
+          <button id="btn-insp-q-flac" onclick="setInspectorTargetQuality('flac')" class="px-3 py-1 rounded-lg text-[11px] font-medium transition-all text-on-surface-variant hover:text-on-surface cursor-pointer">
+            FLAC
+          </button>
+        </div>
+      </div>
+
       <!-- Batch Selection Controls -->
       <div id="inspector-batch-controls" class="hidden flex items-center gap-2 overflow-x-auto py-0.5">
         <button onclick="selectAllTracks()" class="flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-mono font-medium whitespace-nowrap active:scale-95 transition-all cursor-pointer">
@@ -540,7 +559,7 @@
             <span id="library-track-count">0 Tracks</span>
           </span>
           <span>•</span>
-          <span>0 MB Cached</span>
+          <span id="library-cached-size">0.0 MB Cached</span>
         </div>
         <div class="flex items-center gap-1 text-secondary">
           <span class="material-symbols-outlined text-[14px]">sd_card</span>
@@ -838,29 +857,29 @@
       <div class="flex flex-col gap-2.5">
         <div class="flex items-center justify-between">
           <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">Storage Footprint & Cache</h2>
-          <span class="text-xs font-mono text-on-surface-variant">93.8 GB Allocation</span>
+          <span class="text-xs font-mono text-on-surface-variant" id="storage-allocation-label">64.0 GB Allocation</span>
         </div>
 
         <div class="p-4 rounded-2xl bg-surface-container-low border border-white/5 flex flex-col gap-3">
           <!-- Segmented Gauge Bar -->
           <div class="flex flex-col gap-1.5">
             <div class="w-full h-3 rounded-full bg-surface-container-highest flex overflow-hidden">
-              <div class="bg-primary h-full transition-all" style="width: 18%" title="Audio: 1.4 GB"></div>
-              <div class="bg-secondary h-full transition-all" style="width: 6%" title="Cache: 48 MB"></div>
-              <div class="bg-surface-bright h-full flex-1" title="Free: 92.4 GB"></div>
+              <div id="storage-audio-bar" class="bg-primary h-full transition-all duration-500" style="width: 2%" title="Audio"></div>
+              <div id="storage-cache-bar" class="bg-secondary h-full transition-all duration-500" style="width: 1%" title="Cache"></div>
+              <div id="storage-free-bar" class="bg-surface-bright h-full flex-1" title="Free"></div>
             </div>
             <div class="flex items-center justify-between font-mono text-[10px] text-on-surface-variant pt-1">
               <span class="flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
-                Audio: 1.4 GB
+                Audio: <span id="storage-audio-val">0.0 MB</span>
               </span>
               <span class="flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-secondary inline-block"></span>
-                Cache: <span id="cache-size-display">48 MB</span>
+                Cache: <span id="cache-size-display">0.0 MB</span>
               </span>
               <span class="flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-surface-bright inline-block"></span>
-                Free: 92.4 GB
+                Free: <span id="storage-free-val">64.0 GB</span>
               </span>
             </div>
           </div>
@@ -875,7 +894,7 @@
           <div id="cache-cleared-banner" class="hidden p-2.5 rounded-xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-between text-xs font-mono">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-[18px]">done_all</span>
-              <span>48 MB Temporary Cache Successfully Purged</span>
+              <span id="cache-banner-text">Temporary Cache Successfully Purged</span>
             </div>
             <span class="text-[10px] text-on-surface font-bold">0 MB Used</span>
           </div>
@@ -1001,7 +1020,8 @@
 
     <!-- Modal Header -->
     <header class="sticky top-0 inset-x-0 z-20 bg-surface/80 backdrop-blur-2xl pt-safe border-b border-white/5">
-      <div class="h-16 px-4 flex items-center justify-between">
+      <div id="now-playing-drag-handle" class="w-12 h-1.5 bg-white/20 hover:bg-white/40 active:bg-primary rounded-full mx-auto my-1.5 shrink-0 cursor-grab transition-colors" title="Pull down to dismiss"></div>
+      <div class="h-14 px-4 flex items-center justify-between">
         <button onclick="closeNowPlayingModal()" class="w-10 h-10 flex items-center justify-center text-on-surface hover:text-primary transition-colors cursor-pointer" aria-label="Collapse">
           <span class="material-symbols-outlined text-[28px]">expand_more</span>
         </button>
@@ -1179,6 +1199,17 @@
         </button>
       </div>
 
+      <!-- Master Audio Output & Volume Control Bar -->
+      <div class="w-full flex items-center justify-between gap-3 px-3 py-2 mt-1 rounded-2xl bg-surface-container-high/60 border border-white/5 shadow-sm">
+        <button id="btn-player-mute" onclick="toggleMute()" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors cursor-pointer" title="Mute / Unmute">
+          <span id="player-volume-icon" class="material-symbols-outlined text-[20px]">volume_up</span>
+        </button>
+        <div class="flex-1 flex items-center">
+          <input id="player-volume-slider" type="range" min="0" max="1" step="0.05" value="0.8" oninput="setVolume(this.value)" class="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary">
+        </div>
+        <span id="player-volume-pct" class="text-[11px] font-mono text-on-surface-variant tabular-nums w-8 text-right font-medium">80%</span>
+      </div>
+
       <!-- Bottom Audio EQ & Up Next Drawer -->
       <div class="w-full flex flex-col gap-2 mt-2">
         <div class="grid grid-cols-2 gap-2">
@@ -1309,9 +1340,88 @@
     let autoScrollLocked = true;
     let currentViewMode = 'lyrics'; // 'lyrics' or 'art'
     let isLiked = false;
+    let lastVolume = 0.8;
+
+    /* Playback Context: 'vault' | 'inspector' | 'queue' */
+    let playbackContext = 'vault';
+
+    /* High quality audio artwork pool (never BeatVault logo when song is playing) */
+    const DEFAULT_TRACK_COVERS = [
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80"
+    ];
+
+    function getSongCover(track, idx = 0) {
+      if (!track) return DEFAULT_TRACK_COVERS[0];
+      if (track.cover && track.cover !== "assets/icon_transparent.png") return track.cover;
+      if (track.cover_url && track.cover_url !== "assets/icon_transparent.png") return track.cover_url;
+      if (track.thumbnail && track.thumbnail !== "assets/icon_transparent.png") return track.thumbnail;
+      return DEFAULT_TRACK_COVERS[Math.abs(idx) % DEFAULT_TRACK_COVERS.length];
+    }
+
+    function getActiveTrackList() {
+      if (playbackContext === 'inspector' && inspectorTracks && inspectorTracks.length > 0) {
+        return inspectorTracks;
+      }
+      if (playbackContext === 'queue' && completedDownloads && completedDownloads.length > 0) {
+        return completedDownloads;
+      }
+      if (TRACKS_REPO && TRACKS_REPO.length > 0) {
+        return TRACKS_REPO;
+      }
+      if (inspectorTracks && inspectorTracks.length > 0) return inspectorTracks;
+      if (completedDownloads && completedDownloads.length > 0) return completedDownloads;
+      return [];
+    }
+
+    function setVolume(val) {
+      const v = parseFloat(val);
+      if (isNaN(v)) return;
+      audio.volume = Math.max(0, Math.min(1, v));
+      if (v > 0) lastVolume = v;
+      updateVolumeUI();
+    }
+
+    function toggleMute() {
+      if (audio.volume === 0 || audio.muted) {
+        audio.muted = false;
+        audio.volume = lastVolume > 0 ? lastVolume : 0.8;
+      } else {
+        lastVolume = audio.volume;
+        audio.volume = 0;
+      }
+      updateVolumeUI();
+    }
+
+    function updateVolumeUI() {
+      const slider = document.getElementById('player-volume-slider');
+      const icon = document.getElementById('player-volume-icon');
+      const pct = document.getElementById('player-volume-pct');
+      const v = audio.volume;
+
+      if (slider) slider.value = v;
+      if (pct) pct.innerText = `${Math.round(v * 100)}%`;
+      if (icon) {
+        if (v === 0 || audio.muted) {
+          icon.innerText = 'volume_off';
+          icon.classList.add('text-error');
+        } else if (v < 0.5) {
+          icon.innerText = 'volume_down';
+          icon.classList.remove('text-error');
+        } else {
+          icon.innerText = 'volume_up';
+          icon.classList.remove('text-error');
+        }
+      }
+    }
 
     function initAudioEngine() {
       setPlayerIdleState();
+      audio.volume = 0.8;
+      updateVolumeUI();
 
       audio.addEventListener('timeupdate', () => {
         if (!audio.duration) return;
@@ -1401,15 +1511,20 @@
       renderLyricsCanvas([]);
     }
 
-    function loadTrack(index, autoPlay = true) {
-      if (!TRACKS_REPO || TRACKS_REPO.length === 0) {
+    function loadTrack(index, autoPlay = true, context = null) {
+      if (context) playbackContext = context;
+      const list = getActiveTrackList();
+      if (!list || list.length === 0) {
         setPlayerIdleState();
         return;
       }
-      if (index < 0 || index >= TRACKS_REPO.length) index = 0;
+      if (index < 0 || index >= list.length) index = 0;
       currentTrackIndex = index;
-      const track = TRACKS_REPO[index];
+      const track = list[index];
       currentTrack = track;
+
+      const songCover = getSongCover(track, index);
+      track.cover = songCover;
 
       if (track.audioSrc) {
         audio.src = track.audioSrc;
@@ -1421,12 +1536,12 @@
       document.getElementById('mini-track-artist').innerText = track.artist || 'Unknown Artist';
       const miniBadge = document.getElementById('mini-track-badge');
       if (miniBadge) {
-        miniBadge.innerText = track.badge || 'FLAC';
+        miniBadge.innerText = track.badge || (track.format ? track.format.split(' ')[0] : 'MP3');
         miniBadge.classList.remove('hidden');
       }
       const miniCover = document.getElementById('mini-cover-art');
       if (miniCover) {
-        miniCover.src = track.cover || 'assets/icon_transparent.png';
+        miniCover.src = songCover;
         miniCover.className = 'w-full h-full object-cover';
       }
 
@@ -1435,26 +1550,30 @@
       document.getElementById('overlay-artist').innerText = `${track.artist || 'Unknown Artist'}${track.album ? ' — ' + track.album : ''}`;
       const ovBadge = document.getElementById('overlay-badge');
       if (ovBadge) {
-        ovBadge.innerText = track.format || 'Hi-Res';
+        ovBadge.innerText = track.format || 'MP3 320kbps';
         ovBadge.classList.remove('hidden');
       }
       const ovThumb = document.getElementById('overlay-thumb');
       if (ovThumb) {
-        ovThumb.src = track.cover || 'assets/icon_transparent.png';
+        ovThumb.src = songCover;
         ovThumb.className = 'w-full h-full object-cover';
       }
       const vinylArt = document.getElementById('vinyl-art-image');
       if (vinylArt) {
-        vinylArt.src = track.cover || 'assets/icon_transparent.png';
+        vinylArt.src = songCover;
         vinylArt.className = 'w-full h-full object-cover';
       }
 
       // Up next in queue
-      const nextIdx = (index + 1) % TRACKS_REPO.length;
-      const nextTrack = TRACKS_REPO[nextIdx];
+      const nextIdx = (index + 1) % list.length;
+      const nextTrack = list[nextIdx];
       const upnextText = document.getElementById('overlay-upnext-text');
+      const upnextArt = document.getElementById('overlay-upnext-art');
       if (upnextText && nextTrack) {
         upnextText.innerText = `${nextTrack.artist} — ${nextTrack.title}`;
+      }
+      if (upnextArt && nextTrack) {
+        upnextArt.src = getSongCover(nextTrack, nextIdx);
       }
 
       // Render Lyrics
@@ -1466,10 +1585,10 @@
           navigator.mediaSession.metadata = new MediaMetadata({
             title: track.title,
             artist: track.artist,
-            album: track.album || 'BeatVault Lossless',
+            album: track.album || 'BeatVault Master',
             artwork: [
-              { src: track.cover || 'assets/icon-192.png', sizes: '192x192', type: 'image/png' },
-              { src: track.cover || 'assets/icon-512.png', sizes: '512x512', type: 'image/png' }
+              { src: songCover, sizes: '192x192', type: 'image/png' },
+              { src: songCover, sizes: '512x512', type: 'image/png' }
             ]
           });
 
@@ -1493,6 +1612,8 @@
         }).catch(() => {
           setPlayState(false);
         });
+      } else if (autoPlay) {
+        setPlayState(true);
       } else {
         setPlayState(false);
       }
@@ -1501,23 +1622,28 @@
     }
 
     function togglePlayPause() {
+      const list = getActiveTrackList();
       if (!currentTrack) {
-        if (TRACKS_REPO && TRACKS_REPO.length > 0) {
+        if (list && list.length > 0) {
           loadTrack(0, true);
         } else {
           showToast("No track selected to play");
         }
         return;
       }
-      if (audio.paused) {
+      if (audio.paused && audio.src) {
         audio.play().then(() => {
           setPlayState(true);
         }).catch(err => {
           console.warn("Audio play prevented:", err);
+          setPlayState(true);
         });
-      } else {
-        audio.pause();
+      } else if (isPlaying) {
+        if (audio.src) audio.pause();
         setPlayState(false);
+      } else {
+        if (audio.src) audio.play().catch(() => {});
+        setPlayState(true);
       }
     }
 
@@ -1539,22 +1665,24 @@
     }
 
     function skipNextTrack() {
-      if (!TRACKS_REPO || TRACKS_REPO.length === 0) {
+      const list = getActiveTrackList();
+      if (!list || list.length === 0) {
         showToast("Queue is empty");
         return;
       }
       let nextIndex;
       if (isShuffle) {
-        nextIndex = Math.floor(Math.random() * TRACKS_REPO.length);
+        nextIndex = Math.floor(Math.random() * list.length);
       } else {
-        nextIndex = (currentTrackIndex + 1) % TRACKS_REPO.length;
+        nextIndex = (currentTrackIndex + 1) % list.length;
       }
       loadTrack(nextIndex, true);
-      showToast(`Now Playing: ${TRACKS_REPO[nextIndex].title}`);
+      showToast(`Now Playing: ${list[nextIndex].title}`);
     }
 
     function skipPrevTrack() {
-      if (!TRACKS_REPO || TRACKS_REPO.length === 0) {
+      const list = getActiveTrackList();
+      if (!list || list.length === 0) {
         showToast("Queue is empty");
         return;
       }
@@ -1562,9 +1690,9 @@
         audio.currentTime = 0;
         return;
       }
-      let prevIndex = (currentTrackIndex - 1 + TRACKS_REPO.length) % TRACKS_REPO.length;
+      let prevIndex = (currentTrackIndex - 1 + list.length) % list.length;
       loadTrack(prevIndex, true);
-      showToast(`Now Playing: ${TRACKS_REPO[prevIndex].title}`);
+      showToast(`Now Playing: ${list[prevIndex].title}`);
     }
 
     function toggleShuffle() {
@@ -1798,10 +1926,11 @@
     function closeNowPlayingModal() {
       const modal = document.getElementById('now-playing-overlay');
       modal.classList.remove('open');
+      modal.style.transform = '';
     }
 
-    // Touch swipe-up to expand mini player & swipe-down to collapse overlay
-    (function initMiniPlayerSwipeGestures() {
+    // Touch swipe-up to expand mini player & pull-down to collapse overlay
+    (function initNowPlayingGestures() {
       let miniTouchStartY = 0;
       const mini = document.getElementById('persistent-mini-player');
       if (mini) {
@@ -1817,15 +1946,37 @@
       }
 
       let overlayTouchStartY = 0;
+      let overlayIsDragging = false;
       const overlay = document.getElementById('now-playing-overlay');
       if (overlay) {
         overlay.addEventListener('touchstart', (e) => {
-          overlayTouchStartY = e.touches[0].clientY;
+          if (overlay.scrollTop <= 5) {
+            overlayTouchStartY = e.touches[0].clientY;
+            overlayIsDragging = true;
+          } else {
+            overlayIsDragging = false;
+          }
         }, { passive: true });
+
+        overlay.addEventListener('touchmove', (e) => {
+          if (!overlayIsDragging) return;
+          const currentY = e.touches[0].clientY;
+          const dy = currentY - overlayTouchStartY;
+          if (dy > 0) {
+            overlay.style.transition = 'none';
+            overlay.style.transform = `translateY(${Math.min(dy * 0.7, 320)}px)`;
+          }
+        }, { passive: true });
+
         overlay.addEventListener('touchend', (e) => {
+          if (!overlayIsDragging) return;
+          overlayIsDragging = false;
+          overlay.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
           const touchEndY = e.changedTouches[0].clientY;
-          if (touchEndY - overlayTouchStartY > 50 && overlay.scrollTop <= 10) {
+          if (touchEndY - overlayTouchStartY > 70) {
             closeNowPlayingModal();
+          } else {
+            overlay.style.transform = 'translateY(0)';
           }
         }, { passive: true });
       }
@@ -2122,11 +2273,11 @@
 
             // Populate inspectorTracks dynamically from analyzed media
             inspectorTracks = [
-              { id: "p1", title: "Espresso", artist: "Sabrina Carpenter", duration: "02:55", size: 7.4, status: "new", checked: true },
-              { id: "p2", title: "Birds of a Feather", artist: "Billie Eilish", duration: "03:30", size: 8.2, status: "new", checked: true },
-              { id: "p3", title: "Good Luck, Babe!", artist: "Chappell Roan", duration: "03:38", size: 8.5, status: "new", checked: true },
-              { id: "p4", title: "Taste", artist: "Sabrina Carpenter", duration: "02:37", size: 7.1, status: "new", checked: true },
-              { id: "p5", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", duration: "04:11", size: 9.8, status: "new", checked: true }
+              { id: "p1", title: "Espresso", artist: "Sabrina Carpenter", duration: "02:55", size: 7.4, status: "new", checked: true, cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80" },
+              { id: "p2", title: "Birds of a Feather", artist: "Billie Eilish", duration: "03:30", size: 8.2, status: "new", checked: true, cover: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&auto=format&fit=crop&q=80" },
+              { id: "p3", title: "Good Luck, Babe!", artist: "Chappell Roan", duration: "03:38", size: 8.5, status: "new", checked: true, cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80" },
+              { id: "p4", title: "Taste", artist: "Sabrina Carpenter", duration: "02:37", size: 7.1, status: "new", checked: true, cover: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&auto=format&fit=crop&q=80" },
+              { id: "p5", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", duration: "04:11", size: 9.8, status: "new", checked: true, cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop&q=80" }
             ];
 
             const inspTitle = document.getElementById('inspector-title');
@@ -2134,7 +2285,8 @@
             const inspSubtitle = document.getElementById('inspector-subtitle');
             if (inspSubtitle) inspSubtitle.innerText = `${currentPlatform.toUpperCase()} Media Gateway`;
             const inspMeta = document.getElementById('inspector-meta-count');
-            if (inspMeta) inspMeta.innerText = `${inspectorTracks.length} Tracks • ~38.0 MB (FLAC)`;
+            const totalMb = inspectorTracks.reduce((sum, t) => sum + t.size, 0).toFixed(1);
+            if (inspMeta) inspMeta.innerText = `${inspectorTracks.length} Tracks • ~${totalMb} MB (MP3 320kbps)`;
 
             renderInspectorList();
 
@@ -2148,7 +2300,7 @@
           if (progress > 35 && progress < 70) {
             step.innerText = 'Extracting ISRC keys & HD album artwork...';
           } else if (progress >= 70) {
-            step.innerText = 'Synthesizing FLAC 24-bit audio tags & lyrics...';
+            step.innerText = 'Synthesizing MP3 320kbps audio tags & lyrics...';
           }
         }
       }, 250);
@@ -2158,11 +2310,57 @@
     /* 6. SCREEN 2: PLAYLIST INSPECTOR CONTROLLER                   */
     /* ============================================================ */
     let inspectorTracks = [];
+    let inspectorTargetQuality = '320'; // Target quality defaults to MP3 320kbps (not FLAC)
+
+    function setInspectorTargetQuality(q) {
+      inspectorTargetQuality = q;
+      const b320 = document.getElementById('btn-insp-q-320');
+      const b192 = document.getElementById('btn-insp-q-192');
+      const bflac = document.getElementById('btn-insp-q-flac');
+
+      [b320, b192, bflac].forEach(b => {
+        if (!b) return;
+        b.className = 'px-3 py-1 rounded-lg text-[11px] font-medium transition-all text-on-surface-variant hover:text-on-surface cursor-pointer';
+      });
+
+      const activeBtn = q === '320' ? b320 : (q === '192' ? b192 : bflac);
+      if (activeBtn) {
+        activeBtn.className = 'px-3 py-1 rounded-lg text-[11px] font-bold transition-all bg-primary text-on-primary shadow-sm cursor-pointer';
+      }
+
+      // Adjust track sizes based on target quality
+      inspectorTracks.forEach(t => {
+        if (q === 'flac') {
+          t.size = 35.0;
+        } else if (q === '192') {
+          t.size = 4.8;
+        } else {
+          t.size = 7.8;
+        }
+      });
+
+      const totalSize = inspectorTracks.filter(t => t.checked).reduce((sum, t) => sum + t.size, 0).toFixed(1);
+      const inspMeta = document.getElementById('inspector-meta-count');
+      if (inspMeta) {
+        const qLabel = q === 'flac' ? 'FLAC' : `MP3 ${q}kbps`;
+        inspMeta.innerText = `${inspectorTracks.length} Tracks • ~${totalSize} MB (${qLabel})`;
+      }
+      updateInspectorCTA();
+      showToast(`Target quality: ${q === 'flac' ? 'Lossless FLAC' : 'MP3 ' + q + ' kbps'}`);
+    }
+
+    function playInspectorTrack(idx) {
+      if (!inspectorTracks || !inspectorTracks[idx]) return;
+      playbackContext = 'inspector';
+      loadTrack(idx, true, 'inspector');
+      openNowPlayingModal();
+    }
 
     function renderInspectorList() {
       const container = document.getElementById('inspector-tracklist');
       const emptyState = document.getElementById('mobileInspectorEmptyState');
       const headerCard = document.getElementById('inspector-header-card');
+      const qualitySelector = document.getElementById('inspector-quality-selector');
       const batchControls = document.getElementById('inspector-batch-controls');
       const searchContainer = document.getElementById('inspector-search-container');
       const ctaContainer = document.getElementById('inspector-cta-container');
@@ -2170,6 +2368,7 @@
       if (!inspectorTracks || inspectorTracks.length === 0) {
         if (emptyState) emptyState.classList.remove('hidden');
         if (headerCard) headerCard.classList.add('hidden');
+        if (qualitySelector) qualitySelector.classList.add('hidden');
         if (batchControls) batchControls.classList.add('hidden');
         if (searchContainer) searchContainer.classList.add('hidden');
         if (container) {
@@ -2182,6 +2381,7 @@
 
       if (emptyState) emptyState.classList.add('hidden');
       if (headerCard) headerCard.classList.remove('hidden');
+      if (qualitySelector) qualitySelector.classList.remove('hidden');
       if (batchControls) batchControls.classList.remove('hidden');
       if (searchContainer) searchContainer.classList.remove('hidden');
       if (container) container.classList.remove('hidden');
@@ -2196,12 +2396,18 @@
         row.onclick = () => toggleInspectorCheck(t.id);
 
         const checkClass = t.checked ? 'bg-primary text-on-primary' : 'bg-surface-container-highest text-transparent';
+        const trackCover = getSongCover(t, i);
 
         row.innerHTML = `
           <button class="track-checkbox w-6 h-6 rounded-lg ${checkClass} flex items-center justify-center flex-shrink-0 transition-all shadow-sm">
             <span class="material-symbols-outlined text-[16px] font-bold">check</span>
           </button>
-          <span class="text-xs font-mono text-on-surface-variant w-5 text-center tabular-nums flex-shrink-0">${String(i+1).padStart(2, '0')}</span>
+          <button onclick="event.stopPropagation(); playInspectorTrack(${i})" class="w-8 h-8 rounded-xl bg-surface-container-high hover:bg-primary hover:text-on-primary text-primary flex items-center justify-center flex-shrink-0 transition-colors shadow-sm cursor-pointer" title="Preview track">
+            <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+          </button>
+          <div class="relative w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-sm">
+            <img src="${trackCover}" alt="Cover" class="w-full h-full object-cover">
+          </div>
           <div class="flex flex-col min-w-0 flex-1">
             <span class="text-xs font-semibold text-on-surface truncate">${t.title}</span>
             <span class="text-[11px] text-on-surface-variant truncate">${t.artist}</span>
@@ -2290,13 +2496,18 @@
       const selected = inspectorTracks.filter(t => t.checked);
       if (!selected.length) return;
 
+      const formatStr = inspectorTargetQuality === 'flac' ? 'FLAC 24/96' : `MP3 ${inspectorTargetQuality}k`;
+      const badgeStr = inspectorTargetQuality === 'flac' ? '24b' : `${inspectorTargetQuality}k`;
+
       selected.forEach(t => {
         const dlId = `dl-${Date.now()}-${t.id}`;
+        const trackCover = getSongCover(t);
+
         activeDownloads.unshift({
           id: dlId,
           title: t.title,
           artist: t.artist,
-          album: "BeatVault Lossless",
+          album: "BeatVault Master",
           duration: t.duration,
           durationSec: 180,
           progress: 25,
@@ -2306,15 +2517,40 @@
           eta: "00:02s",
           status: "downloading",
           stageText: "Direct Stream Acquisition",
-          format: "FLAC 24/96",
-          badge: "24b",
+          format: formatStr,
+          badge: badgeStr,
           size: `${t.size} MB`,
           color: "primary",
-          cover: "assets/icon_transparent.png",
+          cover: trackCover,
           lyrics: []
         });
 
-        // Simulate finishing download and saving to offline library
+        // Stage 1: Download progress advances
+        setTimeout(() => {
+          const item = activeDownloads.find(d => d.id === dlId);
+          if (item && item.status === 'downloading') {
+            item.progress = 75;
+            item.currentBytes = `${(t.size * 0.75).toFixed(1)} MB`;
+            item.speed = "3.8 MB/s";
+            renderDownloadsList();
+          }
+        }, 800);
+
+        // Stage 2: Raw download completes -> animated "Converting to MP3..." status
+        setTimeout(() => {
+          const item = activeDownloads.find(d => d.id === dlId);
+          if (item && item.status === 'downloading') {
+            item.status = 'converting';
+            item.progress = 92;
+            item.currentBytes = `${t.size} MB`;
+            item.speed = "";
+            item.eta = "";
+            item.stageText = "Converting audio to MP3...";
+            renderDownloadsList();
+          }
+        }, 1600);
+
+        // Stage 3: Conversion finished -> Save to completed and offline Vault
         setTimeout(() => {
           activeDownloads = activeDownloads.filter(item => item.id !== dlId);
           completedDownloads.unshift({
@@ -2322,7 +2558,9 @@
             title: t.title,
             artist: t.artist,
             size: `${t.size} MB`,
-            format: "FLAC 24/96",
+            format: formatStr,
+            badge: badgeStr,
+            cover: trackCover,
             time: "Just now"
           });
 
@@ -2332,14 +2570,14 @@
               id: `tr-${Date.now()}-${t.id}`,
               title: t.title,
               artist: t.artist,
-              album: "Studio Lossless Master",
+              album: "Studio Master",
               duration: t.duration,
               durationSec: 180,
-              format: "FLAC 24/96",
-              badge: "24b",
+              format: formatStr,
+              badge: badgeStr,
               size: `${t.size} MB`,
               status: "downloaded",
-              cover: "assets/icon_transparent.png",
+              cover: trackCover,
               audioSrc: "",
               lyrics: []
             });
@@ -2347,10 +2585,12 @@
               localStorage.setItem('beatvault_mobile_library', JSON.stringify(TRACKS_REPO));
             } catch (e) {}
             renderLibraryList();
+            updateStorageFootprint();
           }
 
           renderDownloadsList();
-        }, 3000);
+          renderCompletedList();
+        }, 2600);
       });
 
       renderDownloadsList();
@@ -2370,6 +2610,28 @@
       document.getElementById('header-active-count').innerText = `${activeDownloads.length} Active`;
       document.getElementById('nav-downloads-badge').innerText = activeDownloads.length;
 
+      // Real bandwidth speed calculation without fake multipliers
+      let totalMBs = 0;
+      activeDownloads.forEach(t => {
+        if (t.status === 'downloading' && t.speed && typeof t.speed === 'string') {
+          const s = t.speed.trim();
+          const num = parseFloat(s.replace(/[^0-9.]/g, ''));
+          if (!isNaN(num) && num > 0) {
+            if (s.toLowerCase().includes('kb/s')) {
+              totalMBs += (num / 1024);
+            } else if (s.toLowerCase().includes('gb/s')) {
+              totalMBs += (num * 1024);
+            } else {
+              totalMBs += num;
+            }
+          }
+        }
+      });
+      const speedTicker = document.getElementById('download-speed-ticker');
+      if (speedTicker) {
+        speedTicker.innerText = totalMBs > 0 ? `${totalMBs.toFixed(1)} MB/s` : '0.0 MB/s';
+      }
+
       if (activeDownloads.length === 0) {
         container.innerHTML = '<div class="p-8 text-center text-xs font-mono text-on-surface-variant">No active downloads in queue.</div>';
         return;
@@ -2377,11 +2639,15 @@
 
       activeDownloads.forEach(task => {
         const card = document.createElement('div');
-        card.className = `bg-surface-container border border-white/5 rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-xl relative overflow-hidden`;
+        card.className = `bg-surface-container border border-white/5 rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-xl relative overflow-hidden transition-all`;
 
         let statusBadge = '';
-        if (task.status === 'downloading') {
+        if (task.status === 'converting' || (task.stageText && task.stageText.toLowerCase().includes('converting'))) {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-[10px] font-mono font-bold flex items-center gap-1 animate-pulse"><span class="material-symbols-outlined text-[13px] animate-spin">sync</span>Converting to MP3...</span>`;
+        } else if (task.status === 'downloading') {
           statusBadge = `<span class="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">Downloading ${task.progress}%</span>`;
+        } else if (task.status === 'paused') {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant text-[10px] font-mono font-bold">Paused</span>`;
         } else if (task.status === 'syncing_lrc') {
           statusBadge = `<span class="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-[10px] font-mono font-bold">Syncing LRC</span>`;
         } else if (task.status === 'queued') {
@@ -2390,13 +2656,17 @@
           statusBadge = `<span class="px-2 py-0.5 rounded-full bg-error/20 text-error text-[10px] font-mono font-bold">Failed</span>`;
         }
 
-        const progressBarColor = task.status === 'failed' ? 'bg-error' : (task.status === 'syncing_lrc' ? 'bg-secondary' : 'bg-primary');
+        const progressBarColor = (task.status === 'converting' || (task.stageText && task.stageText.toLowerCase().includes('converting')))
+          ? 'bg-secondary animate-pulse'
+          : (task.status === 'failed' ? 'bg-error' : (task.status === 'paused' ? 'bg-on-surface-variant/40' : (task.status === 'syncing_lrc' ? 'bg-secondary' : 'bg-primary')));
+
+        const taskCover = getSongCover(task);
 
         card.innerHTML = `
           <div class="flex items-start justify-between gap-2">
             <div class="flex items-center gap-3 min-w-0">
-              <div class="w-11 h-11 rounded-xl bg-surface-container-high overflow-hidden flex-shrink-0 flex items-center justify-center border border-white/5">
-                <span class="material-symbols-outlined text-[20px] text-primary">audiotrack</span>
+              <div class="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-sm">
+                <img src="${taskCover}" alt="Cover" class="w-full h-full object-cover">
               </div>
               <div class="flex flex-col min-w-0">
                 <span class="text-xs font-bold text-on-surface truncate">${task.title}</span>
@@ -2412,8 +2682,8 @@
             </div>
             <div class="flex items-center justify-between font-mono text-[10px] text-on-surface-variant">
               <span>${task.currentBytes} / ${task.totalBytes}</span>
-              <span class="text-secondary font-semibold">${task.speed}</span>
-              <span>ETA: ${task.eta}</span>
+              <span class="text-secondary font-semibold">${task.speed || (task.status === 'converting' ? 'Converting...' : '')}</span>
+              <span>ETA: ${task.eta || '--'}</span>
             </div>
           </div>
 
@@ -2429,11 +2699,11 @@
                   <span>Retry</span>
                 </button>
               ` : `
-                <button onclick="togglePauseTask('${task.id}')" class="w-7 h-7 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface transition-transform active:scale-95 cursor-pointer">
+                <button onclick="togglePauseTask('${task.id}')" class="w-7 h-7 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface transition-transform active:scale-95 cursor-pointer" title="${task.status === 'paused' ? 'Resume' : 'Pause'}">
                   <span class="material-symbols-outlined text-[16px]">${task.status === 'paused' ? 'play_arrow' : 'pause'}</span>
                 </button>
               `}
-              <button onclick="cancelTask('${task.id}')" class="w-7 h-7 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface-variant hover:text-error transition-colors cursor-pointer">
+              <button onclick="cancelTask('${task.id}')" class="w-7 h-7 rounded-full bg-surface-container-high hover:bg-surface-bright flex items-center justify-center text-on-surface-variant hover:text-error transition-colors cursor-pointer" title="Cancel">
                 <span class="material-symbols-outlined text-[16px]">close</span>
               </button>
             </div>
@@ -2452,13 +2722,15 @@
         return;
       }
 
-      completedDownloads.forEach(item => {
+      completedDownloads.forEach((item, idx) => {
         const row = document.createElement('div');
         row.className = 'p-3 rounded-2xl bg-surface-container border border-white/5 flex items-center justify-between gap-3 shadow-md';
+        const itemCover = getSongCover(item, idx);
+
         row.innerHTML = `
           <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0">
-              <span class="material-symbols-outlined text-[20px]">check_circle</span>
+            <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border border-white/5 shadow-sm">
+              <img src="${itemCover}" alt="Cover" class="w-full h-full object-cover">
             </div>
             <div class="flex flex-col min-w-0">
               <span class="text-xs font-bold text-on-surface truncate">${item.title}</span>
@@ -2467,7 +2739,7 @@
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <span class="text-[10px] font-mono text-secondary px-1.5 py-0.5 rounded bg-surface-container-high">${item.format}</span>
-            <button onclick="playCompletedTrack('${item.title}')" class="h-8 px-3 rounded-xl bg-surface-container-high hover:bg-primary hover:text-on-primary text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer">
+            <button onclick="playCompletedTrack(${idx})" class="h-8 px-3 rounded-xl bg-surface-container-high hover:bg-primary hover:text-on-primary text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer">
               <span class="material-symbols-outlined text-[16px]">play_arrow</span>
               Play
             </button>
@@ -2502,7 +2774,7 @@
       if (t) {
         if (t.status === 'paused') {
           t.status = 'downloading';
-          t.speed = '2.9 MB/s';
+          t.speed = '3.2 MB/s';
           showToast(`Resumed ${t.title}`);
         } else {
           t.status = 'paused';
@@ -2559,13 +2831,21 @@
       showToast("Cleared completed history");
     }
 
-    function playCompletedTrack(title) {
-      const foundIdx = TRACKS_REPO.findIndex(t => t.title.toLowerCase().includes(title.toLowerCase()));
-      if (foundIdx >= 0) {
-        loadTrack(foundIdx, true);
+    function playCompletedTrack(target) {
+      let foundIdx = -1;
+      if (typeof target === 'number') {
+        foundIdx = target;
+      } else if (typeof target === 'string') {
+        foundIdx = completedDownloads.findIndex(t => t.title.toLowerCase().includes(target.toLowerCase()));
+      }
+
+      if (foundIdx >= 0 && completedDownloads[foundIdx]) {
+        playbackContext = 'queue';
+        loadTrack(foundIdx, true, 'queue');
         openNowPlayingModal();
-      } else {
-        loadTrack(0, true);
+      } else if (TRACKS_REPO.length > 0) {
+        playbackContext = 'vault';
+        loadTrack(0, true, 'vault');
         openNowPlayingModal();
       }
     }
@@ -2605,6 +2885,15 @@
       const countBadge = document.getElementById('library-track-count');
       if (countBadge) countBadge.innerText = `${list.length} Track${list.length !== 1 ? 's' : ''}`;
 
+      // Dynamic real cached storage calculation across offline tracks
+      const totalSizeMb = TRACKS_REPO.reduce((sum, t) => sum + (parseFloat(t.size) || 0), 0);
+      const cachedBadge = document.getElementById('library-cached-size');
+      if (cachedBadge) {
+        cachedBadge.innerText = totalSizeMb >= 1024
+          ? `${(totalSizeMb / 1024).toFixed(2)} GB Cached`
+          : `${totalSizeMb.toFixed(1)} MB Cached`;
+      }
+
       if (list.length === 0) {
         container.innerHTML = `
           <div id="mobileVaultEmptyState" class="py-16 px-6 flex flex-col items-center justify-center text-center bg-surface-container rounded-2xl border border-white/5 shadow-xl gap-4">
@@ -2624,22 +2913,66 @@
         return;
       }
 
-      list.forEach(t => {
+      list.forEach((t, i) => {
         const isCurrent = (currentTrack && currentTrack.id === t.id);
         const row = document.createElement('div');
         row.id = `lib-row-${t.id}`;
-        row.className = `p-2.5 rounded-2xl ${isCurrent ? 'bg-surface-container-high border border-primary/40 shadow-[0_0_20px_rgba(83,224,118,0.2)]' : 'bg-surface-container-low border border-white/5'} hover:bg-surface-container transition-all flex items-center justify-between gap-3 cursor-pointer`;
+        row.className = `p-2.5 rounded-2xl ${isCurrent ? 'bg-surface-container-high border border-primary/40 shadow-[0_0_20px_rgba(83,224,118,0.2)]' : 'bg-surface-container-low border border-white/5'} hover:bg-surface-container transition-all flex items-center justify-between gap-3 cursor-pointer select-none`;
+        
         row.onclick = () => {
           const idx = TRACKS_REPO.findIndex(item => item.id === t.id);
           if (idx >= 0) {
-            loadTrack(idx, true);
+            playbackContext = 'vault';
+            loadTrack(idx, true, 'vault');
           }
         };
+
+        // Touch gesture swipe on track card
+        let startX = 0;
+        let isSwiping = false;
+        row.addEventListener('touchstart', (e) => {
+          startX = e.touches[0].clientX;
+          isSwiping = true;
+          row.style.transition = 'none';
+        }, { passive: true });
+
+        row.addEventListener('touchmove', (e) => {
+          if (!isSwiping) return;
+          const currentX = e.touches[0].clientX;
+          const dx = currentX - startX;
+          if (Math.abs(dx) > 10 && Math.abs(dx) < 120) {
+            row.style.transform = `translateX(${dx * 0.4}px)`;
+          }
+        }, { passive: true });
+
+        row.addEventListener('touchend', (e) => {
+          if (!isSwiping) return;
+          isSwiping = false;
+          row.style.transition = 'transform 0.25s ease';
+          const endX = e.changedTouches[0].clientX;
+          const dx = endX - startX;
+          row.style.transform = 'translateX(0)';
+
+          if (dx > 60) {
+            // Swipe right -> Play track
+            const idx = TRACKS_REPO.findIndex(item => item.id === t.id);
+            if (idx >= 0) {
+              playbackContext = 'vault';
+              loadTrack(idx, true, 'vault');
+              showToast(`Playing: ${t.title}`);
+            }
+          } else if (dx < -60) {
+            // Swipe left -> Open Context Actions
+            openContextMenu(t.id);
+          }
+        }, { passive: true });
+
+        const trackCover = getSongCover(t, i);
 
         row.innerHTML = `
           <div class="flex items-center gap-3 min-w-0 flex-1">
             <div class="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-highest border border-white/10 shadow-md">
-              <img src="${t.cover || 'assets/icon_transparent.png'}" alt="${t.title}" class="w-full h-full object-cover">
+              <img src="${trackCover}" alt="${t.title}" class="w-full h-full object-cover">
               ${isCurrent ? `
                 <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
                   <div class="flex items-end gap-[2px] h-3.5">
@@ -2653,7 +2986,7 @@
             <div class="flex flex-col min-w-0 pr-1">
               <div class="flex items-center gap-1.5">
                 <span class="text-xs font-semibold ${isCurrent ? 'text-primary' : 'text-on-surface'} truncate">${t.title}</span>
-                <span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-mono font-bold">${t.badge || 'FLAC'}</span>
+                <span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-mono font-bold">${t.badge || 'MP3'}</span>
               </div>
               <span class="text-[11px] text-on-surface-variant truncate mt-0.5">${t.artist}</span>
             </div>
@@ -2720,7 +3053,8 @@
         return;
       }
       const randomIdx = Math.floor(Math.random() * TRACKS_REPO.length);
-      loadTrack(randomIdx, true);
+      playbackContext = 'vault';
+      loadTrack(randomIdx, true, 'vault');
       openNowPlayingModal();
       showToast(`Shuffled & Playing: ${TRACKS_REPO[randomIdx].title}`);
     }
@@ -2735,7 +3069,7 @@
 
       document.getElementById('context-sheet-title').innerText = track.title;
       document.getElementById('context-sheet-artist').innerText = track.artist;
-      document.getElementById('context-sheet-art').src = track.cover;
+      document.getElementById('context-sheet-art').src = getSongCover(track);
 
       const sheet = document.getElementById('context-sheet-backdrop');
       sheet.classList.remove('hidden');
@@ -2755,11 +3089,18 @@
         showToast(`'${track.title}' set as Next Track`);
       } else if (action === 'view-lyrics') {
         const idx = TRACKS_REPO.findIndex(t => t.id === track.id);
-        loadTrack(idx, true);
+        playbackContext = 'vault';
+        loadTrack(idx, true, 'vault');
         openNowPlayingModal('lyrics');
       } else if (action === 'share') {
-        showToast(`Lossless export: ${track.title}.flac`);
+        showToast(`Audio export: ${track.title}.${track.format && track.format.includes('FLAC') ? 'flac' : 'mp3'}`);
       } else if (action === 'delete') {
+        TRACKS_REPO = TRACKS_REPO.filter(t => t.id !== track.id);
+        try {
+          localStorage.setItem('beatvault_mobile_library', JSON.stringify(TRACKS_REPO));
+        } catch (e) {}
+        renderLibraryList();
+        updateStorageFootprint();
         showToast(`Purged '${track.title}' from local vault`);
       }
     }
@@ -2767,6 +3108,38 @@
     /* ============================================================ */
     /* 9. SCREEN 6: APP SETTINGS CONTROLLER                         */
     /* ============================================================ */
+    let appCacheMb = 24.5; // Dynamic temporary cache in MB
+
+    function updateStorageFootprint() {
+      const audioMb = TRACKS_REPO.reduce((sum, t) => sum + (parseFloat(t.size) || 0), 0);
+      const totalAllocationGb = 64.0;
+      const audioGb = audioMb / 1024;
+      const cacheGb = appCacheMb / 1024;
+      const freeGb = Math.max(0, totalAllocationGb - (audioGb + cacheGb));
+
+      const audioBar = document.getElementById('storage-audio-bar');
+      const cacheBar = document.getElementById('storage-cache-bar');
+      const audioVal = document.getElementById('storage-audio-val');
+      const cacheVal = document.getElementById('cache-size-display');
+      const freeVal = document.getElementById('storage-free-val');
+
+      const audioPct = Math.min(95, Math.max(audioMb > 0 ? 2 : 0, (audioGb / totalAllocationGb) * 100));
+      const cachePct = Math.min(95, Math.max(appCacheMb > 0 ? 1 : 0, (cacheGb / totalAllocationGb) * 100));
+
+      if (audioBar) audioBar.style.width = `${audioPct.toFixed(1)}%`;
+      if (cacheBar) cacheBar.style.width = `${cachePct.toFixed(1)}%`;
+
+      if (audioVal) {
+        audioVal.innerText = audioMb >= 1024 ? `${(audioMb / 1024).toFixed(2)} GB` : `${audioMb.toFixed(1)} MB`;
+      }
+      if (cacheVal) {
+        cacheVal.innerText = `${appCacheMb.toFixed(1)} MB`;
+      }
+      if (freeVal) {
+        freeVal.innerText = `${freeGb.toFixed(1)} GB`;
+      }
+    }
+
     function updateConcurrency(value) {
       const badge = document.getElementById('concurrency-val');
       badge.innerText = `${value} Thread${value > 1 ? 's' : ''}`;
@@ -2775,18 +3148,22 @@
     function clearAppCache() {
       const btn = document.getElementById('clear-cache-btn');
       const banner = document.getElementById('cache-cleared-banner');
-      const display = document.getElementById('cache-size-display');
+      const bannerText = document.getElementById('cache-banner-text');
+      const purgedAmount = appCacheMb;
+      appCacheMb = 0.0;
 
       btn.disabled = true;
       btn.classList.add('opacity-50');
-      display.innerText = '0 MB';
+      if (bannerText) bannerText.innerText = `${purgedAmount.toFixed(1)} MB Temporary Cache Successfully Purged`;
       banner.classList.remove('hidden');
+
+      updateStorageFootprint();
 
       setTimeout(() => {
         btn.disabled = false;
         btn.classList.remove('opacity-50');
-        showToast("Cache Cleared: 48 MB Purged");
-      }, 1000);
+        showToast(`Cache Cleared: ${purgedAmount.toFixed(1)} MB Purged`);
+      }, 800);
     }
 
     function checkAppUpdates() {
@@ -2827,6 +3204,7 @@
       renderInspectorList();
       renderDownloadsList();
       renderLibraryList();
+      updateStorageFootprint();
 
       // Check initial URL hash
       const hash = window.location.hash.replace('#', '');

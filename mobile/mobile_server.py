@@ -34,16 +34,43 @@ class BeatVaultHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Range, Content-Type')
+        self.send_header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS, POST')
+        self.send_header('Access-Control-Allow-Headers', 'Range, Content-Type, Authorization, X-Requested-With, Accept')
+        self.send_header('Access-Control-Expose-Headers', 'Content-Range, Content-Length, Accept-Ranges')
         self.send_header('Cache-Control', 'no-cache, must-revalidate')
         super().end_headers()
 
+    def do_OPTIONS(self):
+        """Handle CORS preflight requests on local LAN."""
+        self.send_response(200)
+        self.send_header('Content-Length', '0')
+        self.end_headers()
+
     def guess_type(self, path):
-        if path.endswith('.webmanifest') or path.endswith('manifest.json'):
+        """Map standard audio, manifest, and text formats across desktop and mobile."""
+        path_lower = str(path).lower()
+        if path_lower.endswith('.webmanifest') or path_lower.endswith('manifest.json'):
             return 'application/manifest+json'
-        if path.endswith('.lrc'):
+        if path_lower.endswith('.lrc'):
             return 'text/plain; charset=utf-8'
+        if path_lower.endswith('.mp3'):
+            return 'audio/mpeg'
+        if path_lower.endswith('.flac'):
+            return 'audio/flac'
+        if path_lower.endswith('.opus'):
+            return 'audio/opus'
+        if path_lower.endswith('.wav'):
+            return 'audio/wav'
+        if path_lower.endswith('.ogg'):
+            return 'audio/ogg'
+        if path_lower.endswith('.m4a'):
+            return 'audio/mp4'
+        if path_lower.endswith('.js'):
+            return 'application/javascript; charset=utf-8'
+        if path_lower.endswith('.css'):
+            return 'text/css; charset=utf-8'
+        if path_lower.endswith('.json'):
+            return 'application/json'
         return super().guess_type(path)
 
 def print_banner(local_ip, port):

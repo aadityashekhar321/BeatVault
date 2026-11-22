@@ -680,8 +680,11 @@ class TestAudioWorkstationAndGUILogicEnhancements(unittest.TestCase):
         mobile_192 = re.search(r'value="192"[\s\S]*?Standard Quality — 192 kbps MP3[\s\S]*?RECOMMENDED', self.mobile_html)
         self.assertTrue(mobile_192, "Standard Quality 192 kbps must feature RECOMMENDED badge in mobile/index.html")
 
+        mobile_320 = re.search(r'value="320"[\s\S]*?Ultra Quality — 320 kbps MP3[\s\S]*?HQ AUDIO', self.mobile_html)
+        self.assertTrue(mobile_320, "Ultra Quality 320 kbps must feature HQ AUDIO badge in mobile/index.html, not RECOMMENDED")
+
     def test_inspector_target_quality_defaults_to_mp3(self):
-        """2. Verify target quality in Inspector defaults to MP3 (active) and FLAC is inactive by default."""
+        """2. Verify target quality in Inspector defaults to MP3 (320kbps) in both GUI & Mobile, not FLAC."""
         self.assertIn("targetQuality: 'mp3'", self.gui_html, "App.state.targetQuality must default to 'mp3'")
         
         mp3_btn_match = re.search(r'<button[^>]*data-quality="mp3"[^>]*>', self.gui_html)
@@ -692,8 +695,13 @@ class TestAudioWorkstationAndGUILogicEnhancements(unittest.TestCase):
         self.assertTrue(flac_btn_match, "FLAC quality button must exist in HTML")
         self.assertNotIn("bg-primary-container", flac_btn_match.group(0), "FLAC button must not be styled active by default")
 
+        # Mobile Inspector target quality checks
+        self.assertIn("inspectorTargetQuality = '320'", self.mobile_html, "Mobile inspector quality must default to MP3 320kbps")
+        self.assertIn("btn-insp-q-320", self.mobile_html, "Mobile inspector must feature MP3 320k selector button")
+        self.assertIn("MP3 320kbps", self.mobile_html, "Mobile manifest loader must display MP3 320kbps target quality")
+
     def test_converting_to_mp3_status_in_downloader_and_queue(self):
-        """3. Verify downloader emits converting status and GUI queue renders dynamic 'Converting to MP3...' text."""
+        """3. Verify downloader emits converting status and both GUI & Mobile queues render dynamic 'Converting to MP3...' text."""
         from downloader import DownloadWorker
         worker = DownloadWorker([], "/fake/dest")
         track = {"title": "Test", "artist": "Artist", "id": "t1"}
@@ -709,9 +717,14 @@ class TestAudioWorkstationAndGUILogicEnhancements(unittest.TestCase):
         self.assertEqual(emitted[0]["status_message"], "Converting audio to MP3...")
         self.assertEqual(emitted[0]["percent"], 85.0)
 
+        # Desktop GUI queue checks
         self.assertIn("Converting to MP3...", self.gui_html)
         self.assertIn("t.status === 'converting'", self.gui_html)
         self.assertIn("animate-pulse", self.gui_html)
+
+        # Mobile queue checks
+        self.assertIn("Converting to MP3...", self.mobile_html)
+        self.assertIn("task.status === 'converting'", self.mobile_html)
 
     def test_real_bandwidth_display_without_fake_multipliers(self):
         """4. Verify real bandwidth is tracked from download_progress and fake (activeCount * 2.4) is removed."""
@@ -719,25 +732,163 @@ class TestAudioWorkstationAndGUILogicEnhancements(unittest.TestCase):
         self.assertIn("queueBandwidthVal", self.gui_html)
         self.assertIn("totalMBs", self.gui_html)
 
+        # Mobile speed calculation checks
+        self.assertIn("download-speed-ticker", self.mobile_html)
+        self.assertIn("totalMBs", self.mobile_html, "Mobile queue must sum real speeds into totalMBs")
+
     def test_playback_controls_volume_and_context_navigation(self):
         """5. Verify volume controls (setVolume, mute toggle) and next/prev across multiple contexts (library, inspector, completed)."""
+        # Desktop checks
         self.assertIn("setVolume(val)", self.gui_html)
         self.assertIn("btnPlayerMute", self.gui_html)
         self.assertIn("getActiveTrackList()", self.gui_html)
         self.assertIn("playbackContext", self.gui_html)
 
-    def test_lyrics_song_thumbnail_display(self):
-        """6. Verify lyrics modal displays song thumbnail instead of app logo when track is playing."""
+        # Mobile checks
+        self.assertIn("setVolume(val)", self.mobile_html, "Mobile must feature setVolume handler")
+        self.assertIn("player-volume-slider", self.mobile_html, "Mobile must feature volume slider")
+        self.assertIn("btn-player-mute", self.mobile_html, "Mobile must feature mute toggle")
+        self.assertIn("playbackContext", self.mobile_html, "Mobile must feature playbackContext tracking")
+        self.assertIn("getActiveTrackList()", self.mobile_html, "Mobile must feature getActiveTrackList")
+        self.assertIn("playInspectorTrack", self.mobile_html, "Mobile inspector must allow playing tracks")
+        self.assertIn("playCompletedTrack", self.mobile_html, "Mobile queue must allow playing completed tracks")
+
+    def test_lyrics_and_now_playing_song_thumbnail_display(self):
+        """6. Verify lyrics modal & mini-player display song thumbnail instead of app logo when track is playing."""
+        # Desktop GUI
         self.assertIn("const songCover = p.cover_url || p.cover || p.thumbnail;", self.gui_html)
         self.assertIn("npCover.classList.remove('opacity-30', 'p-12', 'object-contain');", self.gui_html)
         self.assertIn("npCover.classList.add('object-cover', 'opacity-100');", self.gui_html)
 
+        # Mobile Mini-Player & Now Playing Overlay
+        self.assertIn("getSongCover(track", self.mobile_html, "Mobile must use getSongCover helper")
+        self.assertIn("miniCover.src = songCover;", self.mobile_html, "Mini cover must show playing song cover")
+        self.assertIn("ovThumb.src = songCover;", self.mobile_html, "Now Playing thumb must show playing song cover")
+
+    def test_dynamic_offline_storage_metrics(self):
+        """7. Verify offline storage metrics in settings and vault compute real sizes without hardcoded FLAC 780MB."""
+        self.assertIn("library-cached-size", self.mobile_html, "Vault header must feature library-cached-size id")
+        self.assertIn("updateStorageFootprint()", self.mobile_html, "Settings must update dynamic storage footprint")
+        self.assertIn("storage-audio-val", self.mobile_html, "Audio size must be dynamic in storage gauge")
+        self.assertIn("storage-free-val", self.mobile_html, "Free space must be dynamic in storage gauge")
+
+    def test_mobile_touch_gestures(self):
+        """8. Verify pull-down gesture to dismiss Now Playing sheet and track card swipe interactions."""
+        self.assertIn("now-playing-drag-handle", self.mobile_html, "Now playing sheet must have grab handle")
+        self.assertIn("initNowPlayingGestures", self.mobile_html, "Now playing pull-down gesture must be initialized")
+        self.assertIn("closeNowPlayingModal()", self.mobile_html)
+        self.assertIn("openContextMenu", self.mobile_html, "Track card swipe must link to context actions")
+
     def test_pause_resume_buttons_and_api(self):
-        """7. Verify download pause and resume buttons dispatch API calls and update UI state."""
+        """9. Verify download pause and resume buttons dispatch API calls and update UI state."""
         self.assertIn("btnPauseAll", self.gui_html)
         self.assertIn("btnResumeAll", self.gui_html)
         self.assertIn("pause_download", self.gui_html)
         self.assertIn("resume_download", self.gui_html)
+
+
+class TestMobileServerAndServiceWorkerRobustness(unittest.TestCase):
+    """Test suite verifying mobile_server.py MIME types, CORS, and sw.js cache strategies."""
+
+    def test_mobile_server_mime_types(self):
+        """Verify mobile_server.py maps audio, text LRC, manifest, and script MIME types accurately."""
+        sys.path.insert(0, MOBILE_DIR)
+        from mobile_server import BeatVaultHTTPRequestHandler
+
+        # Create dummy instance for testing guess_type
+        class DummyHandler(BeatVaultHTTPRequestHandler):
+            def __init__(self):
+                pass
+
+        handler = DummyHandler()
+        self.assertEqual(handler.guess_type("music.mp3"), "audio/mpeg")
+        self.assertEqual(handler.guess_type("audio.flac"), "audio/flac")
+        self.assertEqual(handler.guess_type("lyrics.lrc"), "text/plain; charset=utf-8")
+        self.assertEqual(handler.guess_type("manifest.json"), "application/manifest+json")
+        self.assertEqual(handler.guess_type("app.webmanifest"), "application/manifest+json")
+        self.assertEqual(handler.guess_type("stream.opus"), "audio/opus")
+        self.assertEqual(handler.guess_type("track.wav"), "audio/wav")
+        self.assertEqual(handler.guess_type("track.m4a"), "audio/mp4")
+
+    def test_mobile_server_cors_and_options_preflight(self):
+        """Verify BeatVaultHTTPRequestHandler implements do_OPTIONS for CORS preflight on LAN."""
+        from mobile_server import BeatVaultHTTPRequestHandler
+        self.assertTrue(hasattr(BeatVaultHTTPRequestHandler, "do_OPTIONS"), "Handler must implement do_OPTIONS")
+
+    def test_service_worker_cache_first_and_network_first_api(self):
+        """Verify sw.js implements Cache-First for assets and Network-First for APIs with offline fallback."""
+        with open(SW_PATH, "r", encoding="utf-8") as f:
+            sw_code = f.read()
+
+        self.assertIn("isAudioStream", sw_code, "Audio streams must bypass SW for range requests")
+        self.assertIn("isApiRequest", sw_code, "API requests must be distinguished for Network-First strategy")
+        self.assertIn("Offline mode active", sw_code, "Safe offline JSON fallback must be returned when offline")
+
+
+class TestBackendIPCEdgeCasesAndSynchronization(unittest.TestCase):
+    """Test suite verifying api.py edge-case resilience and downloader.py payload field consistency."""
+
+    def setUp(self):
+        from api import BeatVaultApi
+        self.api = BeatVaultApi()
+
+    def test_load_playlist_edge_cases(self):
+        """load_playlist should handle None, empty strings, and malformed inputs gracefully."""
+        res_empty = self.api.load_playlist("")
+        self.assertFalse(res_empty["success"])
+        self.assertIn("error", res_empty)
+
+        res_none = self.api.load_playlist(None)
+        self.assertFalse(res_none["success"])
+
+        res_spaces = self.api.load_playlist("   ")
+        self.assertFalse(res_spaces["success"])
+
+    def test_get_audio_data_edge_cases_and_mime_types(self):
+        """get_audio_data should handle non-existent files and detect appropriate audio MIME types."""
+        res_missing = self.api.get_audio_data("non_existent_file.mp3")
+        self.assertFalse(res_missing["success"])
+        self.assertIn("error", res_missing)
+
+        res_none = self.api.get_audio_data(None)
+        self.assertFalse(res_none["success"])
+
+    def test_scan_duplicates_edge_cases(self):
+        """scan_duplicates should handle non-list tracks and invalid folder paths safely."""
+        res_bad_folder = self.api.scan_duplicates([], "C:/Invalid/NonExistent/Folder/12345")
+        self.assertFalse(res_bad_folder["success"])
+
+        res_bad_tracks = self.api.scan_duplicates("not-a-list", self.api.get_default_folder())
+        self.assertFalse(res_bad_tracks["success"])
+
+    def test_downloader_payload_fields_consistency(self):
+        """Ensure all payload fields (status, status_message, speed, eta, percent) are emitted."""
+        from downloader import DownloadWorker
+        worker = DownloadWorker([], "/fake/dest")
+        track = {"title": "Test Title", "artist": "Test Artist", "id": "t1"}
+
+        emitted_progress = []
+        emitted_complete = []
+        worker.on_progress = lambda d: emitted_progress.append(d)
+        worker.on_track_complete = lambda d: emitted_complete.append(d)
+
+        track["status"] = "downloading"
+        track["status_message"] = "Downloading (4.2 MB/s)"
+        worker._emit_progress(track, 45.0, "4.2 MB/s", "12s")
+
+        self.assertEqual(len(emitted_progress), 1)
+        p = emitted_progress[0]
+        for field in ["status", "status_message", "speed", "eta", "percent"]:
+            self.assertIn(field, p, f"Field '{field}' must be emitted in progress payload")
+
+        track["status"] = "completed"
+        track["status_message"] = "Completed"
+        worker._emit_track_complete(track)
+
+        self.assertEqual(len(emitted_complete), 1)
+        c = emitted_complete[0]
+        for field in ["status", "status_message", "speed", "eta", "percent"]:
+            self.assertIn(field, c, f"Field '{field}' must be emitted in track_complete payload")
 
 
 if __name__ == "__main__":
