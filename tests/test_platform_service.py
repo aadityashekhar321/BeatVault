@@ -319,6 +319,86 @@ class TestPlatformScraperParsers(unittest.TestCase):
             self.assertEqual(track["duration_formatted"], "5:01")
             self.assertEqual(track["audio_preview"], "https://apple.com/preview.mp3")
 
+    def test_apple_music_single_track_parsing(self):
+        sample_html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <script type="application/ld+json">
+          {
+            "@type": "MusicComposition",
+            "name": "Smells Like Teen Spirit",
+            "timeRequired": "PT5M1S",
+            "image": "https://apple.com/song_cover.jpg",
+            "audio": {
+              "@type": "MusicRecording",
+              "byArtist": [{"name": "Nirvana"}],
+              "inAlbum": {"name": "Nevermind"},
+              "audio": {
+                "contentUrl": "https://apple.com/preview_single.mp3"
+              }
+            }
+          }
+          </script>
+        </head>
+        </html>
+        """
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.text = sample_html
+
+        with patch.object(self.service.session, "get", return_value=mock_resp):
+            res = self.service._fetch_apple_music_metadata("https://music.apple.com/us/album/smells-like-teen-spirit/1440783617?i=1440783625")
+
+            self.assertEqual(res["platform"], "apple_music")
+            self.assertEqual(res["track_count"], 1)
+            track = res["tracks"][0]
+            self.assertEqual(track["title"], "Smells Like Teen Spirit")
+            self.assertEqual(track["artist"], "Nirvana")
+            self.assertEqual(track["album"], "Nevermind")
+            self.assertEqual(track["duration_formatted"], "5:01")
+            self.assertEqual(track["cover_url"], "https://apple.com/song_cover.jpg")
+
+    def test_apple_music_playlist_parsing(self):
+        sample_html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <script type="application/ld+json">
+          {
+            "@type": "MusicPlaylist",
+            "name": "Today's Hits",
+            "author": {"name": "Apple Music Hits"},
+            "track": [
+              {
+                "@type": "MusicRecording",
+                "name": "stupid song",
+                "duration": "PT3M29S",
+                "audio": {
+                  "thumbnailUrl": "https://apple.com/thumb.jpg"
+                }
+              }
+            ]
+          }
+          </script>
+        </head>
+        </html>
+        """
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.text = sample_html
+
+        with patch.object(self.service.session, "get", return_value=mock_resp):
+            res = self.service._fetch_apple_music_metadata("https://music.apple.com/us/playlist/todays-hits/pl.123")
+
+            self.assertEqual(res["platform"], "apple_music")
+            self.assertEqual(res["title"], "Today's Hits")
+            self.assertEqual(res["track_count"], 1)
+            track = res["tracks"][0]
+            self.assertEqual(track["title"], "stupid song")
+            self.assertEqual(track["duration_formatted"], "3:29")
+            self.assertEqual(track["cover_url"], "https://apple.com/thumb.jpg")
+
 
 if __name__ == "__main__":
     unittest.main()

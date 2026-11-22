@@ -912,7 +912,7 @@
               </div>
               <div class="flex flex-col">
                 <span class="text-xs font-bold text-on-surface">BeatVault Mobile</span>
-                <span class="text-[11px] text-on-surface-variant font-mono">v1.0.0 (Build 2026.11)</span>
+                <span class="text-[11px] text-on-surface-variant font-mono">v2.5.0 (Build 2026.11)</span>
               </div>
             </div>
             <button id="check-updates-btn" onclick="checkAppUpdates()" class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface flex items-center gap-1.5 text-xs font-mono transition-colors cursor-pointer border border-white/5">
@@ -2310,7 +2310,7 @@
     /* 6. SCREEN 2: PLAYLIST INSPECTOR CONTROLLER                   */
     /* ============================================================ */
     let inspectorTracks = [];
-    let inspectorTargetQuality = '320'; // Target quality defaults to MP3 320kbps (not FLAC)
+    let inspectorTargetQuality = localStorage.getItem('beatvault_mobile_audio_quality') || '192';
 
     function setInspectorTargetQuality(q) {
       inspectorTargetQuality = q;

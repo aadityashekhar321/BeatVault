@@ -627,7 +627,7 @@
                   <span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">TARGET QUALITY</span>
                   <div class="flex items-center rounded-full bg-surface-container-lowest p-1 border border-white/5" id="qualitySelector">
                     <button type="button" class="quality-btn rounded-full px-4 py-1.5 text-xs font-medium text-on-surface-variant hover:text-on-surface transition-all" data-quality="flac">FLAC 24-bit</button>
-                    <button type="button" class="quality-btn rounded-full bg-primary-container px-4 py-1.5 text-xs font-bold text-on-primary-container transition-all shadow-sm" data-quality="mp3">320kbps MP3</button>
+                    <button type="button" class="quality-btn rounded-full bg-primary-container px-4 py-1.5 text-xs font-bold text-on-primary-container transition-all shadow-sm" data-quality="mp3">192kbps MP3</button>
                   </div>
                 </div>
               </div>
@@ -969,7 +969,7 @@
             <div class="flex items-center gap-2">
               <span class="px-2 py-0.5 rounded bg-surface-container-high text-secondary text-[11px] font-bold uppercase">SYSTEM_CONFIG</span>
               <span class="text-on-surface-variant text-xs">/</span>
-              <span id="settingsVersionBadge" class="text-on-surface-variant text-xs font-mono">v2.4.8-RELEASE</span>
+              <span id="settingsVersionBadge" class="text-on-surface-variant text-xs font-mono">v2.5.0-STABLE</span>
             </div>
             <h2 class="text-2xl lg:text-3xl font-extrabold text-on-surface tracking-tight">App Settings &amp; Storage Configuration</h2>
             <p class="text-xs text-on-surface-variant">Configure audio transcoding targets, SAF scoped storage mounts, and worker concurrency.</p>
@@ -1258,7 +1258,7 @@
                 <div class="flex flex-col">
                   <div class="flex items-center gap-2">
                     <h3 class="text-sm font-bold text-on-surface">BeatVault Studio</h3>
-                    <span id="appBuildBadge" class="px-2 py-0.2 rounded bg-surface-container-highest text-secondary text-[10px] font-mono">v2.4.8</span>
+                    <span id="appBuildBadge" class="px-2 py-0.2 rounded bg-surface-container-highest text-secondary text-[10px] font-mono">v2.5.0</span>
                   </div>
                   <p class="text-[11px] text-on-surface-variant">FFmpeg 6.1 Audio Core • Python Pywebview Desktop</p>
                 </div>
@@ -1583,7 +1583,7 @@
       <div class="p-3.5 rounded-xl bg-surface-container-lowest border border-white/5 flex flex-col gap-2 text-xs">
         <div class="flex items-center justify-between">
           <span class="text-on-surface-variant">Installed Version:</span>
-          <span id="modalCurrentVersion" class="font-mono text-on-surface">v2.4.8</span>
+          <span id="modalCurrentVersion" class="font-mono text-on-surface">v2.5.0</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="text-on-surface-variant">Latest Release:</span>
@@ -2396,6 +2396,8 @@
           if (emptyState) emptyState.classList.remove('hidden');
           if (content) content.classList.add('hidden');
         }
+
+        this.updateQualityDisplay();
       },
 
       filterTracks(filterMode, query) {
@@ -2575,13 +2577,28 @@
         App.ui.showToast(`Unchecked ${count} duplicate track(s)`, 'info');
       },
 
+      getFormattedQualityLabel(targetQuality, audioQuality) {
+        if (targetQuality === 'flac') return 'FLAC 24/96';
+        const q = audioQuality || (App.state.settings && App.state.settings.audioQuality) || '192';
+        if (q === '320') return '320kbps MP3';
+        if (q === '128') return '128kbps Opus';
+        return '192kbps MP3';
+      },
+
       updateQualityDisplay() {
         const isFlac = App.state.targetQuality === 'flac';
+        const audioQ = (App.state.settings && App.state.settings.audioQuality) || '192';
+        const dynamicLabel = this.getFormattedQualityLabel(App.state.targetQuality, audioQ);
+        const mp3Label = this.getFormattedQualityLabel('mp3', audioQ);
 
         // Sync quality selector buttons
         const qualityBtns = document.querySelectorAll('.quality-btn');
         qualityBtns.forEach(btn => {
-          const isSelected = btn.getAttribute('data-quality') === App.state.targetQuality;
+          const q = btn.getAttribute('data-quality');
+          if (q === 'mp3') {
+            btn.textContent = mp3Label;
+          }
+          const isSelected = q === App.state.targetQuality;
           if (isSelected) {
             btn.classList.add('bg-primary-container', 'text-on-primary-container', 'font-bold', 'shadow-sm');
             btn.classList.remove('text-on-surface-variant', 'font-medium');
@@ -2594,7 +2611,7 @@
         // Update badges in rows
         const formatBadges = document.querySelectorAll('.track-format-tag');
         formatBadges.forEach(badge => {
-          badge.textContent = isFlac ? 'FLAC 24/96' : '320kbps MP3';
+          badge.textContent = dynamicLabel;
           badge.className = isFlac 
             ? 'track-format-tag inline-flex items-center rounded bg-surface-container-lowest px-2 py-0.5 text-[10px] font-bold text-secondary border border-white/5'
             : 'track-format-tag inline-flex items-center rounded bg-surface-container-lowest px-2 py-0.5 text-[10px] font-bold text-on-surface-variant border border-white/5';
@@ -2608,6 +2625,8 @@
         if (!list) return;
 
         const isFlac = App.state.targetQuality === 'flac';
+        const audioQ = (App.state.settings && App.state.settings.audioQuality) || '192';
+        const formatTagLabel = this.getFormattedQualityLabel(App.state.targetQuality, audioQ);
         const q = (this.searchQuery || '').trim().toLowerCase();
         const mode = this.filterMode || 'all';
 
@@ -2668,7 +2687,7 @@
                 <span class="text-xs text-on-surface-variant truncate block">${t.album || 'Single'}</span>
               </div>
               <div class="col-span-2">
-                <span class="track-format-tag inline-flex items-center rounded bg-surface-container-lowest px-2 py-0.5 text-[10px] font-bold ${isFlac ? 'text-secondary' : 'text-on-surface-variant'} border border-white/5">${isFlac ? 'FLAC 24/96' : '320kbps MP3'}</span>
+                <span class="track-format-tag inline-flex items-center rounded bg-surface-container-lowest px-2 py-0.5 text-[10px] font-bold ${isFlac ? 'text-secondary' : 'text-on-surface-variant'} border border-white/5">${formatTagLabel}</span>
               </div>
               <div class="col-span-1 flex items-center justify-end gap-2">
                 <span class="text-xs text-on-surface-variant tabular-nums">${t.duration || '3:30'}</span>
@@ -2873,7 +2892,7 @@
 
         const folder = App.state.settings.destinationFolder || 'C:/Users/Music/BeatVault';
         const playlistTitle = App.state.currentPlaylist ? App.state.currentPlaylist.title : 'BeatVault Archival';
-        const quality = App.state.settings.audioQuality || '192';
+        const quality = App.state.targetQuality === 'flac' ? 'flac' : (App.state.settings.audioQuality || '192');
         const template = App.state.settings.filenameTemplate || 'title_artist';
         const embedLyrics = App.state.settings.embedLyrics !== false;
         const concurrency = App.state.settings.concurrency || 2;
@@ -2925,7 +2944,7 @@
 
         const folder = App.state.settings.destinationFolder || 'C:/Users/Music/BeatVault';
         const playlistTitle = App.state.currentPlaylist ? App.state.currentPlaylist.title : 'BeatVault Archival';
-        const quality = App.state.settings.audioQuality || '192';
+        const quality = App.state.targetQuality === 'flac' ? 'flac' : (App.state.settings.audioQuality || '192');
         const template = App.state.settings.filenameTemplate || 'title_artist';
         const embedLyrics = App.state.settings.embedLyrics !== false;
         const concurrency = 1;
@@ -3701,6 +3720,12 @@
             }
 
             App.state.settings.audioQuality = card.getAttribute('data-quality');
+            if (App.inspector && typeof App.inspector.updateQualityDisplay === 'function') {
+              App.inspector.updateQualityDisplay();
+              if (App.state.loadedTracks && App.state.loadedTracks.length > 0) {
+                App.inspector.renderTrackRows();
+              }
+            }
           });
         });
 
@@ -3848,6 +3873,13 @@
         });
 
         this.updateStorageMetrics();
+
+        if (App.inspector && typeof App.inspector.updateQualityDisplay === 'function') {
+          App.inspector.updateQualityDisplay();
+          if (App.state.loadedTracks && App.state.loadedTracks.length > 0) {
+            App.inspector.renderTrackRows();
+          }
+        }
       },
 
       updateStorageMetrics() {
@@ -3925,6 +3957,13 @@
             await window.pywebview.api.save_settings(App.state.settings);
           } catch (e) {
             console.error('save_settings error:', e);
+          }
+        }
+
+        if (App.inspector && typeof App.inspector.updateQualityDisplay === 'function') {
+          App.inspector.updateQualityDisplay();
+          if (App.state.loadedTracks && App.state.loadedTracks.length > 0) {
+            App.inspector.renderTrackRows();
           }
         }
 
@@ -4895,7 +4934,7 @@
           if (window.pywebview && window.pywebview.api && window.pywebview.api.check_for_updates) {
             res = await window.pywebview.api.check_for_updates(manual);
           } else {
-            res = { success: true, update_available: false, current_version: '2.4.8', latest_version: '2.4.8' };
+            res = { success: true, update_available: false, current_version: '2.5.0', latest_version: '2.5.0' };
           }
 
           if (res && res.update_available) {
@@ -5271,7 +5310,7 @@
               settings: {
                 destinationFolder: 'C:/Users/Music/BeatVault',
                 concurrency: 2,
-                audioQuality: '320',
+                audioQuality: '192',
                 filenameTemplate: 'title_artist',
                 embedLyrics: true,
                 embedArtwork: true,
@@ -5297,9 +5336,9 @@
           async get_default_folder() { return 'C:/Users/Music/BeatVault'; },
           async get_audio_data(file_path) { return { success: true, data_url: null }; },
           async get_lyrics() { return { success: true, synced_lyrics: SAMPLE_LRC }; },
-          async check_for_updates() { return { success: true, update_available: false, current_version: '2.4.8' }; },
+          async check_for_updates() { return { success: true, update_available: false, current_version: '2.5.0' }; },
           async open_release_page() { return { success: true }; },
-          async get_version_info() { return { success: true, info: { version: '2.4.8' } }; },
+          async get_version_info() { return { success: true, info: { version: '2.5.0' } }; },
           async scan_duplicates(tracks, folder) { return { success: true, duplicate_count: 0, tracks: tracks }; },
           // Aliases for comprehensive API bridge compatibility
           async get_playlist(url) { return this.load_playlist(url); },

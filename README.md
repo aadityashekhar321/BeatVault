@@ -20,7 +20,7 @@
 
 <p align="center">
   <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
-    <img src="https://img.shields.io/badge/Release-v2.5--stable-10b981?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
+    <img src="https://img.shields.io/badge/Release-v2.5.0--stable-10b981?style=for-the-badge&logo=github&logoColor=white" alt="Latest Release" />
   </a>
   <a href="https://github.com/aadityashekhar321/BeatVault/releases/latest">
     <img src="https://img.shields.io/badge/⬇️_Download-Setup_Installer_(.exe)-53E076?style=for-the-badge&logo=windows&logoColor=black" alt="Download Installer" />
@@ -303,7 +303,7 @@ BeatVault is engineered for keyboard power users. Control your entire studio exp
 
 ## 📊 Comparison Matrix
 
-| Capability | Generic Downloaders / Web Bots | Telegram Bots | 🎵 **BeatVault v2.5** |
+| Capability | Generic Downloaders / Web Bots | Telegram Bots | 🎵 **BeatVault v2.5.0** |
 | :--- | :---: | :---: | :---: |
 | **Supported Platforms** | ❌ Spotify only | ⚠️ 1 Platform | **🌐 Multi-Platform (Spotify, YouTube, Apple Music, SoundCloud)** |
 | **Download Concurrency** | ❌ 1-by-1 Sequential | ❌ Single queue | **⚡ 1x to 4x Configurable Parallel ThreadPool** |

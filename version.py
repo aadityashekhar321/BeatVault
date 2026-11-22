@@ -5,7 +5,8 @@ Central source of truth for version tracking, metadata, and GitHub release synch
 
 from typing import Dict, Any
 
-__version__ = "1.0.0"
+__version__ = "2.5.0"
+BUILD_ID = "2026.11-STABLE"
 
 APP_NAME = "BeatVault"
 APP_TITLE = "BeatVault - Music & Lyrics Studio"
@@ -28,6 +29,7 @@ def get_version_info() -> Dict[str, Any]:
     """
     return {
         "version": __version__,
+        "build_id": BUILD_ID,
         "app_name": APP_NAME,
         "app_title": APP_TITLE,
         "app_description": APP_DESCRIPTION,

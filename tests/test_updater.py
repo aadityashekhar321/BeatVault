@@ -59,53 +59,53 @@ class TestUpdateChecker(unittest.TestCase):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         mock_resp.json.return_value = {
-            "tag_name": "v1.1.0",
-            "name": "BeatVault v1.1.0 Release",
+            "tag_name": "v2.6.0",
+            "name": "BeatVault v2.6.0 Release",
             "body": "## Features\n- Better karaoke sync\n",
-            "html_url": "https://github.com/aadityashekhar321/BeatVault/releases/tag/v1.1.0",
+            "html_url": "https://github.com/aadityashekhar321/BeatVault/releases/tag/v2.6.0",
             "assets": [
                 {
-                    "name": "BeatVault-Setup-v1.1.0.exe",
-                    "browser_download_url": "https://github.com/releases/download/v1.1.0/installer.exe",
+                    "name": "BeatVault-Setup-v2.6.0.exe",
+                    "browser_download_url": "https://github.com/releases/download/v2.6.0/installer.exe",
                     "size": 75000000
                 }
             ]
         }
         mock_get.return_value = mock_resp
 
-        checker = UpdateChecker(current_version="1.0.0")
+        checker = UpdateChecker(current_version="2.5.0")
         res = checker.check_for_updates()
 
         self.assertTrue(res["success"])
         self.assertTrue(res["update_available"])
-        self.assertEqual(res["latest_version"], "1.1.0")
-        self.assertEqual(res["download_url"], "https://github.com/releases/download/v1.1.0/installer.exe")
+        self.assertEqual(res["latest_version"], "2.6.0")
+        self.assertEqual(res["download_url"], "https://github.com/releases/download/v2.6.0/installer.exe")
         self.assertEqual(len(res["assets"]), 1)
-        self.assertEqual(res["assets"][0]["name"], "BeatVault-Setup-v1.1.0.exe")
+        self.assertEqual(res["assets"][0]["name"], "BeatVault-Setup-v2.6.0.exe")
 
     @patch("requests.get")
     def test_already_on_latest_version(self, mock_get):
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         mock_resp.json.return_value = {
-            "tag_name": "v1.0.0",
-            "name": "BeatVault v1.0.0",
-            "body": "Initial release",
-            "html_url": "https://github.com/releases/v1.0.0",
+            "tag_name": "v2.5.0",
+            "name": "BeatVault v2.5.0",
+            "body": "Latest release",
+            "html_url": "https://github.com/releases/v2.5.0",
             "assets": []
         }
         mock_get.return_value = mock_resp
 
-        checker = UpdateChecker(current_version="1.0.0")
+        checker = UpdateChecker(current_version="2.5.0")
         res = checker.check_for_updates()
 
         self.assertTrue(res["success"])
         self.assertFalse(res["update_available"])
-        self.assertEqual(res["latest_version"], "1.0.0")
+        self.assertEqual(res["latest_version"], "2.5.0")
 
     @patch("requests.get", side_effect=Exception("Network unreachable"))
     def test_network_failure_handled_gracefully(self, mock_get):
-        checker = UpdateChecker(current_version="1.0.0")
+        checker = UpdateChecker(current_version="2.5.0")
         res = checker.check_for_updates()
 
         self.assertFalse(res["success"])
@@ -120,7 +120,8 @@ class TestVersionInfo(unittest.TestCase):
 
     def test_version_info_structure(self):
         info = get_version_info()
-        self.assertEqual(info["version"], __version__)
+        self.assertEqual(__version__, "2.5.0")
+        self.assertEqual(info["version"], "2.5.0")
         self.assertEqual(info["app_name"], "BeatVault")
         self.assertIn("github.com", info["repo_url"])
 

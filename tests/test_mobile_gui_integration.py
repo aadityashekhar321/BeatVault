@@ -684,7 +684,7 @@ class TestAudioWorkstationAndGUILogicEnhancements(unittest.TestCase):
         self.assertTrue(mobile_320, "Ultra Quality 320 kbps must feature HQ AUDIO badge in mobile/index.html, not RECOMMENDED")
 
     def test_inspector_target_quality_defaults_to_mp3(self):
-        """2. Verify target quality in Inspector defaults to MP3 (320kbps) in both GUI & Mobile, not FLAC."""
+        """2. Verify target quality in Inspector defaults to MP3 (192kbps) in both GUI & Mobile, not FLAC."""
         self.assertIn("targetQuality: 'mp3'", self.gui_html, "App.state.targetQuality must default to 'mp3'")
         
         mp3_btn_match = re.search(r'<button[^>]*data-quality="mp3"[^>]*>', self.gui_html)
@@ -696,9 +696,23 @@ class TestAudioWorkstationAndGUILogicEnhancements(unittest.TestCase):
         self.assertNotIn("bg-primary-container", flac_btn_match.group(0), "FLAC button must not be styled active by default")
 
         # Mobile Inspector target quality checks
-        self.assertIn("inspectorTargetQuality = '320'", self.mobile_html, "Mobile inspector quality must default to MP3 320kbps")
+        self.assertIn("inspectorTargetQuality = localStorage.getItem('beatvault_mobile_audio_quality') || '192'", self.mobile_html, "Mobile inspector quality must default to 192kbps from settings")
         self.assertIn("btn-insp-q-320", self.mobile_html, "Mobile inspector must feature MP3 320k selector button")
-        self.assertIn("MP3 320kbps", self.mobile_html, "Mobile manifest loader must display MP3 320kbps target quality")
+        self.assertIn("btn-insp-q-192", self.mobile_html, "Mobile inspector must feature MP3 192k selector button")
+
+    def test_unified_version_synchronization(self):
+        """Verify unified version 2.5.0 across GUI and Mobile files."""
+        from version import __version__, BUILD_ID
+        self.assertEqual(__version__, "2.5.0")
+        self.assertEqual(BUILD_ID, "2026.11-STABLE")
+
+        # Desktop GUI
+        self.assertIn('id="settingsVersionBadge" class="text-on-surface-variant text-xs font-mono">v2.5.0-STABLE</span>', self.gui_html)
+        self.assertIn('id="appBuildBadge" class="px-2 py-0.2 rounded bg-surface-container-highest text-secondary text-[10px] font-mono">v2.5.0</span>', self.gui_html)
+        self.assertIn('id="modalCurrentVersion" class="font-mono text-on-surface">v2.5.0</span>', self.gui_html)
+
+        # Mobile GUI
+        self.assertIn('v2.5.0 (Build 2026.11)', self.mobile_html)
 
     def test_converting_to_mp3_status_in_downloader_and_queue(self):
         """3. Verify downloader emits converting status and both GUI & Mobile queues render dynamic 'Converting to MP3...' text."""
